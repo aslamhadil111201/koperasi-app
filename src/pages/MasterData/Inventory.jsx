@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../store/useStore';
+import { supabase, isSupabaseReady } from '../../lib/supabase';
 import { Search, Plus, Package, ShoppingBag, Briefcase, Store, X, AlertTriangle, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import './MasterData.css';
 
@@ -73,11 +74,43 @@ const Inventory = () => {
     setRestockItem(null);
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 800 * 1024) {
-      alert('Ukuran gambar maksimal 800KB. Coba kompres atau pilih gambar lain.');
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran gambar maksimal 2MB.');
+      return;
+    }
+
+    // Coba upload ke Supabase Storage kalau tersedia
+    if (isSupabaseReady()) {
+      try {
+        const ext      = file.name.split('.').pop();
+        const fileName = `products/${Date.now()}.${ext}`;
+        const { data, error } = await supabase.storage
+          .from('kpkcg-images')
+          .upload(fileName, file, { upsert: true });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage
+          .from('kpkcg-images')
+          .getPublicUrl(fileName);
+        const url = urlData.publicUrl;
+        setImagePreview(url);
+        setItemForm(prev => ({ ...prev, image: url }));
+        return;
+      } catch (err) {
+        console.warn('Supabase storage upload failed, fallback to base64:', err);
+      }
+    }
+
+    // Fallback: base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+      setItemForm(prev => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
       return;
     }
     const reader = new FileReader();

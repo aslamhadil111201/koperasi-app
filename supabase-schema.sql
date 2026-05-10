@@ -153,3 +153,23 @@ insert into users (username, name, password, role) values
   ('surtini', 'Ibu Surtini',   '123456',    'admin'),
   ('indah',   'Ibu Indah',     '123456',    'admin')
 on conflict (username) do nothing;
+
+-- ── Storage Bucket untuk foto produk ──────────────────────────────────────────
+insert into storage.buckets (id, name, public)
+values ('kpkcg-images', 'kpkcg-images', true)
+on conflict (id) do nothing;
+
+-- Allow public read
+create policy "Public read kpkcg-images"
+  on storage.objects for select
+  using ( bucket_id = 'kpkcg-images' );
+
+-- Allow authenticated upload
+create policy "Allow upload kpkcg-images"
+  on storage.objects for insert
+  with check ( bucket_id = 'kpkcg-images' );
+
+-- Allow delete
+create policy "Allow delete kpkcg-images"
+  on storage.objects for delete
+  using ( bucket_id = 'kpkcg-images' );
