@@ -97,6 +97,16 @@ export const useStore = create(
     return { darkMode: next };
   }),
 
+  // Bulk setters untuk Supabase sync
+  setMembers:                (members)  => set({ members }),
+  setProducts:               (products) => set({ products }),
+  setConsignmentProducts:    (items)    => set({ consignmentProducts: items }),
+  setServices:               (services) => set({ services }),
+  setJournal:                (journal)  => set({ journal }),
+  setCashLoans:              (loans)    => set({ cashLoans: loans }),
+  setCreditGoods:            (credits)  => set({ creditGoods: credits }),
+  setMemberSalesTransactions:(txs)      => set({ memberSalesTransactions: txs }),
+
   addTransaction: (transactionEntries) => set((state) => ({
     journal: [...state.journal, ...transactionEntries]
   })),

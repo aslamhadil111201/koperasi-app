@@ -15,7 +15,7 @@
 .login-bg {
   position: fixed;
   inset: 0;
-  background-image: url('/src/assets/hero.png');
+  background-image: url('/hero.png');
   background-size: cover;
   background-position: left center;
   background-repeat: no-repeat;

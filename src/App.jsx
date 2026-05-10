@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useStore } from './store/useStore';
+import { useSupabaseSync } from './hooks/useSupabaseSync';
+import { useSupabaseWrite } from './hooks/useSupabaseWrite';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import ProtectedRoute from './components/Layout/ProtectedRoute';
@@ -37,11 +39,23 @@ const AppLayout = ({ children }) => (
 function App() {
   const darkMode = useStore((state) => state.darkMode);
   const patchMembersJoinDate = useStore((state) => state.patchMembersJoinDate);
+  const { syncing } = useSupabaseSync();
+  useSupabaseWrite();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-    patchMembersJoinDate(); // patch anggota lama yang belum punya joinDate
+    patchMembersJoinDate();
   }, [darkMode]);
+
+  if (syncing) {
+    return (
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', flexDirection:'column', gap:'1rem', background:'var(--color-background)' }}>
+        <div style={{ width:40, height:40, border:'4px solid #FF4D00', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+        <p style={{ color:'var(--color-text-muted)', fontSize:'0.875rem' }}>Memuat data...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>

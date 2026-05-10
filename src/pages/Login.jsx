@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { authApi } from '../services/api';
+import { loginSupabase } from '../services/supabaseService';
+import { isSupabaseReady } from '../lib/supabase';
 import { Lock, User, Eye, EyeOff, Shield, BarChart2, Users, ArrowRight, Headphones, X, Phone, Mail } from 'lucide-react';
 import './Login.css';
 
@@ -41,27 +43,29 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      // Coba API backend dulu, fallback ke hardcoded
       let userData;
-      try {
-        const data = await authApi.login(username, password);
-        localStorage.setItem('koperasi_token', data.token);
-        userData = { id: data.user.id, name: data.user.name, role: data.user.role };
-      } catch {
-        // Fallback hardcoded
-        if (username === 'admin' && password === 'admin123') {
-          userData = { id: 1, name: 'Bapak Aslam', role: 'admin' };
-        } else if (username === 'kasir' && password === 'kasir123') {
-          userData = { id: 2, name: 'Mbak Kasir', role: 'kasir' };
-        } else if (username === 'uci' && password === '123456') {
-          userData = { id: 3, name: 'Ibu Uci', role: 'admin' };
-        } else if (username === 'surtini' && password === '123456') {
-          userData = { id: 4, name: 'Ibu Surtini', role: 'admin' };
-        } else if (username === 'indah' && password === '123456') {
-          userData = { id: 5, name: 'Ibu Indah', role: 'admin' };
-        } else {
-          throw new Error('Username atau password salah!');
+
+      // Coba Supabase dulu
+      if (isSupabaseReady()) {
+        try {
+          userData = await loginSupabase(username, password);
+        } catch {
+          // fallback ke hardcoded
         }
+      }
+
+      // Fallback hardcoded
+      if (!userData) {
+        const accounts = [
+          { username: 'admin',   password: 'admin123', id: 1, name: 'Bapak Aslam',  role: 'admin' },
+          { username: 'kasir',   password: 'kasir123', id: 2, name: 'Mbak Kasir',   role: 'kasir' },
+          { username: 'uci',     password: '123456',   id: 3, name: 'Ibu Uci',      role: 'admin' },
+          { username: 'surtini', password: '123456',   id: 4, name: 'Ibu Surtini',  role: 'admin' },
+          { username: 'indah',   password: '123456',   id: 5, name: 'Ibu Indah',    role: 'admin' },
+        ];
+        const found = accounts.find(a => a.username === username && a.password === password);
+        if (!found) throw new Error('Username atau password salah!');
+        userData = { id: found.id, name: found.name, role: found.role };
       }
 
       // Ingat saya
