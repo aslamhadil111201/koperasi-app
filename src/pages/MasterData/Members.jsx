@@ -86,9 +86,11 @@ const Members = () => {
           <p>Kelola daftar anggota, jenis keanggotaan, dan saldo awal simpanan.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={openAddModal}>
-            <UserPlus size={16} /> Tambah Anggota
-          </button>
+          {canEdit && (
+            <button className="btn btn-primary" onClick={openAddModal}>
+              <UserPlus size={16} /> Tambah Anggota
+            </button>
+          )}
         </div>
       </div>
 
@@ -155,7 +157,7 @@ const Members = () => {
                 <th>Simpanan Pokok</th>
                 <th>Simpanan Wajib</th>
                 <th>Simpanan Sukarela</th>
-                <th>Aksi</th>
+                {canEdit && <th>Aksi</th>}
               </tr>
             </thead>
             <tbody>
@@ -174,16 +176,16 @@ const Members = () => {
                   <td className="cell-amount">Rp {member.pokok.toLocaleString('id-ID')}</td>
                   <td className="cell-amount">Rp {member.wajib.toLocaleString('id-ID')}</td>
                   <td className="cell-amount">Rp {member.sukarela.toLocaleString('id-ID')}</td>
-                  <td>
-                    {canEdit && (
+                  {canEdit && (
+                    <td>
                       <button
                         className="table-action-btn"
                         onClick={() => openEditModal(member)}
                       >
                         <Pencil size={13} /> Edit
                       </button>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
