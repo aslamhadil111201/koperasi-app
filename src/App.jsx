@@ -42,14 +42,28 @@ const AppLayout = ({ children }) => {
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);
-  const patchMembersJoinDate = useStore((state) => state.patchMembersJoinDate);
+  const members = useStore((state) => state.members);
+  const setMembers = useStore((state) => state.setMembers);
   const { syncing } = useSupabaseSync();
   useSupabaseWrite();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-    patchMembersJoinDate();
   }, [darkMode]);
+
+  // Migrasi permanen: konversi ANG-xxx → KPKCG-xxx dan simpan ke localStorage
+  useEffect(() => {
+    if (members.some(m => m.id && m.id.startsWith('ANG-'))) {
+      const migrated = members.map(m => {
+        if (m.id && m.id.startsWith('ANG-')) {
+          const num = m.id.replace('ANG-', '');
+          return { ...m, id: `KPKCG-${num}` };
+        }
+        return m;
+      });
+      setMembers(migrated);
+    }
+  }, [members, setMembers]);
 
   if (syncing) {
     return (

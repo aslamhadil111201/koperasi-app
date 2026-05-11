@@ -142,7 +142,13 @@ export const useStore = create(
   })),
 
   addMember: (member) => set((state) => {
-    const newId = `KPKCG-${String(state.members.length + 1).padStart(3, '0')}`;
+    // Ambil nomor tertinggi dari ID yang sudah ada untuk menghindari duplikat
+    const maxNum = state.members.reduce((max, m) => {
+      const match = m.id && m.id.match(/KPKCG-(\d+)/);
+      if (match) return Math.max(max, parseInt(match[1], 10));
+      return max;
+    }, 0);
+    const newId = `KPKCG-${String(maxNum + 1).padStart(3, '0')}`;
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     return {
@@ -159,15 +165,9 @@ export const useStore = create(
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     return {
-      members: state.members.map((m, i) => {
+      members: state.members.map((m) => {
         // Patch joinDate kalau belum ada
-        const withDate = m.joinDate ? m : { ...m, joinDate: todayStr };
-        // Patch ID dari ANG-xxx ke KPKCG-xxx
-        if (withDate.id && withDate.id.startsWith('ANG-')) {
-          const num = withDate.id.replace('ANG-', '');
-          return { ...withDate, id: `KPKCG-${num}` };
-        }
-        return withDate;
+        return m.joinDate ? m : { ...m, joinDate: todayStr };
       })
     };
   }),
@@ -447,10 +447,18 @@ export const useStore = create(
         creditGoods:            state.creditGoods,
         memberSalesTransactions: state.memberSalesTransactions,
         darkMode:               state.darkMode,
-        // currentUser TIDAK disimpan â€” harus login ulang setiap sesi
+        currentUser:            state.currentUser,
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
+
+        // Patch joinDate untuk anggota yang belum punya
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        if (state.members) {
+          state.members = state.members.map(m => m.joinDate ? m : { ...m, joinDate: todayStr });
+        }
+
         const sudahAda = state.journal.some(j => j.id === 'JU-INIT');
         if (!sudahAda && NILAI_PERSEDIAAN_AWAL > 0) {
           state.journal = [
