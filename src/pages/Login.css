@@ -396,6 +396,8 @@
 [data-theme="dark"] .login-bg {
   background-image: url('/hero-dark.png');
 }
+
+[data-theme="dark"] .login-card {
   background: rgba(26, 29, 39, 0.97);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
