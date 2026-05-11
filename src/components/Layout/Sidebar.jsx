@@ -110,8 +110,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       {/* Footer */}
       <div className="sidebar-footer p-4 mt-auto">
         {!collapsed && (
-          <div className="user-info flex items-center gap-3 mb-4 p-2 rounded-lg"
-            style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.75rem' }}>
+          <div className="user-info flex items-center gap-3 mb-4"
+            style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.5rem 0 0.75rem' }}>
             <div className="avatar"
               style={{ background: 'var(--color-primary)', width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, flexShrink:0, fontSize:'1.1rem' }}>
               {currentUser?.name?.charAt(0) || 'U'}
