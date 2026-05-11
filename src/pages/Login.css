@@ -609,28 +609,36 @@
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,77,0,0.5);
+  background: rgba(255,255,255,0.85);
   backdrop-filter: blur(8px);
-  color: #fff;
+  color: #FF4D00;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
 
 .login-theme-btn:hover {
-  background: rgba(255,255,255,0.35);
+  background: #FF4D00;
+  color: #fff;
+  border-color: #FF4D00;
   transform: scale(1.1);
 }
 
 [data-theme="dark"] .login-theme-btn {
-  border-color: rgba(255,255,255,0.2);
-  background: rgba(0,0,0,0.3);
+  border-color: rgba(245,158,11,0.6);
+  background: rgba(0,0,0,0.5);
   color: #F59E0B;
+}
+
+[data-theme="dark"] .login-theme-btn:hover {
+  background: #F59E0B;
+  color: #000;
+  border-color: #F59E0B;
 }

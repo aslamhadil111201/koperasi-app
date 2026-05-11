@@ -110,25 +110,26 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       {/* Footer */}
       <div className="sidebar-footer p-4 mt-auto">
         {!collapsed && (
-          <div className="user-info flex items-center gap-3 mb-4 p-2 rounded-lg" style={{ background: 'var(--bg-main)' }}>
-            <div className="avatar w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+          <div className="user-info flex items-center gap-3 mb-4 p-2 rounded-lg"
+            style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
+            <div className="avatar w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
+              style={{ background: 'var(--color-primary)', width:32, height:32, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, flexShrink:0 }}>
               {currentUser?.name?.charAt(0) || 'U'}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-bold truncate">{currentUser?.name}</p>
-              <p className="text-xs text-muted capitalize">{currentUser?.role}</p>
+              <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text-main)' }}>{currentUser?.name}</p>
+              <p className="text-xs capitalize" style={{ color: 'var(--color-text-muted)' }}>{currentUser?.role}</p>
             </div>
           </div>
         )}
         {collapsed && (
-          <div className="avatar w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold mb-4"
-            style={{ margin: '0 auto 1rem' }}>
+          <div style={{ width:32, height:32, borderRadius:'50%', background:'var(--color-primary)', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, margin:'0 auto 1rem' }}>
             {currentUser?.name?.charAt(0) || 'U'}
           </div>
         )}
         <button onClick={handleLogout}
           className={`btn flex justify-center gap-2 ${collapsed ? '' : 'w-full'}`}
-          style={{ background: 'var(--danger)', color: 'white', border: 'none', width: collapsed ? 40 : '100%', padding: collapsed ? '0.5rem' : undefined }}
+          style={{ background: '#EF4444', color: 'white', border: 'none', width: collapsed ? 40 : '100%', padding: collapsed ? '0.5rem' : '0.625rem 1rem', fontWeight: 600, boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}
           title="Logout">
           <LogOut size={16} />
           {!collapsed && 'Logout'}
