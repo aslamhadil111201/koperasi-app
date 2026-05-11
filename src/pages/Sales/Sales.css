@@ -362,8 +362,10 @@
 }
 
 .product-meta .badge {
-  font-size: 0.65rem;
-  padding: 0.15rem 0.45rem;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.35rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .product-category {
