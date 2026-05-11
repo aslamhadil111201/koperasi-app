@@ -90,19 +90,25 @@ const Login = () => {
     <div className="login-page">
       <div className="login-bg" />
 
-      {/* Toggle dark/light mode — pojok kanan atas (switch) */}
-      <button
-        className={`login-theme-switch ${darkMode ? 'dark' : 'light'}`}
-        onClick={toggleDarkMode}
-        title={darkMode ? 'Light Mode' : 'Dark Mode'}
-        aria-label="Toggle dark mode"
-      >
-        <span className="login-ts-track">
-          <span className="login-ts-icon login-ts-sun"><Sun size={11} /></span>
-          <span className="login-ts-icon login-ts-moon"><Moon size={11} /></span>
-          <span className="login-ts-thumb" />
-        </span>
-      </button>
+      {/* Toggle dark/light mode — pojok kanan atas (segmented control) */}
+      <div className="login-theme-segment">
+        <button
+          className={`login-seg-btn ${!darkMode ? 'active' : ''}`}
+          onClick={() => !darkMode || toggleDarkMode()}
+          aria-label="Light Mode"
+        >
+          <Sun size={13} />
+          <span>Light</span>
+        </button>
+        <button
+          className={`login-seg-btn ${darkMode ? 'active' : ''}`}
+          onClick={() => darkMode || toggleDarkMode()}
+          aria-label="Dark Mode"
+        >
+          <Moon size={13} />
+          <span>Dark</span>
+        </button>
+      </div>
 
       {/* LEFT */}
       <div className="login-left">

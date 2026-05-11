@@ -612,71 +612,63 @@
   .login-card-icon { display: none; }
 }
 
-/* ── Login Theme Switch ──────────────────────── */
-.login-theme-switch {
+/* ── Login Theme Segmented Control ──────────── */
+.login-theme-segment {
   position: fixed;
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
   display: flex;
   align-items: center;
-}
-
-.login-ts-track {
-  position: relative;
-  width: 52px;
-  height: 28px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .login-theme-segment {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.login-seg-btn {
   display: flex;
   align-items: center;
-  padding: 0 4px;
-  transition: background 0.35s ease, box-shadow 0.35s ease;
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  box-shadow: 0 2px 12px rgba(245,158,11,0.4), inset 0 1px 3px rgba(0,0,0,0.15);
+  gap: 5px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
 }
 
-.login-theme-switch.dark .login-ts-track {
-  background: linear-gradient(135deg, #1e1b4b, #312e81);
-  box-shadow: 0 2px 12px rgba(99,102,241,0.5), inset 0 1px 3px rgba(0,0,0,0.4);
-}
-
-.login-ts-thumb {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transform: translateX(0px);
-  z-index: 2;
-}
-
-.login-theme-switch.dark .login-ts-thumb {
-  transform: translateX(24px);
-  background: #e0e7ff;
-}
-
-.login-ts-icon {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  z-index: 1;
+.login-seg-btn:hover {
   color: #fff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.login-ts-sun  { left: 6px; }
-.login-ts-moon { right: 6px; }
+.login-seg-btn.active {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
 
-.login-theme-switch.light .login-ts-sun  { opacity: 1; transform: scale(1); }
-.login-theme-switch.light .login-ts-moon { opacity: 0; transform: scale(0.5); }
-.login-theme-switch.dark  .login-ts-sun  { opacity: 0; transform: scale(0.5); }
-.login-theme-switch.dark  .login-ts-moon { opacity: 1; transform: scale(1); }
+[data-theme="dark"] .login-seg-btn {
+  color: rgba(255, 255, 255, 0.5);
+}
 
-.login-theme-switch:hover .login-ts-track { filter: brightness(1.08); }
+[data-theme="dark"] .login-seg-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
