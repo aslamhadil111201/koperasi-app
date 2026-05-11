@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../store/useStore';
-import { Search, Plus, Users, UserPlus, X, UserCheck, UserCog, Pencil } from 'lucide-react';
+import { Search, Users, UserPlus, X, UserCheck, UserCog, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import './MasterData.css';
 
 const Members = () => {
@@ -64,26 +64,33 @@ const Members = () => {
   const hasOldIds = members.some(m => m.id && m.id.startsWith('ANG-'));
 
   const handleMigrateIds = () => {
-    members.forEach(m => {
-      if (m.id && m.id.startsWith('ANG-')) {
-        const newId = 'KPKCG-' + m.id.replace('ANG-', '');
-        updateMember(m.id, { ...m, id: newId });
-      }
-    });
-    // Force update localStorage langsung
+    const updatedMembers = members.map(m => ({
+      ...m,
+      id: m.id?.startsWith('ANG-') ? 'KPKCG-' + m.id.replace('ANG-', '') : m.id
+    }));
+    // Update store langsung
+    useStore.setState({ members: updatedMembers });
+    // Update localStorage
     const storeKey = Object.keys(localStorage).find(k => k.startsWith('koperasi-store'));
     if (storeKey) {
-      const store = JSON.parse(localStorage.getItem(storeKey));
-      if (store?.state?.members) {
-        store.state.members = store.state.members.map(m => ({
-          ...m,
-          id: m.id?.startsWith('ANG-') ? 'KPKCG-' + m.id.replace('ANG-', '') : m.id
-        }));
-        localStorage.setItem(storeKey, JSON.stringify(store));
-        window.location.reload();
-      }
+      try {
+        const store = JSON.parse(localStorage.getItem(storeKey));
+        if (store?.state?.members) {
+          store.state.members = updatedMembers;
+          localStorage.setItem(storeKey, JSON.stringify(store));
+        }
+      } catch (e) { console.error(e); }
     }
   };
+
+  // ── Pagination ─────────────────────────────────────────────────────────────
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(filteredMembers.length / PAGE_SIZE);
+  const pagedMembers = filteredMembers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // Reset ke halaman 1 saat search berubah
+  React.useEffect(() => { setCurrentPage(1); }, [searchTerm, filterType]);
 
   return (
     <div className="master-container">
@@ -158,8 +165,7 @@ const Members = () => {
           <div className="master-toolbar-info">
             <Users size={15} />
             <span>{filteredMembers.length} anggota ditemukan</span>
-          </div>
-        </div>
+          </div>        </div>
 
         {/* Table */}
         <div className="master-table-wrapper">
@@ -177,7 +183,7 @@ const Members = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredMembers.map((member) => (
+              {pagedMembers.map((member) => (
                 <tr key={member.id}>
                   <td><span className="cell-id">{member.id}</span></td>
                   <td><span className="cell-name">{member.name}</span></td>
@@ -211,6 +217,48 @@ const Members = () => {
                 <Users size={24} style={{ color: 'var(--color-text-muted)' }} />
               </div>
               <p>Tidak ada data anggota ditemukan.</p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem' }}>
+              <span style={{ color:'var(--color-text-muted)' }}>
+                Halaman {currentPage} dari {totalPages} · {filteredMembers.length} anggota
+              </span>
+              <div style={{ display:'flex', gap:'0.5rem' }}>
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={14} /> Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => (
+                    <React.Fragment key={p}>
+                      {idx > 0 && arr[idx-1] !== p - 1 && <span style={{ padding:'0.3rem 0.25rem', color:'var(--color-text-muted)' }}>…</span>}
+                      <button
+                        className={`btn ${currentPage === p ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ padding:'0.3rem 0.625rem', fontSize:'0.78rem', minWidth:32 }}
+                        onClick={() => setCurrentPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  ))
+                }
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
           )}
         </div>
