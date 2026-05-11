@@ -634,12 +634,14 @@
 .login-theme-btn.light {
   background: #FF4D00;
   color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 2px 12px rgba(255,77,0,0.4);
 }
 
 .login-theme-btn.dark {
   background: #FF4D00;
   color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 2px 12px rgba(255,77,0,0.4);
 }
 
