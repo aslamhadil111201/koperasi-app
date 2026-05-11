@@ -541,16 +541,23 @@
     overflow-y: auto;
   }
 
-  /* Sembunyikan panel kiri di mobile */
-  .login-left { display: none; }
+  /* Sembunyikan konten panel kiri tapi background tetap */
+  .login-left {
+    display: none;
+  }
+
+  /* Background tetap full screen */
+  .login-bg {
+    display: block !important;
+  }
 
   /* Card login full screen di mobile */
   .login-right {
     width: 100%;
     min-height: 100vh;
     padding: 1.5rem 1rem;
-    background: #f0f2f5;
-    align-items: flex-start;
+    background: transparent;
+    align-items: center;
     padding-top: 3rem;
   }
 
@@ -558,8 +565,9 @@
 
   .login-card {
     width: 100%;
-    max-width: 100%;
+    max-width: 420px;
     padding: 1.75rem 1.25rem 1.5rem;
+    background: rgba(255,255,255,0.97);
   }
 
   .login-card-title { font-size: 1.15rem; }
@@ -568,5 +576,6 @@
 }
 
 @media (max-width: 480px) {
-  .login-right { padding: 1.5rem 0.75rem; padding-top: 2rem; }
+  .login-right { padding: 1.5rem 0.75rem; }
+  .login-card { max-width: 100%; }
 }
