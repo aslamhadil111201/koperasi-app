@@ -363,10 +363,22 @@
     grid-template-columns: 1fr;
     gap: 1rem;
     height: auto;
+    overflow-x: hidden;
+  }
+
+  /* Header POS — stack vertikal */
+  .product-section > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .product-section > div:first-child .search-bar {
+    width: 100% !important;
   }
 
   .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 0.625rem;
   }
 
@@ -376,4 +388,8 @@
 
   .cart-summary { margin-top: 1rem; padding-top: 1rem; }
   .checkout-btn { padding: 0.875rem; }
+
+  /* Payment buttons full width */
+  .payment-method-btns { gap: 0.5rem; }
+  .payment-btn { font-size: 0.75rem; padding: 0.45rem 0.5rem; }
 }
