@@ -140,6 +140,7 @@ const GeneralLedger = () => {
     if (!win) { alert('Izinkan pop-up untuk mencetak.'); return; }
     win.document.write(html);
     win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
   };
 
   return (
