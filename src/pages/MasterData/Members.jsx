@@ -61,6 +61,30 @@ const Members = () => {
     closeModal();
   };
 
+  const hasOldIds = members.some(m => m.id && m.id.startsWith('ANG-'));
+
+  const handleMigrateIds = () => {
+    members.forEach(m => {
+      if (m.id && m.id.startsWith('ANG-')) {
+        const newId = 'KPKCG-' + m.id.replace('ANG-', '');
+        updateMember(m.id, { ...m, id: newId });
+      }
+    });
+    // Force update localStorage langsung
+    const storeKey = Object.keys(localStorage).find(k => k.startsWith('koperasi-store'));
+    if (storeKey) {
+      const store = JSON.parse(localStorage.getItem(storeKey));
+      if (store?.state?.members) {
+        store.state.members = store.state.members.map(m => ({
+          ...m,
+          id: m.id?.startsWith('ANG-') ? 'KPKCG-' + m.id.replace('ANG-', '') : m.id
+        }));
+        localStorage.setItem(storeKey, JSON.stringify(store));
+        window.location.reload();
+      }
+    }
+  };
+
   return (
     <div className="master-container">
 
@@ -70,9 +94,19 @@ const Members = () => {
           <h2>Data Anggota Koperasi</h2>
           <p>Kelola daftar anggota, jenis keanggotaan, dan saldo awal simpanan.</p>
         </div>
-        <button className="btn btn-primary" onClick={openAddModal}>
-          <UserPlus size={16} /> Tambah Anggota
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {hasOldIds && (
+            <button className="btn btn-secondary"
+              style={{ color: 'var(--color-warning)', borderColor: 'rgba(245,158,11,0.4)', fontSize: '0.8rem' }}
+              onClick={handleMigrateIds}
+              title="Ubah format ID dari ANG-xxx ke KPKCG-xxx">
+              🔄 Update Format ID
+            </button>
+          )}
+          <button className="btn btn-primary" onClick={openAddModal}>
+            <UserPlus size={16} /> Tambah Anggota
+          </button>
+        </div>
       </div>
 
       {/* Stat Cards */}
