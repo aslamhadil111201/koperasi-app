@@ -4,7 +4,7 @@ import { useStore } from '../store/useStore';
 import { authApi } from '../services/api';
 import { loginSupabase } from '../services/supabaseService';
 import { isSupabaseReady } from '../lib/supabase';
-import { Lock, User, Eye, EyeOff, Shield, BarChart2, Users, ArrowRight, Headphones, X, Phone, Mail } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, Shield, BarChart2, Users, ArrowRight, Headphones, X, Phone, Mail, Sun, Moon } from 'lucide-react';
 import './Login.css';
 
 // ── Info kontak admin — ganti sesuai kebutuhan ────────────────────────────────
@@ -26,8 +26,10 @@ const Login = () => {
   const [showForgot,   setShowForgot]   = useState(false);
   const [showHelp,     setShowHelp]     = useState(false);
 
-  const login    = useStore((state) => state.login);
-  const navigate = useNavigate();
+  const login         = useStore((state) => state.login);
+  const darkMode      = useStore((state) => state.darkMode);
+  const toggleDarkMode = useStore((state) => state.toggleDarkMode);
+  const navigate      = useNavigate();
 
   // ── Ingat saya — load username tersimpan saat mount ──────────────────────
   useEffect(() => {
@@ -87,6 +89,24 @@ const Login = () => {
   return (
     <div className="login-page">
       <div className="login-bg" />
+
+      {/* Toggle dark/light mode — pojok kanan atas */}
+      <button
+        onClick={toggleDarkMode}
+        className="login-theme-btn"
+        title={darkMode ? 'Light Mode' : 'Dark Mode'}
+      >
+        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
+      {/* Toggle dark/light — pojok kanan atas */}
+      <button
+        onClick={toggleDarkMode}
+        className="login-theme-toggle"
+        title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      >
+        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
 
       {/* LEFT */}
       <div className="login-left">
