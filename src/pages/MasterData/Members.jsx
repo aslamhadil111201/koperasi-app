@@ -10,7 +10,9 @@ const Members = () => {
 
   const [searchTerm,  setSearchTerm]  = useState('');
   const [showModal,   setShowModal]   = useState(false);
-  const [editingMember, setEditingMember] = useState(null); // null = mode tambah
+  const [editingMember, setEditingMember] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10; // null = mode tambah
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -84,8 +86,6 @@ const Members = () => {
   };
 
   // ── Pagination ─────────────────────────────────────────────────────────────
-  const PAGE_SIZE = 10;
-  const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(filteredMembers.length / PAGE_SIZE);
   const pagedMembers = filteredMembers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
