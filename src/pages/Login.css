@@ -612,42 +612,71 @@
   .login-card-icon { display: none; }
 }
 
-/* ── Login Theme Toggle Button ───────────────── */
-.login-theme-btn {
+/* ── Login Theme Switch ──────────────────────── */
+.login-theme-switch {
   position: fixed;
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  width: 42px;
-  height: 42px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.login-ts-track {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 2px 12px rgba(245,158,11,0.4), inset 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.login-theme-switch.dark .login-ts-track {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  box-shadow: 0 2px 12px rgba(99,102,241,0.5), inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.login-ts-thumb {
+  position: absolute;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid rgba(255,77,0,0.5);
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(8px);
-  color: #FF4D00;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateX(0px);
+  z-index: 2;
+}
+
+.login-theme-switch.dark .login-ts-thumb {
+  transform: translateX(24px);
+  background: #e0e7ff;
+}
+
+.login-ts-icon {
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-}
-
-.login-theme-btn:hover {
-  background: #FF4D00;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1;
   color: #fff;
-  border-color: #FF4D00;
-  transform: scale(1.1);
 }
 
-[data-theme="dark"] .login-theme-btn {
-  border-color: rgba(245,158,11,0.6);
-  background: rgba(0,0,0,0.5);
-  color: #F59E0B;
-}
+.login-ts-sun  { left: 6px; }
+.login-ts-moon { right: 6px; }
 
-[data-theme="dark"] .login-theme-btn:hover {
-  background: #F59E0B;
-  color: #000;
-  border-color: #F59E0B;
-}
+.login-theme-switch.light .login-ts-sun  { opacity: 1; transform: scale(1); }
+.login-theme-switch.light .login-ts-moon { opacity: 0; transform: scale(0.5); }
+.login-theme-switch.dark  .login-ts-sun  { opacity: 0; transform: scale(0.5); }
+.login-theme-switch.dark  .login-ts-moon { opacity: 1; transform: scale(1); }
+
+.login-theme-switch:hover .login-ts-track { filter: brightness(1.08); }

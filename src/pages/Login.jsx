@@ -90,22 +90,18 @@ const Login = () => {
     <div className="login-page">
       <div className="login-bg" />
 
-      {/* Toggle dark/light mode — pojok kanan atas */}
+      {/* Toggle dark/light mode — pojok kanan atas (switch) */}
       <button
+        className={`login-theme-switch ${darkMode ? 'dark' : 'light'}`}
         onClick={toggleDarkMode}
-        className="login-theme-btn"
         title={darkMode ? 'Light Mode' : 'Dark Mode'}
+        aria-label="Toggle dark mode"
       >
-        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-      </button>
-
-      {/* Toggle dark/light — pojok kanan atas */}
-      <button
-        onClick={toggleDarkMode}
-        className="login-theme-toggle"
-        title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-      >
-        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+        <span className="login-ts-track">
+          <span className="login-ts-icon login-ts-sun"><Sun size={11} /></span>
+          <span className="login-ts-icon login-ts-moon"><Moon size={11} /></span>
+          <span className="login-ts-thumb" />
+        </span>
       </button>
 
       {/* LEFT */}
