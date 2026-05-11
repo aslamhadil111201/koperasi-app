@@ -612,46 +612,45 @@
   .login-card-icon { display: none; }
 }
 
-/* ── Login Theme Segmented Control ──────────── */
-.login-theme-segment {
+/* ── Login Theme Button ──────────────────────── */
+.login-theme-btn {
   position: fixed;
   top: 1rem;
   right: 1rem;
   z-index: 10;
-  display: flex;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 77, 0, 0.3);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 2px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.login-seg-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.75rem;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.25s ease;
-  white-space: nowrap;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.login-seg-btn:hover {
+.login-theme-btn.light {
+  background: rgba(0, 0, 0, 0.3);
   color: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
 
-.login-seg-btn.active {
-  background: linear-gradient(135deg, #FF4D00, #FF7A40);
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(255, 77, 0, 0.45);
+.login-theme-btn.dark {
+  background: rgba(255, 200, 0, 0.2);
+  color: #fbbf24;
+  box-shadow: 0 2px 12px rgba(251,191,36,0.3);
+}
+
+.login-theme-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+}
+
+.login-theme-btn.light:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.login-theme-btn.dark:hover {
+  background: rgba(255, 200, 0, 0.35);
 }

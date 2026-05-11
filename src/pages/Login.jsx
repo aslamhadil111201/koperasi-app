@@ -90,25 +90,15 @@ const Login = () => {
     <div className="login-page">
       <div className="login-bg" />
 
-      {/* Toggle dark/light mode — pojok kanan atas (segmented control) */}
-      <div className="login-theme-segment">
-        <button
-          className={`login-seg-btn ${!darkMode ? 'active' : ''}`}
-          onClick={() => !darkMode || toggleDarkMode()}
-          aria-label="Light Mode"
-        >
-          <Sun size={13} />
-          <span>Light</span>
-        </button>
-        <button
-          className={`login-seg-btn ${darkMode ? 'active' : ''}`}
-          onClick={() => darkMode || toggleDarkMode()}
-          aria-label="Dark Mode"
-        >
-          <Moon size={13} />
-          <span>Dark</span>
-        </button>
-      </div>
+      {/* Toggle dark/light mode — pojok kanan atas */}
+      <button
+        className={`login-theme-btn ${darkMode ? 'dark' : 'light'}`}
+        onClick={toggleDarkMode}
+        title={darkMode ? 'Light Mode' : 'Dark Mode'}
+        aria-label="Toggle dark mode"
+      >
+        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
 
       {/* LEFT */}
       <div className="login-left">
