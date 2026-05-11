@@ -142,7 +142,7 @@ export const useStore = create(
   })),
 
   addMember: (member) => set((state) => {
-    const newId = `ANG-${String(state.members.length + 1).padStart(3, '0')}`;
+    const newId = `KPKCG-${String(state.members.length + 1).padStart(3, '0')}`;
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     return {
@@ -159,7 +159,16 @@ export const useStore = create(
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     return {
-      members: state.members.map(m => m.joinDate ? m : { ...m, joinDate: todayStr })
+      members: state.members.map((m, i) => {
+        // Patch joinDate kalau belum ada
+        const withDate = m.joinDate ? m : { ...m, joinDate: todayStr };
+        // Patch ID dari ANG-xxx ke KPKCG-xxx
+        if (withDate.id && withDate.id.startsWith('ANG-')) {
+          const num = withDate.id.replace('ANG-', '');
+          return { ...withDate, id: `KPKCG-${num}` };
+        }
+        return withDate;
+      })
     };
   }),
 
