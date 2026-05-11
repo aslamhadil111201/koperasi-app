@@ -434,7 +434,7 @@ export const useStore = create(
   }),
     }),
     {
-      name: 'koperasi-store-v3',           // localStorage key
+      name: 'koperasi-store-v6',           // localStorage key — bump versi untuk reset data lama
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Simpan semua data kecuali session login (keamanan)
