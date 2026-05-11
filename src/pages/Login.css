@@ -632,15 +632,15 @@
 }
 
 .login-theme-btn.light {
-  background: rgba(0, 0, 0, 0.3);
+  background: #FF4D00;
   color: #fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 12px rgba(255,77,0,0.4);
 }
 
 .login-theme-btn.dark {
-  background: rgba(255, 200, 0, 0.2);
-  color: #fbbf24;
-  box-shadow: 0 2px 12px rgba(251,191,36,0.3);
+  background: #FF4D00;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(255,77,0,0.4);
 }
 
 .login-theme-btn:hover {
