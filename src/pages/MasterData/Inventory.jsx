@@ -111,15 +111,6 @@ const Inventory = () => {
     };
     reader.readAsDataURL(file);
   };
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-      setItemForm(prev => ({ ...prev, image: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
