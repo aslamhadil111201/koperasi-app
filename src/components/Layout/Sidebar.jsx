@@ -109,24 +109,33 @@ const Sidebar = ({ mobileOpen, onClose }) => {
 
       {/* Footer */}
       <div className="sidebar-footer p-4 mt-auto">
-        {!collapsed && (
-          <div className="user-info flex items-center gap-3 mb-4"
-            style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.5rem 0 0.75rem' }}>
-            <div className="avatar"
-              style={{ background: 'var(--color-primary)', width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, flexShrink:0, fontSize:'1.1rem' }}>
+        {!collapsed && (() => {
+          const isPengurus = ['uci', 'surtini', 'indah'].includes(currentUser?.username);
+          const avatarColor = isPengurus ? '#0D9488' : 'var(--color-primary)';
+          const roleLabel   = isPengurus ? 'Pengurus' : (currentUser?.role || 'Admin');
+          return (
+            <div className="user-info flex items-center gap-3 mb-4"
+              style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.5rem 0 0.75rem' }}>
+              <div className="avatar"
+                style={{ background: avatarColor, width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, flexShrink:0, fontSize:'1.1rem' }}>
+                {currentUser?.name?.charAt(0) || 'U'}
+              </div>
+              <div>
+                <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text-main)', fontWeight: 700 }}>{currentUser?.name}</p>
+                <p className="text-xs capitalize" style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{roleLabel}</p>
+              </div>
+            </div>
+          );
+        })()}
+        {collapsed && (() => {
+          const isPengurus = ['uci', 'surtini', 'indah'].includes(currentUser?.username);
+          const avatarColor = isPengurus ? '#0D9488' : 'var(--color-primary)';
+          return (
+            <div style={{ width:32, height:32, borderRadius:'50%', background: avatarColor, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, margin:'0 auto 1rem' }}>
               {currentUser?.name?.charAt(0) || 'U'}
             </div>
-            <div>
-              <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text-main)', fontWeight: 700 }}>{currentUser?.name}</p>
-              <p className="text-xs capitalize" style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{currentUser?.role}</p>
-            </div>
-          </div>
-        )}
-        {collapsed && (
-          <div style={{ width:32, height:32, borderRadius:'50%', background:'var(--color-primary)', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, margin:'0 auto 1rem' }}>
-            {currentUser?.name?.charAt(0) || 'U'}
-          </div>
-        )}
+          );
+        })()}
         <button onClick={handleLogout}
           className={`btn flex justify-center gap-2 ${collapsed ? '' : 'w-full'}`}
           style={{ background: '#EF4444', color: 'white', border: 'none', width: collapsed ? 40 : '100%', padding: collapsed ? '0.5rem' : '0.625rem 1rem', fontWeight: 600, boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}
