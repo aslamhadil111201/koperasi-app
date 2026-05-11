@@ -201,11 +201,24 @@
     top: 0;
     left: 0;
     height: 100vh;
+    height: 100dvh; /* dynamic viewport height untuk mobile browser */
     z-index: 1000;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s;
     width: 260px !important;
     box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+
+  /* Nav bisa scroll di dalam sidebar */
+  .sidebar .sidebar-nav {
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    min-height: 0; /* penting agar flex child bisa scroll */
   }
 
   .sidebar.mobile-open {
