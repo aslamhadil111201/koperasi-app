@@ -59,7 +59,7 @@ const Login = () => {
       // Fallback hardcoded
       if (!userData) {
         const accounts = [
-          { username: 'admin',   password: 'admin123', id: 1, name: 'Bapak Aslam',  role: 'admin' },
+          { username: 'aslamhadilmatin', password: 'Aslam_040700', id: 1, name: 'Bapak Aslam',  role: 'admin' },
           { username: 'kasir',   password: 'kasir123', id: 2, name: 'Mbak Kasir',   role: 'kasir' },
           { username: 'uci',     password: '123456',   id: 3, name: 'Ibu Uci',      role: 'admin' },
           { username: 'surtini', password: '123456',   id: 4, name: 'Ibu Surtini',  role: 'admin' },
