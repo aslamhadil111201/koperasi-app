@@ -90,7 +90,7 @@ const Members = () => {
   const pagedMembers = filteredMembers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Reset ke halaman 1 saat search berubah
-  React.useEffect(() => { setCurrentPage(1); }, [searchTerm, filterType]);
+  React.useEffect(() => { setCurrentPage(1); }, [searchTerm]);
 
   return (
     <div className="master-container">
