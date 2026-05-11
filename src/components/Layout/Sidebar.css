@@ -259,3 +259,8 @@
   }
   .sidebar-collapsed .logo-container { justify-content: flex-start; }
 }
+
+/* Sembunyikan tombol collapse di mobile/tablet */
+@media (max-width: 1024px) {
+  .sidebar-toggle-btn { display: none; }
+}
