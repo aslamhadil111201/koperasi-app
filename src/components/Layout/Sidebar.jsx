@@ -137,8 +137,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
           );
         })()}
         <button onClick={handleLogout}
-          className={`btn flex justify-center gap-2 ${collapsed ? '' : 'w-full'}`}
-          style={{ background: '#EF4444', color: 'white', border: 'none', width: collapsed ? 36 : '100%', padding: collapsed ? '0.4rem' : '0.45rem 0.875rem', fontWeight: 600, fontSize: '0.82rem', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}
+          className="btn flex justify-center gap-2"
+          style={{ background: '#EF4444', color: 'white', border: 'none', width: collapsed ? 36 : 'auto', padding: collapsed ? '0.4rem' : '0.45rem 1.25rem', fontWeight: 600, fontSize: '0.82rem', boxShadow: '0 2px 8px rgba(239,68,68,0.3)', margin: '0 auto', display: 'flex' }}
           title="Logout">
           <LogOut size={14} />
           {!collapsed && 'Logout'}
