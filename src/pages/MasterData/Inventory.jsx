@@ -239,9 +239,11 @@ const Inventory = () => {
           <h2>Data Inventaris &amp; Layanan</h2>
           <p>Kelola daftar barang jualan, titipan, dan daftar PPOB/Jasa.</p>
         </div>
-        <button className="btn btn-primary" onClick={openAddModal}>
-          <Plus size={16} /> Tambah Data
-        </button>
+        {canEdit && (
+          <button className="btn btn-primary" onClick={openAddModal}>
+            <Plus size={16} /> Tambah Data
+          </button>
+        )}
       </div>
 
       {/* Stat Cards */}
@@ -345,11 +347,13 @@ const Inventory = () => {
                     <td>{stockBadge(item.stock)}</td>
                     <td>
                       <div className="table-action-group">
-                        <button className="table-action-btn" onClick={() => openRestockModal(item)} style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)' }}>
-                          <RefreshCw size={13} /> Restock
-                        </button>
+                        {canEdit && (
+                          <button className="table-action-btn" onClick={() => openRestockModal(item)} style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)' }}>
+                            <RefreshCw size={13} /> Restock
+                          </button>
+                        )}
                         {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
-                        <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                        {canEdit && <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>}
                       </div>
                     </td>
                   </tr>
@@ -402,7 +406,7 @@ const Inventory = () => {
                     <td>
                       <div className="table-action-group">
                         {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
-                        <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                        {canEdit && <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>}
                       </div>
                     </td>
                   </tr>
@@ -455,7 +459,7 @@ const Inventory = () => {
                     <td>
                       <div className="table-action-group">
                         {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
-                        <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                        {canEdit && <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>}
                       </div>
                     </td>
                   </tr>
