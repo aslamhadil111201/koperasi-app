@@ -128,6 +128,11 @@ const Login = () => {
       {/* RIGHT */}
       <div className="login-right">
         <div className="login-card">
+          {/* Logo mobile only */}
+          <div className="login-mobile-logo">
+            <img src="/favicon.png" alt="KPKCG" />
+          </div>
+
           <div className="login-card-icon"><Shield size={22} /></div>
           <h2 className="login-card-title">Masuk ke Akun Anda</h2>
           <p className="login-card-subtitle">Silakan masukkan username dan password untuk melanjutkan</p>

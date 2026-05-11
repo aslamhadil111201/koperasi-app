@@ -579,3 +579,24 @@
   .login-right { padding: 1.5rem 0.75rem; }
   .login-card { max-width: 100%; }
 }
+
+/* ── Mobile Logo (hidden on desktop) ────────── */
+.login-mobile-logo {
+  display: none;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.login-mobile-logo img {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  object-fit: contain;
+  box-shadow: 0 4px 14px rgba(255,77,0,0.3);
+}
+
+@media (max-width: 768px) {
+  .login-mobile-logo { display: flex; }
+  /* Sembunyikan shield icon di mobile karena sudah ada logo */
+  .login-card-icon { display: none; }
+}
