@@ -115,7 +115,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
           const roleLabel   = isPengurus ? 'Pengurus' : (currentUser?.role || 'Admin');
           return (
             <div className="user-info flex items-center gap-3 mb-4"
-              style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.5rem 0 0.75rem' }}>
+              style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.5rem 0 0.35rem' }}>
               <div className="avatar"
                 style={{ background: avatarColor, width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, flexShrink:0, fontSize:'1.1rem' }}>
                 {currentUser?.name?.charAt(0) || 'U'}
