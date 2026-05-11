@@ -8,6 +8,10 @@ const Inventory = () => {
   const products            = useStore((state) => state.products);
   const consignmentProducts = useStore((state) => state.consignmentProducts);
   const services            = useStore((state) => state.services);
+  const currentUser         = useStore((state) => state.currentUser);
+
+  // Akun yang tidak boleh edit data
+  const canEdit = !['uci', 'surtini', 'indah'].includes(currentUser?.username);
 
   const addProduct        = useStore((state) => state.addProduct);
   const addConsignment    = useStore((state) => state.addConsignment);
@@ -344,7 +348,7 @@ const Inventory = () => {
                         <button className="table-action-btn" onClick={() => openRestockModal(item)} style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)' }}>
                           <RefreshCw size={13} /> Restock
                         </button>
-                        <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
+                        {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
                         <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
                       </div>
                     </td>
@@ -397,7 +401,7 @@ const Inventory = () => {
                     <td>{stockBadge(item.stock)}</td>
                     <td>
                       <div className="table-action-group">
-                        <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
+                        {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
                         <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
                       </div>
                     </td>
@@ -450,7 +454,7 @@ const Inventory = () => {
                     <td className="cell-amount">Rp {item.price.toLocaleString('id-ID')}</td>
                     <td>
                       <div className="table-action-group">
-                        <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
+                        {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
                         <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
                       </div>
                     </td>

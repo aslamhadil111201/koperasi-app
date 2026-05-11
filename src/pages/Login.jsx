@@ -67,7 +67,7 @@ const Login = () => {
         ];
         const found = accounts.find(a => a.username === username && a.password === password);
         if (!found) throw new Error('Username atau password salah!');
-        userData = { id: found.id, name: found.name, role: found.role };
+        userData = { id: found.id, name: found.name, role: found.role, username: found.username };
       }
 
       // Ingat saya

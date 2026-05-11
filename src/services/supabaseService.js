@@ -10,7 +10,7 @@ export const loginSupabase = async (username, password) => {
     .single();
   if (error || !data) throw new Error('Username atau password salah!');
   if (data.password !== password) throw new Error('Username atau password salah!');
-  return { id: data.id, name: data.name, role: data.role };
+  return { id: data.id, name: data.name, role: data.role, username: data.username };
 };
 
 // ── Members ───────────────────────────────────────────────────────────────────

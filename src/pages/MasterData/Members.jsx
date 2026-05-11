@@ -7,6 +7,10 @@ const Members = () => {
   const members      = useStore((state) => state.members);
   const addMember    = useStore((state) => state.addMember);
   const updateMember = useStore((state) => state.updateMember);
+  const currentUser  = useStore((state) => state.currentUser);
+
+  // Akun yang tidak boleh edit data
+  const canEdit = !['uci', 'surtini', 'indah'].includes(currentUser?.username);
 
   const [searchTerm,  setSearchTerm]  = useState('');
   const [showModal,   setShowModal]   = useState(false);
@@ -171,12 +175,14 @@ const Members = () => {
                   <td className="cell-amount">Rp {member.wajib.toLocaleString('id-ID')}</td>
                   <td className="cell-amount">Rp {member.sukarela.toLocaleString('id-ID')}</td>
                   <td>
-                    <button
-                      className="table-action-btn"
-                      onClick={() => openEditModal(member)}
-                    >
-                      <Pencil size={13} /> Edit
-                    </button>
+                    {canEdit && (
+                      <button
+                        className="table-action-btn"
+                        onClick={() => openEditModal(member)}
+                      >
+                        <Pencil size={13} /> Edit
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
