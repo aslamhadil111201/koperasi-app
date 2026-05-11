@@ -620,20 +620,14 @@
   z-index: 10;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 77, 0, 0.3);
   border-radius: 999px;
   padding: 3px;
   gap: 2px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="dark"] .login-theme-segment {
-  background: rgba(0, 0, 0, 0.25);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .login-seg-btn {
@@ -644,7 +638,7 @@
   border-radius: 999px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.55);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -654,21 +648,10 @@
 
 .login-seg-btn:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
 }
 
 .login-seg-btn.active {
-  background: #fff;
-  color: #111827;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="dark"] .login-seg-btn {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-[data-theme="dark"] .login-seg-btn.active {
-  background: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #FF4D00, #FF7A40);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(255, 77, 0, 0.45);
 }
