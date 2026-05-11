@@ -414,6 +414,15 @@
   .product-name { font-size: 0.75rem; }
   .product-price { font-size: 0.85rem; }
 
+  /* Cart section scrollable di mobile */
+  .cart-section {
+    max-height: 85vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 0;
+  }
+
   .cart-summary { margin-top: 1rem; padding-top: 1rem; }
   .checkout-btn { padding: 0.875rem; }
 
