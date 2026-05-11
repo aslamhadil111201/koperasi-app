@@ -3,7 +3,8 @@ import { useStore } from '../../store/useStore';
 import './SHU.css';
 import {
   DollarSign, Percent, Users, TrendingUp,
-  ChevronDown, ChevronUp, Info, Printer, AlertTriangle, Link
+  ChevronDown, ChevronUp, Info, Printer, AlertTriangle, Link,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 const fmt  = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
@@ -40,6 +41,9 @@ const SHU = () => {
   const [pctJUABelanja,  setPctJUABelanja]  = useState(20); // Jasa Usaha Belanja (kredit+tunai)
   const [pctSosial,      setPctSosial]      = useState(5);  // Dana Sosial
   const [showFormula,    setShowFormula]    = useState(false);
+
+  const SHU_PAGE_SIZE = 10;
+  const [shuPage, setShuPage] = useState(1);
 
   const totalPct = pctCadangan + pctJMAPW + pctJMASukarela + pctJUAKredit + pctJUABelanja + pctSosial;
   const pctValid = totalPct === 100;
@@ -121,6 +125,9 @@ const SHU = () => {
   }, [members, kreditPerMember, belanjaPerMember, totalPokokWajib, totalSukarela, totalKreditBayar, totalBelanja, poolJMAPW, poolJMASukarela, poolJUAKredit, poolJUABelanja]);
 
   const totalTerbagi = memberSHU.reduce((s, m) => s + m.totalAnggota, 0);
+
+  const shuTotalPages = Math.ceil(memberSHU.length / SHU_PAGE_SIZE);
+  const pagedSHU = memberSHU.slice((shuPage - 1) * SHU_PAGE_SIZE, shuPage * SHU_PAGE_SIZE);
 
   const komponen = [
     { label: 'Dana Cadangan / Modal',          pool: poolCadangan,    pct: pctCadangan,    set: setPctCadangan,    color: 'var(--color-danger)',     desc: 'Diputar kembali sebagai modal koperasi' },
@@ -218,13 +225,13 @@ const SHU = () => {
       <tr><th>Komponen</th><th style="text-align:center">Persentase</th><th style="text-align:right">Jumlah Pool</th></tr>
     </thead>
     <tbody>${komponenRows}</tbody>
-    <tfoot>
+    <tbody id="total-row">
       <tr>
         <td>TOTAL</td>
         <td style="text-align:center">${pctCadangan+pctJMAPW+pctJMASukarela+pctJUAKredit+pctJUABelanja+pctSosial}%</td>
         <td style="text-align:right;color:#FF4D00">Rp ${totalSHU.toLocaleString('id-ID')}</td>
       </tr>
-    </tfoot>
+    </tbody>
   </table>
 
   <h3>Rincian SHU Per Anggota</h3>
@@ -244,7 +251,7 @@ const SHU = () => {
       </tr>
     </thead>
     <tbody>${memberRows}</tbody>
-    <tfoot>
+    <tbody id="total-row">
       <tr>
         <td colspan="3"><strong>TOTAL</strong></td>
         <td style="text-align:right"><strong>Rp ${members.reduce((s,m)=>s+m.pokok+m.wajib,0).toLocaleString('id-ID')}</strong></td>
@@ -257,7 +264,7 @@ const SHU = () => {
         <td style="text-align:right;color:#06b6d4"><strong>Rp ${poolJUABelanja.toLocaleString('id-ID')}</strong></td>
         <td style="text-align:right;color:#FF4D00"><strong>Rp ${totalTerbagi.toLocaleString('id-ID')}</strong></td>
       </tr>
-    </tfoot>
+    </tbody>
   </table>
 
   <div class="footer">KPKCG — Koperasi Pemasaran Karya Cipta Gemilang &nbsp;|&nbsp; ${todayLabel}</div>
@@ -447,7 +454,7 @@ const SHU = () => {
             Rincian SHU Per Anggota
           </h4>
           <div className="master-toolbar-info">
-            <span>Total dibagikan: <strong style={{ color:'var(--color-primary)' }}>{fmt(totalTerbagi)}</strong></span>
+            <span>{memberSHU.length} anggota · Halaman {shuPage} dari {Math.ceil(memberSHU.length / SHU_PAGE_SIZE) || 1}</span>
           </div>
         </div>
 
@@ -470,7 +477,7 @@ const SHU = () => {
               </tr>
             </thead>
             <tbody>
-              {memberSHU.map(m => (
+              {pagedSHU.map(m => (
                 <tr key={m.id}>
                   <td><span className="cell-id">{m.id}</span></td>
                   <td><span className="cell-name">{m.name}</span></td>
@@ -489,9 +496,76 @@ const SHU = () => {
                 </tr>
               ))}
             </tbody>
-            <tfoot>
-              <tr className="shu-tfoot">
-                <td colSpan={3}><strong>TOTAL</strong></td>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {shuTotalPages > 1 && (
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem' }}>
+            <span style={{ color:'var(--color-text-muted)' }}>
+              Halaman {shuPage} dari {shuTotalPages} · {memberSHU.length} anggota
+            </span>
+            <div style={{ display:'flex', gap:'0.5rem' }}>
+              <button className="btn btn-secondary"
+                style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                onClick={() => setShuPage(p => Math.max(1, p-1))}
+                disabled={shuPage === 1}>
+                <ChevronLeft size={14} /> Prev
+              </button>
+              {Array.from({ length: shuTotalPages }, (_, i) => i+1)
+                .filter(p => p===1 || p===shuTotalPages || Math.abs(p-shuPage)<=1)
+                .map((p, idx, arr) => (
+                  <React.Fragment key={p}>
+                    {idx > 0 && arr[idx-1] !== p-1 && <span style={{ padding:'0.3rem 0.25rem', color:'var(--color-text-muted)' }}>…</span>}
+                    <button
+                      className={`btn ${shuPage===p ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ padding:'0.3rem 0.625rem', fontSize:'0.78rem', minWidth:32 }}
+                      onClick={() => setShuPage(p)}>
+                      {p}
+                    </button>
+                  </React.Fragment>
+                ))
+              }
+              <button className="btn btn-secondary"
+                style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                onClick={() => setShuPage(p => Math.min(shuTotalPages, p+1))}
+                disabled={shuPage === shuTotalPages}>
+                Next <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {totalBelanja === 0 && totalKreditBayar === 0 && (
+          <div className="shu-warning">
+            ⚠️ Belum ada data transaksi anggota. Komponen JUA akan bernilai 0 sampai ada penjualan/kredit yang tercatat.
+          </div>
+        )}
+      </div>
+
+      {/* Panel TOTAL — terpisah di bawah */}
+      <div className="glass-panel" style={{ borderLeft:'4px solid var(--color-primary)', padding:'1.25rem 1.5rem' }}>
+        <h4 style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'1rem', fontWeight:700 }}>
+          <DollarSign size={17} style={{ color:'var(--color-primary)' }} />
+          Rekapitulasi Total SHU Seluruh Anggota
+        </h4>
+        <div style={{ overflowX:'auto' }}>
+          <table className="master-table" style={{ fontSize:'0.875rem' }}>
+            <thead>
+              <tr>
+                <th>Pokok+Wajib</th>
+                <th>Sukarela</th>
+                <th>Kredit Bayar</th>
+                <th>Belanja</th>
+                <th style={{ color:'var(--color-success)' }}>JMA PW</th>
+                <th style={{ color:'var(--color-primary)' }}>JMA Suk</th>
+                <th style={{ color:'var(--color-warning)' }}>JUA Kredit</th>
+                <th style={{ color:'var(--color-secondary)' }}>JUA Belanja</th>
+                <th style={{ color:'var(--color-primary)', fontWeight:800 }}>Total Dibagikan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ background:'rgba(255,77,0,0.03)', fontWeight:700 }}>
                 <td className="cell-amount"><strong>{fmt(members.reduce((s,m)=>s+m.pokok+m.wajib,0))}</strong></td>
                 <td className="cell-amount"><strong>{fmt(totalSukarela)}</strong></td>
                 <td className="cell-amount"><strong>{fmt(totalKreditBayar)}</strong></td>
@@ -502,15 +576,9 @@ const SHU = () => {
                 <td className="cell-amount" style={{ color:'var(--color-secondary)' }}><strong>{fmt(poolJUABelanja)}</strong></td>
                 <td><span className="shu-total-badge shu-total-badge-grand">{fmt(totalTerbagi)}</span></td>
               </tr>
-            </tfoot>
+            </tbody>
           </table>
         </div>
-
-        {totalBelanja === 0 && totalKreditBayar === 0 && (
-          <div className="shu-warning">
-            ⚠️ Belum ada data transaksi anggota. Komponen JUA akan bernilai 0 sampai ada penjualan/kredit yang tercatat.
-          </div>
-        )}
       </div>
     </div>
   );

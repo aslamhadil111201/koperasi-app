@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { PackagePlus, ShoppingBag, Store, Briefcase, X, RefreshCw, Search, History } from 'lucide-react';
+import { PackagePlus, ShoppingBag, Store, Briefcase, X, RefreshCw, Search, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './MasterData.css';
 
@@ -16,6 +16,11 @@ const ReceiveNew = () => {
 
   const [activeTab, setActiveTab] = useState('retail');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  // Reset halaman saat tab/search berubah
+  React.useEffect(() => { setCurrentPage(1); }, [activeTab, searchTerm]);
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -61,6 +66,52 @@ const ReceiveNew = () => {
 
   const getFiltered = (data) =>
     data.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const getPaged = (data) => {
+    const filtered = getFiltered(data);
+    const pages = Math.ceil(filtered.length / PAGE_SIZE);
+    const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    return { paged, total: filtered.length, pages };
+  };
+
+  const PaginationBar = ({ total, pages }) => {
+    if (pages <= 1) return null;
+    return (
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem' }}>
+        <span style={{ color:'var(--color-text-muted)' }}>
+          Halaman {currentPage} dari {pages} · {total} item
+        </span>
+        <div style={{ display:'flex', gap:'0.5rem' }}>
+          <button className="btn btn-secondary"
+            style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+            onClick={() => setCurrentPage(p => Math.max(1, p-1))}
+            disabled={currentPage === 1}>
+            <ChevronLeft size={14} /> Prev
+          </button>
+          {Array.from({ length: pages }, (_, i) => i+1)
+            .filter(p => p===1 || p===pages || Math.abs(p-currentPage)<=1)
+            .map((p, idx, arr) => (
+              <React.Fragment key={p}>
+                {idx > 0 && arr[idx-1] !== p-1 && <span style={{ padding:'0.3rem 0.25rem', color:'var(--color-text-muted)' }}>…</span>}
+                <button
+                  className={`btn ${currentPage===p ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding:'0.3rem 0.625rem', fontSize:'0.78rem', minWidth:32 }}
+                  onClick={() => setCurrentPage(p)}>
+                  {p}
+                </button>
+              </React.Fragment>
+            ))
+          }
+          <button className="btn btn-secondary"
+            style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+            onClick={() => setCurrentPage(p => Math.min(pages, p+1))}
+            disabled={currentPage === pages}>
+            Next <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const stockBadge = (stock) => {
     if (stock === undefined || stock === null) return null;
@@ -164,7 +215,7 @@ const ReceiveNew = () => {
                 </tr>
               </thead>
               <tbody>
-                {getFiltered(products).map(item => (
+                {getPaged(products).paged.map(item => (
                   <tr key={item.id}>
                     <td><span className="cell-id">BRG-{item.id}</span></td>
                     <td><span className="cell-name">{item.name}</span></td>
@@ -188,6 +239,7 @@ const ReceiveNew = () => {
             {getFiltered(products).length === 0 && (
               <div className="empty-state"><div className="empty-state-icon"><ShoppingBag size={24} /></div><p>Tidak ada barang ditemukan.</p></div>
             )}
+            <PaginationBar total={getPaged(products).total} pages={getPaged(products).pages} />
           </div>
         )}
 
@@ -207,7 +259,7 @@ const ReceiveNew = () => {
                 </tr>
               </thead>
               <tbody>
-                {getFiltered(consignmentProducts).map(item => (
+                {getPaged(consignmentProducts).paged.map(item => (
                   <tr key={item.id}>
                     <td><span className="cell-id">KNS-{item.id}</span></td>
                     <td><span className="cell-name">{item.name}</span></td>
@@ -231,6 +283,7 @@ const ReceiveNew = () => {
             {getFiltered(consignmentProducts).length === 0 && (
               <div className="empty-state"><div className="empty-state-icon"><Store size={24} /></div><p>Tidak ada barang konsinyasi ditemukan.</p></div>
             )}
+            <PaginationBar total={getPaged(consignmentProducts).total} pages={getPaged(consignmentProducts).pages} />
           </div>
         )}
 
@@ -250,7 +303,7 @@ const ReceiveNew = () => {
                 </tr>
               </thead>
               <tbody>
-                {getFiltered(services).map(item => (
+                {getPaged(services).paged.map(item => (
                   <tr key={item.id}>
                     <td><span className="cell-id">JSA-{item.id}</span></td>
                     <td><span className="cell-name">{item.name}</span></td>
@@ -274,6 +327,7 @@ const ReceiveNew = () => {
             {getFiltered(services).length === 0 && (
               <div className="empty-state"><div className="empty-state-icon"><Briefcase size={24} /></div><p>Tidak ada layanan ditemukan.</p></div>
             )}
+            <PaginationBar total={getPaged(services).total} pages={getPaged(services).pages} />
           </div>
         )}
       </div>

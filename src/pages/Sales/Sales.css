@@ -8,7 +8,7 @@
 .product-section {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .product-grid {
@@ -16,7 +16,8 @@
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 0.875rem;
   overflow-y: auto;
-  padding-right: 0.5rem;
+  overflow-x: visible;
+  padding: 0.25rem 0.5rem 0.5rem 0.25rem;
   align-items: stretch;
 }
 
@@ -89,6 +90,7 @@
   flex-direction: column;
   gap: 1rem;
   padding-right: 0.5rem;
+  min-height: 80px;
 }
 
 .empty-cart {
@@ -345,6 +347,32 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ── Product meta row (stok + kategori) ─────── */
+.product-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.product-meta .badge {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.45rem;
+}
+
+.product-category {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 /* ── POS Responsive ──────────────────────────── */

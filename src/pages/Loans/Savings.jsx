@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, TrendingUp, Calendar, CreditCard } from 'lucide-react';
+import { Search, X, TrendingUp, Calendar, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Loans.css';
 
@@ -14,6 +14,8 @@ const Savings = () => {
   const [showDetail,   setShowDetail]   = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [depositForm,  setDepositForm]  = useState({ memberId: '', pokok: 0, wajib: 0, sukarela: 0, date: new Date().toLocaleDateString('en-CA') });
+  const [currentPage,  setCurrentPage]  = useState(1);
+  const PAGE_SIZE = 10;
 
   const filteredMembers = members.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -21,6 +23,12 @@ const Savings = () => {
     const matchType   = filterType === 'Semua' || m.type === filterType;
     return matchSearch && matchType;
   });
+
+  // Reset ke halaman 1 saat search/filter berubah
+  React.useEffect(() => { setCurrentPage(1); }, [searchTerm, filterType]);
+
+  const totalPages   = Math.ceil(filteredMembers.length / PAGE_SIZE);
+  const pagedMembers = filteredMembers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // Riwayat setoran simpanan anggota dari jurnal
   const getMemberHistory = (memberId) =>
@@ -99,11 +107,11 @@ const Savings = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredMembers.map((member) => {
+              {pagedMembers.map((member) => {
                 const total = member.pokok + member.wajib + member.sukarela;
                 return (
                   <tr key={member.id}>
-                    <td className="font-medium">{member.id}</td>
+                    <td><span className="cell-id">{member.id}</span></td>
                     <td>{member.name}</td>
                     <td>
                       <span className={`badge ${member.type === 'Penuh' ? 'badge-success' : 'badge-warning'}`}>
@@ -136,6 +144,48 @@ const Savings = () => {
           {filteredMembers.length === 0 && (
             <div className="text-center p-6 text-muted">
               Tidak ada data anggota ditemukan.
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem' }}>
+              <span style={{ color:'var(--color-text-muted)' }}>
+                Halaman {currentPage} dari {totalPages} · {filteredMembers.length} anggota
+              </span>
+              <div style={{ display:'flex', gap:'0.5rem' }}>
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={14} /> Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => (
+                    <React.Fragment key={p}>
+                      {idx > 0 && arr[idx-1] !== p - 1 && <span style={{ padding:'0.3rem 0.25rem', color:'var(--color-text-muted)' }}>…</span>}
+                      <button
+                        className={`btn ${currentPage === p ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ padding:'0.3rem 0.625rem', fontSize:'0.78rem', minWidth:32 }}
+                        onClick={() => setCurrentPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  ))
+                }
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
           )}
         </div>

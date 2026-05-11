@@ -262,6 +262,7 @@
   color: var(--color-text-main);
   cursor: pointer;
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .table-action-btn:hover {
@@ -279,6 +280,14 @@
   border-color: var(--color-danger) !important;
   color: var(--color-danger) !important;
   background: rgba(239, 68, 68, 0.07) !important;
+}
+
+/* Action group wrapper */
+.table-action-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 /* --- Stock level indicator --- */

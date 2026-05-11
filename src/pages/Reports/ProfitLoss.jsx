@@ -196,7 +196,7 @@ const ProfitLoss = () => {
   </table>
 
   <div class="footer">KPKCG — Koperasi Pemasaran Karya Cipta Gemilang &nbsp;|&nbsp; ${todayLabel}</div>
-  <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}</script>
+
 </body>
 </html>`;
 

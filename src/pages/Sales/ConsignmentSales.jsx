@@ -98,9 +98,9 @@ const ConsignmentSales = () => {
                 <p className="product-name">{product.name}</p>
                 <p className="product-supplier">Titipan: {product.supplier}</p>
                 <p className="product-price">Rp {product.price.toLocaleString('id-ID')}</p>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'0.35rem' }}>
+                <div className="product-meta">
                   <span className="badge badge-primary">Stok: {product.stock}</span>
-                  <span style={{ fontSize:'0.7rem', color:'var(--color-text-muted)' }}>
+                  <span className="product-category">
                     +Rp {(product.commission ?? (product.price - product.supplierPrice)).toLocaleString('id-ID')}
                   </span>
                 </div>
@@ -205,6 +205,24 @@ const ConsignmentSales = () => {
         </div>
 
         <div className="cart-summary">
+          {/* Rincian item */}
+          {cart.length > 0 && (
+            <div style={{ marginBottom:'0.75rem', paddingBottom:'0.75rem', borderBottom:'1px dashed var(--color-border)' }}>
+              {cart.map(item => (
+                <div key={item.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:'0.8rem', marginBottom:'0.35rem', gap:'0.5rem' }}>
+                  <span style={{ color:'var(--color-text-muted)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {item.name}
+                  </span>
+                  <span style={{ color:'var(--color-text-muted)', flexShrink:0 }}>
+                    {item.qty}× Rp {item.price.toLocaleString('id-ID')}
+                  </span>
+                  <span style={{ fontWeight:600, flexShrink:0, minWidth:70, textAlign:'right' }}>
+                    Rp {(item.qty * item.price).toLocaleString('id-ID')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="summary-row" style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
             <span>Komisi Koperasi</span><span>Rp {totalCommission.toLocaleString('id-ID')}</span>
           </div>

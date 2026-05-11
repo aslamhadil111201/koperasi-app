@@ -271,3 +271,11 @@
     margin: 0.5rem;
   }
 }
+
+/* ── ID cell — sama dengan MasterData ───────── */
+.cell-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}

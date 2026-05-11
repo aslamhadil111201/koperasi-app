@@ -102,9 +102,9 @@ const ServiceSales = () => {
               <div className="product-info">
                 <p className="product-name">{service.name}</p>
                 <p className="product-price">Rp {service.price.toLocaleString('id-ID')}</p>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'0.35rem' }}>
+                <div className="product-meta">
                   <span className="badge badge-primary">{service.type}</span>
-                  <span style={{ fontSize:'0.7rem', color:'var(--color-text-muted)' }}>{service.provider}</span>
+                  <span className="product-category">{service.provider}</span>
                 </div>
               </div>
             </div>
@@ -204,6 +204,24 @@ const ServiceSales = () => {
         </div>
 
         <div className="cart-summary">
+          {/* Rincian item */}
+          {cart.length > 0 && (
+            <div style={{ marginBottom:'0.75rem', paddingBottom:'0.75rem', borderBottom:'1px dashed var(--color-border)' }}>
+              {cart.map(item => (
+                <div key={item.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:'0.8rem', marginBottom:'0.35rem', gap:'0.5rem' }}>
+                  <span style={{ color:'var(--color-text-muted)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {item.name}
+                  </span>
+                  <span style={{ color:'var(--color-text-muted)', flexShrink:0 }}>
+                    {item.qty}× Rp {item.price.toLocaleString('id-ID')}
+                  </span>
+                  <span style={{ fontWeight:600, flexShrink:0, minWidth:70, textAlign:'right' }}>
+                    Rp {(item.qty * item.price).toLocaleString('id-ID')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
           {paymentMethod === 'Kredit' && installments > 1 && (
             <div className="summary-row" style={{ fontSize: '0.8rem', color: 'var(--color-warning)' }}>
               <span>Per cicilan ({installments}x)</span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, FileText, CheckCircle, XCircle, Clock, X } from 'lucide-react';
+import { Search, Plus, FileText, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Loans.css';
 
@@ -17,13 +17,16 @@ const CashLoans = () => {
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   const thisMonth = todayStr.slice(0, 7);
 
-  const [searchTerm,     setSearchTerm]     = useState('');
-  const [filterStatus,   setFilterStatus]   = useState('Semua');
-  const [showModal,      setShowModal]      = useState(false);
-  const [showPayModal,   setShowPayModal]   = useState(false);
-  const [showDetail,     setShowDetail]     = useState(false);
-  const [selectedLoan,   setSelectedLoan]   = useState(null);
-  const [payAmount,      setPayAmount]      = useState(0);
+  const [searchTerm,   setSearchTerm]   = useState('');
+  const [filterStatus, setFilterStatus] = useState('Semua');
+  const [showModal,    setShowModal]    = useState(false);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [showDetail,   setShowDetail]   = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState(null);
+  const [payAmount,    setPayAmount]    = useState(0);
+  const [currentPage,  setCurrentPage]  = useState(1);
+  const PAGE_SIZE = 10;
+
   const [loanForm, setLoanForm] = useState({
     memberId: '', name: '', amount: 0, tenor: 12, interest: 1.5,
     applyDate: todayStr, takeDate: ''
@@ -45,7 +48,6 @@ const CashLoans = () => {
 
   const openPayModal = (loan) => {
     setSelectedLoan(loan);
-    // Default = cicilan normal (pokok / tenor)
     const cicilan = Math.ceil(loan.amount / loan.tenor);
     setPayAmount(Math.min(cicilan, loan.remainingAmount));
     setShowPayModal(true);
@@ -69,6 +71,11 @@ const CashLoans = () => {
     return matchSearch && matchStatus;
   });
 
+  // Reset halaman saat filter/search berubah
+  React.useEffect(() => { setCurrentPage(1); }, [searchTerm, filterStatus]);
+  const totalPages = Math.ceil(filteredLoans.length / PAGE_SIZE);
+  const pagedLoans = filteredLoans.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   const getStatusBadge = (status) => {
     const map = {
       Active:    <span className="badge badge-success" style={{ display:'flex',alignItems:'center',gap:4 }}><CheckCircle size={12}/> Aktif</span>,
@@ -79,13 +86,12 @@ const CashLoans = () => {
     return map[status] || <span className="badge">{status}</span>;
   };
 
-  // Stats dari data real
-  const totalActive  = cashLoans.filter(l => l.status === 'Active').reduce((s,l) => s + l.remainingAmount, 0);
-  const totalPending = cashLoans.filter(l => l.status === 'Pending').reduce((s,l) => s + l.amount, 0);
-  const pencairanBulanIni = journal
+  const totalActive        = cashLoans.filter(l => l.status === 'Active').reduce((s,l) => s + l.remainingAmount, 0);
+  const totalPending       = cashLoans.filter(l => l.status === 'Pending').reduce((s,l) => s + l.amount, 0);
+  const pencairanBulanIni  = journal
     .filter(j => j.account === 'Piutang Anggota' && j.debit > 0 && j.date.startsWith(thisMonth))
     .reduce((s,j) => s + j.debit, 0);
-  const angsuranBulanIni = journal
+  const angsuranBulanIni   = journal
     .filter(j => j.account === 'Kas' && j.debit > 0 && j.date.startsWith(thisMonth) &&
                  j.description.toLowerCase().includes('angsuran pinjaman'))
     .reduce((s,j) => s + j.debit, 0);
@@ -120,10 +126,10 @@ const CashLoans = () => {
       <div className="glass-panel mb-6">
         <div className="grid" style={{ gridTemplateColumns:'repeat(4,1fr)', gap:'1rem' }}>
           {[
-            { label: 'Total Pinjaman Aktif',    value: totalActive,         color: 'var(--color-primary)' },
-            { label: 'Menunggu Persetujuan',     value: totalPending,        color: 'var(--color-warning)' },
-            { label: 'Pencairan Bulan Ini',      value: pencairanBulanIni,   color: 'var(--color-success)' },
-            { label: 'Angsuran Bulan Ini',       value: angsuranBulanIni,    color: 'var(--color-secondary)' },
+            { label: 'Total Pinjaman Aktif',  value: totalActive,        color: 'var(--color-primary)' },
+            { label: 'Menunggu Persetujuan',   value: totalPending,       color: 'var(--color-warning)' },
+            { label: 'Pencairan Bulan Ini',    value: pencairanBulanIni,  color: 'var(--color-success)' },
+            { label: 'Angsuran Bulan Ini',     value: angsuranBulanIni,   color: 'var(--color-secondary)' },
           ].map(({ label, value, color }) => (
             <div key={label} className="stat-card p-4 rounded-lg">
               <p className="text-muted text-sm">{label}</p>
@@ -161,11 +167,11 @@ const CashLoans = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredLoans.map((loan) => {
+              {pagedLoans.map((loan) => {
                 const cicilan = loan.tenor > 0 ? Math.ceil(loan.amount / loan.tenor) : 0;
                 return (
                   <tr key={loan.id}>
-                    <td className="font-medium">{loan.id}</td>
+                    <td><span className="cell-id">{loan.id}</span></td>
                     <td>
                       <div>{loan.name}</div>
                       <div style={{ fontSize:'0.75rem', color:'var(--color-text-muted)' }}>{loan.memberId}</div>
@@ -205,8 +211,46 @@ const CashLoans = () => {
               })}
             </tbody>
           </table>
+
           {filteredLoans.length === 0 && (
             <div className="text-center p-6 text-muted">Tidak ada data pinjaman ditemukan.</div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem' }}>
+              <span style={{ color:'var(--color-text-muted)' }}>
+                Halaman {currentPage} dari {totalPages} · {filteredLoans.length} data
+              </span>
+              <div style={{ display:'flex', gap:'0.5rem' }}>
+                <button className="btn btn-secondary"
+                  style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}>
+                  <ChevronLeft size={14} /> Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => (
+                    <React.Fragment key={p}>
+                      {idx > 0 && arr[idx-1] !== p - 1 && <span style={{ padding:'0.3rem 0.25rem', color:'var(--color-text-muted)' }}>…</span>}
+                      <button
+                        className={`btn ${currentPage === p ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ padding:'0.3rem 0.625rem', fontSize:'0.78rem', minWidth:32 }}
+                        onClick={() => setCurrentPage(p)}>
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  ))
+                }
+                <button className="btn btn-secondary"
+                  style={{ padding:'0.3rem 0.75rem', fontSize:'0.78rem', display:'flex', alignItems:'center', gap:4 }}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}>
+                  Next <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -261,7 +305,6 @@ const CashLoans = () => {
                       onChange={(e) => setLoanForm({...loanForm, interest: Number(e.target.value)})} required />
                   </div>
                 </div>
-                {/* Preview cicilan */}
                 {loanForm.amount > 0 && loanForm.tenor > 0 && (
                   <div style={{ background:'rgba(6,182,212,0.06)', border:'1px solid rgba(6,182,212,0.2)', borderRadius:'var(--radius-md)', padding:'0.875rem 1rem', fontSize:'0.85rem' }}>
                     <div style={{ fontWeight:700, color:'var(--color-secondary)', marginBottom:'0.5rem' }}>Estimasi Cicilan</div>
@@ -270,8 +313,7 @@ const CashLoans = () => {
                       <span style={{ fontWeight:600 }}>{fmt(Math.ceil(loanForm.amount / loanForm.tenor))}</span>
                     </div>
                     <div style={{ display:'flex', justifyContent:'space-between' }}>
-                      <span>Total tenor</span>
-                      <span>{loanForm.tenor} bulan</span>
+                      <span>Total tenor</span><span>{loanForm.tenor} bulan</span>
                     </div>
                   </div>
                 )}

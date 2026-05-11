@@ -61,7 +61,7 @@ const Header = ({ onMenuClick }) => {
 
   const unreadCount = notifications.filter(n => !readIds.includes(n.id)).length;
 
-  // Tutup dropdown kalau klik di luar
+  // Tutup dropdown kalau klik/touch di luar
   useEffect(() => {
     const handler = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
@@ -69,7 +69,11 @@ const Header = ({ onMenuClick }) => {
       }
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
   }, []);
 
   const handleNotifClick = (notif) => {

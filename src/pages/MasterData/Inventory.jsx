@@ -339,12 +339,14 @@ const Inventory = () => {
                     </td>
                     <td className="cell-amount">Rp {item.price.toLocaleString('id-ID')}</td>
                     <td>{stockBadge(item.stock)}</td>
-                    <td style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      <button className="table-action-btn" onClick={() => openRestockModal(item)} style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)' }}>
-                        <RefreshCw size={13} /> Restock
-                      </button>
-                      <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
-                      <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                    <td>
+                      <div className="table-action-group">
+                        <button className="table-action-btn" onClick={() => openRestockModal(item)} style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)' }}>
+                          <RefreshCw size={13} /> Restock
+                        </button>
+                        <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
+                        <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -393,9 +395,11 @@ const Inventory = () => {
                       Rp {(item.commission ?? (item.price - item.supplierPrice)).toLocaleString('id-ID')}
                     </td>
                     <td>{stockBadge(item.stock)}</td>
-                    <td style={{ display: 'flex', gap: '6px' }}>
-                      <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
-                      <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                    <td>
+                      <div className="table-action-group">
+                        <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
+                        <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -444,9 +448,11 @@ const Inventory = () => {
                       Rp {(item.hpp || 0).toLocaleString('id-ID')}
                     </td>
                     <td className="cell-amount">Rp {item.price.toLocaleString('id-ID')}</td>
-                    <td style={{ display: 'flex', gap: '6px' }}>
-                      <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
-                      <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                    <td>
+                      <div className="table-action-group">
+                        <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>
+                        <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>
+                      </div>
                     </td>
                   </tr>
                 ))}

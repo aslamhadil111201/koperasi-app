@@ -111,14 +111,14 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       <div className="sidebar-footer p-4 mt-auto">
         {!collapsed && (
           <div className="user-info flex items-center gap-3 mb-4 p-2 rounded-lg"
-            style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
-            <div className="avatar w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
-              style={{ background: 'var(--color-primary)', width:32, height:32, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, flexShrink:0 }}>
+            style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0.75rem' }}>
+            <div className="avatar"
+              style={{ background: 'var(--color-primary)', width:44, height:44, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, flexShrink:0, fontSize:'1.1rem' }}>
               {currentUser?.name?.charAt(0) || 'U'}
             </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text-main)' }}>{currentUser?.name}</p>
-              <p className="text-xs capitalize" style={{ color: 'var(--color-text-muted)' }}>{currentUser?.role}</p>
+            <div>
+              <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text-main)', fontWeight: 700 }}>{currentUser?.name}</p>
+              <p className="text-xs capitalize" style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{currentUser?.role}</p>
             </div>
           </div>
         )}
