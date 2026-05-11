@@ -111,7 +111,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       <div className="sidebar-footer p-4 mt-auto">
         {!collapsed && (() => {
           const isPengurus = ['uci', 'surtini', 'indah'].includes(currentUser?.username);
-          const avatarColor = isPengurus ? '#0D9488' : 'var(--color-primary)';
+          const avatarColor = isPengurus ? '#FF4D00' : 'var(--color-primary)';
           const roleLabel   = isPengurus ? 'Pengurus' : (currentUser?.role || 'Admin');
           return (
             <div className="user-info flex items-center gap-3 mb-4"
@@ -129,7 +129,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
         })()}
         {collapsed && (() => {
           const isPengurus = ['uci', 'surtini', 'indah'].includes(currentUser?.username);
-          const avatarColor = isPengurus ? '#0D9488' : 'var(--color-primary)';
+          const avatarColor = isPengurus ? '#FF4D00' : 'var(--color-primary)';
           return (
             <div style={{ width:32, height:32, borderRadius:'50%', background: avatarColor, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:700, margin:'0 auto 1rem' }}>
               {currentUser?.name?.charAt(0) || 'U'}
@@ -138,9 +138,9 @@ const Sidebar = ({ mobileOpen, onClose }) => {
         })()}
         <button onClick={handleLogout}
           className={`btn flex justify-center gap-2 ${collapsed ? '' : 'w-full'}`}
-          style={{ background: '#EF4444', color: 'white', border: 'none', width: collapsed ? 40 : '100%', padding: collapsed ? '0.5rem' : '0.625rem 1rem', fontWeight: 600, boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}
+          style={{ background: '#EF4444', color: 'white', border: 'none', width: collapsed ? 36 : '100%', padding: collapsed ? '0.4rem' : '0.45rem 0.875rem', fontWeight: 600, fontSize: '0.82rem', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}
           title="Logout">
-          <LogOut size={16} />
+          <LogOut size={14} />
           {!collapsed && 'Logout'}
         </button>
       </div>

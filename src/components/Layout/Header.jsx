@@ -221,7 +221,7 @@ const Header = ({ onMenuClick }) => {
         {/* User profile */}
         {(() => {
           const isPengurus  = ['uci', 'surtini', 'indah'].includes(currentUser?.username);
-          const avatarColor = isPengurus ? '#0D9488' : 'var(--color-primary-light)';
+          const avatarColor = isPengurus ? '#FF4D00' : 'var(--color-primary-light)';
           const roleLabel   = isPengurus ? 'Pengurus' : (currentUser?.role || 'Administrator');
           return (
             <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
