@@ -147,3 +147,28 @@
   font-size: 0.82rem;
   margin: 0;
 }
+
+/* ── Dashboard Responsive ────────────────────── */
+@media (max-width: 1024px) {
+  .dashboard-container .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-container .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container .grid-cols-4,
+  .dashboard-container .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat-amount { font-size: 1.2rem; }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat-amount { font-size: 1rem; }
+}

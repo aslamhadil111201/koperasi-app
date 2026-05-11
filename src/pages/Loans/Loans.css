@@ -249,3 +249,25 @@
   justify-content: center;
   flex-shrink: 0;
 }
+
+/* ── Loans Responsive ────────────────────────── */
+@media (max-width: 768px) {
+  .loans-container { gap: 1rem; }
+
+  .filter-chips { flex-wrap: wrap; gap: 0.375rem; }
+  .filter-chip { font-size: 0.72rem; padding: 0.3rem 0.625rem; }
+
+  .table th, .table td {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.78rem;
+  }
+
+  /* Stack grid di modal */
+  .grid.grid-cols-2 { grid-template-columns: 1fr; }
+  .grid.grid-cols-3 { grid-template-columns: 1fr; }
+
+  .modal-content {
+    max-width: 100% !important;
+    margin: 0.5rem;
+  }
+}

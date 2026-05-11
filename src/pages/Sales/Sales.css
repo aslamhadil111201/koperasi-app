@@ -346,3 +346,34 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ── POS Responsive ──────────────────────────── */
+@media (max-width: 1024px) {
+  .pos-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .product-section { max-height: 50vh; overflow-y: auto; }
+  .cart-section { max-height: none; overflow-y: visible; }
+}
+
+@media (max-width: 768px) {
+  .pos-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    height: auto;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.625rem;
+  }
+
+  .product-img-placeholder { height: 56px; }
+  .product-name { font-size: 0.75rem; }
+  .product-price { font-size: 0.85rem; }
+
+  .cart-summary { margin-top: 1rem; padding-top: 1rem; }
+  .checkout-btn { padding: 0.875rem; }
+}

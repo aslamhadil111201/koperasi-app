@@ -185,3 +185,60 @@
 .sidebar-collapsed .nav-link span {
   display: none;
 }
+
+/* ══════════════════════════════════════════════
+   SIDEBAR RESPONSIVE
+   ══════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Sidebar jadi overlay dari kiri */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s;
+    width: 260px !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Overlay backdrop */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+    backdrop-filter: blur(2px);
+  }
+
+  /* Collapsed tidak berlaku di mobile */
+  .sidebar-collapsed {
+    width: 260px !important;
+    transform: translateX(-100%);
+  }
+
+  .sidebar-collapsed.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Semua teks tetap tampil di mobile */
+  .sidebar-collapsed .nav-link span { display: inline; }
+  .sidebar-collapsed .nav-link {
+    justify-content: flex-start;
+    padding: 0.625rem 0.75rem;
+    width: auto;
+    margin: 0 0 0.25rem;
+  }
+  .sidebar-collapsed .sidebar-header {
+    flex-direction: row;
+    padding: 0 1.5rem 1.5rem;
+  }
+  .sidebar-collapsed .logo-container { justify-content: flex-start; }
+}

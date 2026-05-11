@@ -332,3 +332,59 @@
   flex-shrink: 0;
   margin-top: 6px;
 }
+
+/* ── Hamburger Button (mobile only) ─────────── */
+.hamburger-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-main);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.hamburger-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+/* ── Header Responsive ───────────────────────── */
+@media (max-width: 768px) {
+  .hamburger-btn { display: flex; }
+
+  .header {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+
+  .search-bar {
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+  }
+
+  /* Sembunyikan nama user di mobile */
+  .user-info { display: none; }
+
+  /* Kurangi gap header actions */
+  .header-actions { gap: 0.75rem; }
+
+  /* Notif dropdown full width di mobile */
+  .notif-dropdown {
+    width: calc(100vw - 2rem);
+    right: -1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Sembunyikan search bar di layar sangat kecil */
+  .search-bar { display: none; }
+}

@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingCart, Package, Wrench,
   PiggyBank, Banknote, CreditCard, BookOpen, TrendingUp,
   LogOut, Users, Database, PieChart, Scale, PackagePlus,
-  BookMarked, Waves, ChevronLeft, ChevronRight, Menu
+  BookMarked, Waves, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, onClose }) => {
   const currentUser = useStore((state) => state.currentUser);
   const logout      = useStore((state) => state.logout);
   const navigate    = useNavigate();
+  const location    = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Tutup sidebar saat navigasi di mobile
+  useEffect(() => {
+    if (onClose) onClose();
+  }, [location.pathname]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -46,7 +52,11 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className={`sidebar glass-panel ${collapsed ? 'sidebar-collapsed' : ''}`}>
+    <>
+      {/* Backdrop mobile */}
+      {mobileOpen && <div className="sidebar-backdrop" onClick={onClose} />}
+
+      <aside className={`sidebar glass-panel ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
 
       {/* Header — klik logo/nama → Dashboard */}
       <div className="sidebar-header">
@@ -125,6 +135,7 @@ const Sidebar = () => {
         </button>
       </div>
     </aside>
+    </>
   );
 };
 

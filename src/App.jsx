@@ -24,17 +24,21 @@ import Neraca from './pages/Reports/Neraca';
 import BukuBesar from './pages/Reports/BukuBesar';
 import ArusKas from './pages/Reports/ArusKas';
 
-const AppLayout = ({ children }) => (
-  <div className="app-container">
-    <Sidebar />
-    <main className="main-content">
-      <Header />
-      <div className="page-content" style={{ flex: 1 }}>
-        {children}
-      </div>
-    </main>
-  </div>
-);
+const AppLayout = ({ children }) => {
+  const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
+
+  return (
+    <div className="app-container">
+      <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
+      <main className="main-content">
+        <Header onMenuClick={() => setMobileSidebarOpen(v => !v)} />
+        <div className="page-content" style={{ flex: 1 }}>
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+};
 
 function App() {
   const darkMode = useStore((state) => state.darkMode);

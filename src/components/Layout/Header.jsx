@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Search, User, LogOut, X, Sun, Moon, AlertTriangle, Clock, Package } from 'lucide-react';
+import { Bell, Search, User, LogOut, X, Sun, Moon, AlertTriangle, Clock, Package, Menu } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
 
-const Header = () => {
+const Header = ({ onMenuClick }) => {
   const currentUser    = useStore((state) => state.currentUser);
   const logout         = useStore((state) => state.logout);
   const members        = useStore((state) => state.members);
@@ -108,6 +108,11 @@ const Header = () => {
 
   return (
     <header className="header glass-panel">
+      {/* Hamburger — mobile only */}
+      <button className="hamburger-btn" onClick={onMenuClick} aria-label="Menu">
+        <Menu size={22} />
+      </button>
+
       {/* Search bar */}
       <div style={{ position: 'relative' }}>
         <div className="search-bar">
