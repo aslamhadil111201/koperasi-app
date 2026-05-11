@@ -147,11 +147,11 @@ create policy "Allow all for authenticated" on member_sales_transactions for all
 
 -- ── Seed Users ─────────────────────────────────────────────────────────────
 insert into users (username, name, password, role) values
-  ('admin',   'Bapak Aslam',   'admin123',  'admin'),
-  ('kasir',   'Mbak Kasir',    'kasir123',  'kasir'),
-  ('uci',     'Ibu Uci',       '123456',    'admin'),
-  ('surtini', 'Ibu Surtini',   '123456',    'admin'),
-  ('indah',   'Ibu Indah',     '123456',    'admin')
+  ('aslamhadilmatin', 'Bapak Aslam',   'Aslam_040700', 'admin'),
+  ('kasir',           'Mbak Kasir',    'kasir123',     'kasir'),
+  ('uci',             'Ibu Uci',       '123456',       'admin'),
+  ('surtini',         'Ibu Surtini',   '123456',       'admin'),
+  ('indah',           'Ibu Indah',     '123456',       'admin')
 on conflict (username) do nothing;
 
 -- ── Storage Bucket untuk foto produk ──────────────────────────────────────────
