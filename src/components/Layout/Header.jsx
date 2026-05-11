@@ -160,10 +160,18 @@ const Header = ({ onMenuClick }) => {
       </div>
 
       <div className="header-actions">
-        {/* Dark / Light toggle */}
-        <button className="icon-btn theme-toggle" onClick={toggleDarkMode}
-          title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
-          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+        {/* Dark / Light toggle switch */}
+        <button
+          className={`theme-switch ${darkMode ? 'dark' : 'light'}`}
+          onClick={toggleDarkMode}
+          title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label="Toggle dark mode"
+        >
+          <span className="theme-switch-track">
+            <span className="theme-switch-icon theme-switch-sun"><Sun size={11} /></span>
+            <span className="theme-switch-icon theme-switch-moon"><Moon size={11} /></span>
+            <span className="theme-switch-thumb" />
+          </span>
         </button>
 
         {/* ── Notification Bell ── */}

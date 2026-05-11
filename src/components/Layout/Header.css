@@ -158,22 +158,80 @@
   margin-top: 0.1rem;
 }
 
-/* ── Theme Toggle ────────────────────────────── */
-.theme-toggle {
-  transition: var(--transition);
+/* ── Theme Toggle Switch ─────────────────────── */
+.theme-switch {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.theme-toggle:hover {
-  background: rgba(255, 77, 0, 0.08);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  transform: rotate(15deg);
+.theme-switch-track {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 0 0 1.5px rgba(245,158,11,0.4), inset 0 1px 3px rgba(0,0,0,0.15);
 }
 
-[data-theme="dark"] .theme-toggle:hover {
-  background: rgba(255, 200, 0, 0.1);
-  border-color: #F59E0B;
-  color: #F59E0B;
+.theme-switch.dark .theme-switch-track {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  box-shadow: 0 0 0 1.5px rgba(99,102,241,0.5), inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.theme-switch-thumb {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateX(0px);
+  z-index: 2;
+}
+
+.theme-switch.dark .theme-switch-thumb {
+  transform: translateX(24px);
+  background: #e0e7ff;
+}
+
+.theme-switch-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1;
+  color: #fff;
+}
+
+.theme-switch-sun  { left: 6px;  }
+.theme-switch-moon { right: 6px; }
+
+/* Light mode: tampilkan matahari, sembunyikan bulan */
+.theme-switch.light .theme-switch-sun  { opacity: 1; transform: scale(1); }
+.theme-switch.light .theme-switch-moon { opacity: 0; transform: scale(0.5); }
+
+/* Dark mode: tampilkan bulan, sembunyikan matahari */
+.theme-switch.dark .theme-switch-sun  { opacity: 0; transform: scale(0.5); }
+.theme-switch.dark .theme-switch-moon { opacity: 1; transform: scale(1); }
+
+.theme-switch:hover .theme-switch-track {
+  filter: brightness(1.08);
+}
+
+.theme-switch:focus-visible .theme-switch-track {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* ── Notification Badge ──────────────────────── */
