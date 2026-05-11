@@ -424,10 +424,10 @@
 [data-theme="dark"] .login-footer { color: #64748B; }
 [data-theme="dark"] .login-divider::before,
 [data-theme="dark"] .login-divider::after { background: #2D3148; }
-[data-theme="dark"] .login-headline h1 { color: #111827; }
-[data-theme="dark"] .login-headline-desc { color: #374151; }
-[data-theme="dark"] .login-feature-title { color: #111827; }
-[data-theme="dark"] .login-feature-desc { color: #4B5563; }
+[data-theme="dark"] .login-headline h1 { color: #F1F5F9; }
+[data-theme="dark"] .login-headline-desc { color: #CBD5E1; }
+[data-theme="dark"] .login-feature-title { color: #F1F5F9; }
+[data-theme="dark"] .login-feature-desc { color: #94A3B8; }
 
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 900px) {
