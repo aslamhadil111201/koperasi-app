@@ -35,13 +35,15 @@ export const insertMember = async (member) => {
 };
 
 export const updateMemberDB = async (memberId, updates) => {
+  const oldId = memberId.replace('KPKCG-', 'ANG-');
   const { error } = await supabase.from('members')
     .update({
+      member_id: memberId,
       name: updates.name, type: updates.type,
       pokok: updates.pokok, wajib: updates.wajib, sukarela: updates.sukarela,
       join_date: updates.joinDate || null,
     })
-    .eq('member_id', memberId);
+    .or(`member_id.eq.${memberId},member_id.eq.${oldId}`);
   if (error) throw error;
 };
 

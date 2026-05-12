@@ -193,6 +193,29 @@ export const useStore = create(
     return { members: newMembers, journal: [...state.journal, ...journalEntries] };
   }),
 
+  depositSavingsBulk: (memberIds, wajibAmount, date) => set((state) => {
+    if (!memberIds.length || wajibAmount <= 0) return state;
+
+    const newMembers = state.members.map(m => 
+      memberIds.includes(m.id)
+        ? { ...m, wajib: m.wajib + Number(wajibAmount) }
+        : m
+    );
+
+    const journalEntries = [];
+    const baseId = Math.floor(state.journal.length / 2) + 1;
+    
+    memberIds.forEach((mId, index) => {
+      const newJournalId = `JU-${String(baseId + index).padStart(3, '0')}`;
+      journalEntries.push(
+        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: Number(wajibAmount), credit: 0, account: 'Kas' },
+        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: 0, credit: Number(wajibAmount), account: 'Simpanan Anggota' }
+      );
+    });
+
+    return { members: newMembers, journal: [...state.journal, ...journalEntries] };
+  }),
+
   addCashLoan: (loan) => set((state) => {
     const newId = `PLN-${String(state.cashLoans.length + 1).padStart(3, '0')}`;
     return { cashLoans: [...state.cashLoans, { ...loan, id: newId, status: 'Pending', remainingAmount: loan.amount }] };

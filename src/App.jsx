@@ -65,6 +65,17 @@ function App() {
     }
   }, [members, setMembers]);
 
+  // Global fix: Mencegah input bertipe "number" berubah value-nya saat di-scroll pakai mouse
+  useEffect(() => {
+    const handleWheel = () => {
+      if (document.activeElement && document.activeElement.type === 'number') {
+        document.activeElement.blur();
+      }
+    };
+    window.addEventListener('wheel', handleWheel);
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, []);
+
   if (syncing) {
     return (
       <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', flexDirection:'column', gap:'1rem', background:'var(--color-background)' }}>

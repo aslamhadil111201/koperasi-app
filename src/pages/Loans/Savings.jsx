@@ -13,8 +13,10 @@ const Savings = () => {
   const [filterType,   setFilterType]   = useState('Semua');
   const [showDeposit,  setShowDeposit]  = useState(false);
   const [showDetail,   setShowDetail]   = useState(false);
+  const [showBulk,     setShowBulk]     = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [depositForm,  setDepositForm]  = useState({ memberId: '', pokok: 0, wajib: 0, sukarela: 0, date: new Date().toLocaleDateString('en-CA') });
+  const [bulkDate,     setBulkDate]     = useState(new Date().toLocaleDateString('en-CA'));
   const [currentPage,  setCurrentPage]  = useState(1);
   const PAGE_SIZE = 10;
 
@@ -51,6 +53,19 @@ const Savings = () => {
     setDepositForm({ memberId: '', pokok: 0, wajib: 0, sukarela: 0, date: new Date().toLocaleDateString('en-CA') });
   };
 
+  const handleBulkDeposit = (e) => {
+    e.preventDefault();
+    const activeMembers = members.filter(m => m.type === 'Penuh' || m.type === 'Calon');
+    const memberIds = activeMembers.map(m => m.id);
+    
+    if (memberIds.length === 0) return alert('Tidak ada anggota aktif untuk diproses.');
+    if (!window.confirm(`Proses Simpanan Wajib Rp 100.000 untuk ${memberIds.length} anggota?\nKas Koperasi akan bertambah Rp ${(memberIds.length * 100000).toLocaleString('id-ID')}.`)) return;
+
+    useStore.getState().depositSavingsBulk(memberIds, 100000, bulkDate);
+    setShowBulk(false);
+    alert(`Berhasil memproses simpanan wajib untuk ${memberIds.length} anggota!`);
+  };
+
   return (
     <div className="loans-container">
       <div className="flex justify-between items-center mb-6">
@@ -58,7 +73,10 @@ const Savings = () => {
           <h2>Simpanan Anggota</h2>
           <p className="text-muted">Kelola data simpanan pokok, wajib, dan sukarela.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowDeposit(true)}>+ Setor Simpanan</button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-secondary" onClick={() => setShowBulk(true)}>Proses Simpanan Wajib Massal</button>
+          <button className="btn btn-primary" onClick={() => setShowDeposit(true)}>+ Setor Simpanan</button>
+        </div>
       </div>
 
       {/* Filter Chips */}
@@ -348,6 +366,42 @@ const Savings = () => {
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowDeposit(false)}>Batal</button>
                 <button type="submit" className="btn btn-primary">Simpan Setoran</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Setor Massal ── */}
+      {showBulk && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowBulk(false)}>
+          <div className="modal-content glass-panel" style={{ width: '100%', maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h3>Proses Simpanan Wajib Massal</h3>
+              <button className="modal-close-btn" onClick={() => setShowBulk(false)}><X size={16} /></button>
+            </div>
+
+            <form onSubmit={handleBulkDeposit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Tanggal Setoran</label>
+                  <input type="date" className="form-control" value={bulkDate}
+                    onChange={(e) => setBulkDate(e.target.value)} required />
+                </div>
+                
+                <div style={{ background: 'rgba(255, 77, 0, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 77, 0, 0.1)', marginBottom: '1rem' }}>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                    Sistem akan memotong otomatis dan menambahkan <strong>Rp 100.000</strong> ke Simpanan Wajib untuk <strong>seluruh anggota aktif</strong> ({members.length} orang).
+                  </p>
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                    Tindakan ini akan menghasilkan jurnal Kas masuk secara massal.
+                  </p>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowBulk(false)}>Batal</button>
+                <button type="submit" className="btn btn-primary">Proses Sekarang</button>
               </div>
             </form>
           </div>

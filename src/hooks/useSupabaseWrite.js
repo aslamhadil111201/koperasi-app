@@ -22,6 +22,9 @@ export const useSupabaseWrite = () => {
   useEffect(() => {
     if (!isSupabaseReady()) return;
 
+    // Jika sudah di-patch, jangan patch ulang (untuk mencegah bug Vite HMR)
+    if (store.addMember._isPatched) return;
+
     // Patch store actions untuk juga write ke Supabase
     const origAddMember    = store.addMember;
     const origUpdateMember = store.updateMember;
@@ -44,6 +47,7 @@ export const useSupabaseWrite = () => {
     const origCheckoutService = store.checkoutService;
     const origRestockProduct = store.restockProduct;
     const origDepositSavings = store.depositSavings;
+    const origDepositSavingsBulk = store.depositSavingsBulk;
     const origApproveCashLoan = store.approveCashLoan;
     const origPayCashLoan = store.payCashLoan;
     const origApproveCreditGoods = store.approveCreditGoods;
@@ -52,7 +56,7 @@ export const useSupabaseWrite = () => {
     const origAddIncome = store.addIncome;
 
     // Override dengan versi yang juga write ke Supabase
-    useStore.setState({
+    const patchedActions = {
       addMember: (member) => {
         origAddMember(member);
         const state = useStore.getState();
@@ -61,7 +65,10 @@ export const useSupabaseWrite = () => {
       },
       updateMember: (id, data) => {
         origUpdateMember(id, data);
-        updateMemberDB(id, data).catch(console.error);
+        updateMemberDB(id, data).catch(e => {
+          console.error(e);
+          alert('Gagal menyimpan ke database (Supabase): ' + e.message);
+        });
       },
       addProduct: (product) => {
         origAddProduct(product);
@@ -208,6 +215,21 @@ export const useSupabaseWrite = () => {
         const newJournals = stateAfter.journal.slice(oldJournalLen);
         if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
       },
+      depositSavingsBulk: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origDepositSavingsBulk(...args);
+        const stateAfter = useStore.getState();
+        
+        const memberIds = args[0];
+        memberIds.forEach(mId => {
+          const updated = stateAfter.members.find(m => m.id === mId);
+          if (updated) updateMemberDB(mId, { pokok: updated.pokok, wajib: updated.wajib, sukarela: updated.sukarela }).catch(console.error);
+        });
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
       approveCashLoan: (...args) => {
         const stateBefore = useStore.getState();
         const oldJournalLen = stateBefore.journal.length;
@@ -278,6 +300,11 @@ export const useSupabaseWrite = () => {
         const newJournals = stateAfter.journal.slice(oldJournalLen);
         if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
       },
-    });
+    };
+
+    // Tandai agar tidak di-patch berulang kali saat hot reload
+    Object.values(patchedActions).forEach(fn => { fn._isPatched = true; });
+
+    useStore.setState(patchedActions);
   }, []);
 };
