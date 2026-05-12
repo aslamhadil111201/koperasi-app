@@ -200,7 +200,10 @@ export const useStore = create(
 
   addCreditGoods: (credit) => set((state) => {
     const newId = `KRD-${String(state.creditGoods.length + 1).padStart(3, '0')}`;
-    return { creditGoods: [...state.creditGoods, { ...credit, id: newId, status: 'Pending', remainingAmount: credit.amount - credit.dp }] };
+    const sisaPokok = credit.amount - credit.dp;
+    const totalBunga = sisaPokok * ((credit.interest || 0) / 100) * (credit.tenor || 1);
+    const totalPiutang = sisaPokok + totalBunga;
+    return { creditGoods: [...state.creditGoods, { ...credit, id: newId, status: 'Pending', remainingAmount: totalPiutang }] };
   }),
 
   addProduct: (product) => set((state) => {
@@ -402,12 +405,23 @@ export const useStore = create(
     
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     const date = new Date().toISOString().split('T')[0];
+    
+    const sisaPokok = credit.amount - credit.dp;
+    const totalBunga = sisaPokok * ((credit.interest || 0) / 100) * (credit.tenor || 1);
+    
     const journalEntries = [
       { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: credit.amount, credit: 0, account: 'Piutang Barang' },
       { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.amount, account: 'Persediaan Barang' },
       // DP Handling
-      { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: credit.dp, credit: 0, account: 'Kas' },
-      { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.dp, account: 'Piutang Barang' }
+      ...(credit.dp > 0 ? [
+        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: credit.dp, credit: 0, account: 'Kas' },
+        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.dp, account: 'Piutang Barang' }
+      ] : []),
+      // Bunga Handling
+      ...(totalBunga > 0 ? [
+        { id: newJournalId + 'B', date, description: `Bunga Kredit ${credit.itemName}`, ref: credit.id, debit: totalBunga, credit: 0, account: 'Piutang Barang' },
+        { id: newJournalId + 'B', date, description: `Bunga Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: totalBunga, account: 'Pendapatan Bunga' }
+      ] : [])
     ];
 
     return { creditGoods: newCredits, journal: [...state.journal, ...journalEntries] };

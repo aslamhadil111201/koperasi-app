@@ -29,16 +29,35 @@ const ConsignmentSales = () => {
   );
 
   const addToCart = (product) => {
+    if (product.stock <= 0) return alert('Stok barang habis!');
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
-      if (existing) return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+      if (existing) {
+        if (existing.qty + 1 > product.stock) {
+          alert('Jumlah melebihi stok yang tersedia!');
+          return prev;
+        }
+        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+      }
       return [...prev, { ...product, qty: 1 }];
     });
   };
 
-  const updateQty = (id, delta) => setCart(prev => prev.map(item =>
-    item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item
-  ));
+  const updateQty = (id, delta) => setCart(prev => {
+    return prev.map(item => {
+      if (item.id === id) {
+        const product = consignmentProducts.find(p => p.id === id);
+        const newQty = item.qty + delta;
+        if (newQty < 1) return item;
+        if (product && newQty > product.stock) {
+          alert('Jumlah melebihi stok yang tersedia!');
+          return item;
+        }
+        return { ...item, qty: newQty };
+      }
+      return item;
+    });
+  });
 
   const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
 

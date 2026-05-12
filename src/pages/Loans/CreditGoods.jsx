@@ -37,13 +37,28 @@ const CreditGoods = () => {
 
   // Hitung cicilan per bulan dari form
   const sisaKredit   = Math.max(0, creditForm.amount - creditForm.dp);
-  const cicilanPerBulan = creditForm.tenor > 0 ? Math.ceil(sisaKredit / creditForm.tenor) : 0;
+  const totalBungaForm = sisaKredit * (creditForm.interest / 100) * creditForm.tenor;
+  const totalPiutangForm = sisaKredit + totalBungaForm;
+  const cicilanPerBulan = creditForm.tenor > 0 ? Math.ceil(totalPiutangForm / creditForm.tenor) : 0;
 
   // Preview jadwal dari form
   const formSchedule = useMemo(() =>
-    buildSchedule(sisaKredit, creditForm.tenor, creditForm.startDate),
-    [sisaKredit, creditForm.tenor, creditForm.startDate]
+    buildSchedule(totalPiutangForm, creditForm.tenor, creditForm.startDate),
+    [totalPiutangForm, creditForm.tenor, creditForm.startDate]
   );
+
+  // Jadwal cicilan untuk detail modal
+  const detailSchedule = useMemo(() => {
+    if (!selectedCredit) return [];
+    const sPokok = selectedCredit.amount - selectedCredit.dp;
+    const tBunga = sPokok * ((selectedCredit.interest || 0) / 100) * (selectedCredit.tenor || 1);
+    const tPiutang = sPokok + tBunga;
+    return buildSchedule(
+      tPiutang,
+      selectedCredit.tenor,
+      selectedCredit.startDate
+    );
+  }, [selectedCredit]);
 
   const handleAddCredit = (e) => {
     e.preventDefault();
@@ -62,8 +77,15 @@ const CreditGoods = () => {
 
   const openPayModal = (credit) => {
     setSelectedCredit(credit);
-    // Default cicilan = sisa / tenor tersisa (estimasi)
-    const cicilan = Math.ceil(credit.remainingAmount / (credit.tenor || 1));
+    const sPokok = credit.amount - credit.dp;
+    const tBunga = sPokok * ((credit.interest || 0) / 100) * (credit.tenor || 1);
+    let cicilan = Math.ceil((sPokok + tBunga) / (credit.tenor || 1));
+    
+    // Pastikan default cicilan tidak melebihi sisa tagihan
+    if (cicilan > credit.remainingAmount) {
+      cicilan = credit.remainingAmount;
+    }
+    
     setPayAmount(cicilan);
     setShowPayModal(true);
   };
@@ -180,9 +202,10 @@ const CreditGoods = () => {
             </thead>
             <tbody>
               {pagedCredits.map((credit) => {
-                const cicilan = credit.tenor > 0
-                  ? Math.ceil((credit.amount - credit.dp) / credit.tenor)
-                  : 0;
+                const sPokok = credit.amount - credit.dp;
+                const tBunga = sPokok * ((credit.interest || 0) / 100) * (credit.tenor || 1);
+                const tPiutang = sPokok + tBunga;
+                const cicilan = credit.tenor > 0 ? Math.ceil(tPiutang / credit.tenor) : 0;
                 return (
                   <tr key={credit.id}>
                     <td><span className="cell-id">{credit.id}</span></td>
@@ -390,7 +413,13 @@ const CreditGoods = () => {
                       <span>DP / Uang Muka</span><span>({fmt(creditForm.dp)})</span>
                     </div>
                     <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.25rem', borderTop:'1px dashed var(--color-border)', paddingTop:'0.25rem' }}>
-                      <span>Sisa yang Dicicil</span><span style={{ fontWeight:600 }}>{fmt(sisaKredit)}</span>
+                      <span>Sisa Pokok</span><span style={{ fontWeight:600 }}>{fmt(sisaKredit)}</span>
+                    </div>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.25rem' }}>
+                      <span>Total Bunga ({creditForm.tenor} Bulan)</span><span style={{ fontWeight:600 }}>{fmt(totalBungaForm)}</span>
+                    </div>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.25rem', borderTop:'1px dashed var(--color-border)', paddingTop:'0.25rem' }}>
+                      <span>Total Tagihan / Dicicil</span><span style={{ fontWeight:600, color:'var(--color-danger)' }}>{fmt(totalPiutangForm)}</span>
                     </div>
                     <div style={{ display:'flex', justifyContent:'space-between', color:'var(--color-primary)', fontWeight:700 }}>
                       <span>Cicilan / Bulan ({creditForm.tenor}x)</span>
@@ -430,26 +459,51 @@ const CreditGoods = () => {
               <button className="modal-close-btn" onClick={() => setShowDetail(false)}><X size={16} /></button>
             </div>
             <div className="modal-body">
-              {[
-                ['Anggota',       selectedCredit.name],
-                ['ID Anggota',    selectedCredit.memberId],
-                ['Nama Barang',   selectedCredit.itemName],
-                ['Harga Barang',  fmt(selectedCredit.amount)],
-                ['DP / Uang Muka',fmt(selectedCredit.dp)],
-                ['Sisa Dicicil',  fmt(selectedCredit.amount - selectedCredit.dp)],
-                ['Tenor',         `${selectedCredit.tenor} Bulan`],
-                ['Bunga',         `${selectedCredit.interest}%/bln`],
-                ['Cicilan/Bln',   fmt(Math.ceil((selectedCredit.amount - selectedCredit.dp) / selectedCredit.tenor))],
-                ['Sisa Tagihan',  fmt(selectedCredit.remainingAmount)],
-                ['Tgl Pengajuan', selectedCredit.applyDate || '—'],
-                ['Tgl Pengambilan', selectedCredit.takeDate || '—'],
-                ['Status',        selectedCredit.status],
-              ].map(([label, value]) => (
-                <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'0.4rem 0', borderBottom:'1px solid var(--color-border)', fontSize:'0.875rem' }}>
-                  <span style={{ color:'var(--color-text-muted)' }}>{label}</span>
-                  <span style={{ fontWeight:500 }}>{value}</span>
+              {(() => {
+                const sPokok = selectedCredit.amount - selectedCredit.dp;
+                const tBunga = sPokok * ((selectedCredit.interest || 0) / 100) * (selectedCredit.tenor || 1);
+                const tPiutang = sPokok + tBunga;
+                return [
+                  ['Anggota',       selectedCredit.name],
+                  ['ID Anggota',    selectedCredit.memberId],
+                  ['Nama Barang',   selectedCredit.itemName],
+                  ['Harga Barang',  fmt(selectedCredit.amount)],
+                  ['DP / Uang Muka',fmt(selectedCredit.dp)],
+                  ['Sisa Pokok',    fmt(sPokok)],
+                  ['Tenor',         `${selectedCredit.tenor} Bulan`],
+                  ['Bunga',         `${selectedCredit.interest}%/bln`],
+                  ['Total Bunga',   fmt(tBunga)],
+                  ['Total Dicicil', fmt(tPiutang)],
+                  ['Cicilan/Bln',   fmt(Math.ceil(tPiutang / selectedCredit.tenor))],
+                  ['Sisa Tagihan (Saat Ini)', fmt(selectedCredit.remainingAmount)],
+                  ['Tgl Pengajuan', selectedCredit.applyDate || '—'],
+                  ['Tgl Pengambilan', selectedCredit.takeDate || '—'],
+                  ['Mulai Cicilan', selectedCredit.startDate || '—'],
+                  ['Status',        selectedCredit.status],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'0.4rem 0', borderBottom:'1px solid var(--color-border)', fontSize:'0.875rem' }}>
+                    <span style={{ color:'var(--color-text-muted)' }}>{label}</span>
+                    <span style={{ fontWeight:500 }}>{value}</span>
+                  </div>
+                ));
+              })()}
+
+              {detailSchedule.length > 0 && (
+                <div style={{ marginTop:'1rem', background:'rgba(6,182,212,0.06)', border:'1px solid rgba(6,182,212,0.2)', borderRadius:'var(--radius-md)', padding:'0.875rem 1rem' }}>
+                  <div style={{ fontSize:'0.8rem', fontWeight:700, color:'var(--color-secondary)', marginBottom:'0.5rem' }}>
+                    <Calendar size={14} style={{ display:'inline', marginRight:6, verticalAlign:'text-bottom' }} />
+                    Jadwal Cicilan
+                  </div>
+                  <div style={{ maxHeight:'150px', overflowY:'auto' }}>
+                    {detailSchedule.map(s => (
+                      <div key={s.no} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8rem', padding:'0.25rem 0', borderBottom:'1px dashed var(--color-border)' }}>
+                        <span>Cicilan ke-{s.no} ({s.date})</span>
+                        <span style={{ fontWeight:500 }}>{fmt(s.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setShowDetail(false)}>Tutup</button>
@@ -486,8 +540,27 @@ const CreditGoods = () => {
                   <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.25rem' }}>
                     <span>Barang</span><span>{selectedCredit.itemName}</span>
                   </div>
-                  <div style={{ display:'flex', justifyContent:'space-between', color:'var(--color-danger)', fontWeight:700 }}>
-                    <span>Sisa Tagihan</span><span>{fmt(selectedCredit.remainingAmount)}</span>
+                  {(() => {
+                    const totalPokok = selectedCredit.amount - selectedCredit.dp;
+                    const totalBunga = totalPokok * ((selectedCredit.interest || 0) / 100) * (selectedCredit.tenor || 1);
+                    const totalPiutang = totalPokok + totalBunga;
+                    const cBulan = Math.ceil(totalPiutang / selectedCredit.tenor);
+                    const paidAmount = totalPiutang - selectedCredit.remainingAmount;
+                    const installmentsPaid = Math.floor(paidAmount / cBulan);
+                    const nextNo = installmentsPaid + 1;
+                    const nextInstallment = detailSchedule.find(s => s.no === nextNo);
+                    if (nextInstallment && selectedCredit.status === 'Active') {
+                      return (
+                        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'0.25rem', color:'var(--color-secondary)' }}>
+                          <span>Pembayaran Cicilan</span>
+                          <span style={{ fontWeight:600 }}>Ke-{nextInstallment.no} ({nextInstallment.date})</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  <div style={{ display:'flex', justifyContent:'space-between', color:'var(--color-danger)', fontWeight:700, borderTop:'1px dashed var(--color-border)', paddingTop:'0.35rem', marginTop:'0.25rem' }}>
+                    <span>Sisa Tagihan Total</span><span>{fmt(selectedCredit.remainingAmount)}</span>
                   </div>
                 </div>
                 <div className="form-group">
@@ -496,7 +569,11 @@ const CreditGoods = () => {
                     max={selectedCredit.remainingAmount}
                     onChange={(e) => setPayAmount(Number(e.target.value))} required />
                   <p style={{ fontSize:'0.75rem', color:'var(--color-text-muted)', marginTop:'0.35rem' }}>
-                    Cicilan normal: {fmt(Math.ceil((selectedCredit.amount - selectedCredit.dp) / selectedCredit.tenor))} / bulan
+                    Cicilan normal: {(() => {
+                      const sp = selectedCredit.amount - selectedCredit.dp;
+                      const tb = sp * ((selectedCredit.interest || 0) / 100) * (selectedCredit.tenor || 1);
+                      return fmt(Math.ceil((sp + tb) / selectedCredit.tenor));
+                    })()} / bulan
                   </p>
                 </div>
               </div>
