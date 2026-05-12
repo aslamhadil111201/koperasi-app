@@ -38,6 +38,19 @@ export const useSupabaseWrite = () => {
     const origAddCashLoan  = store.addCashLoan;
     const origAddCreditGoods = store.addCreditGoods;
 
+    // Tambahan untuk checkout & transaksi lainnya
+    const origCheckoutRetail = store.checkoutRetail;
+    const origCheckoutConsignment = store.checkoutConsignment;
+    const origCheckoutService = store.checkoutService;
+    const origRestockProduct = store.restockProduct;
+    const origDepositSavings = store.depositSavings;
+    const origApproveCashLoan = store.approveCashLoan;
+    const origPayCashLoan = store.payCashLoan;
+    const origApproveCreditGoods = store.approveCreditGoods;
+    const origPayCreditGoods = store.payCreditGoods;
+    const origAddExpense = store.addExpense;
+    const origAddIncome = store.addIncome;
+
     // Override dengan versi yang juga write ke Supabase
     useStore.setState({
       addMember: (member) => {
@@ -107,6 +120,163 @@ export const useSupabaseWrite = () => {
         const state = useStore.getState();
         const newCredit = state.creditGoods[state.creditGoods.length - 1];
         if (newCredit) insertCreditGood(newCredit).catch(console.error);
+      },
+      checkoutRetail: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        const oldTxLen = stateBefore.memberSalesTransactions.length;
+
+        origCheckoutRetail(...args);
+
+        const stateAfter = useStore.getState();
+        
+        // Update product stock
+        const cart = args[0] || [];
+        cart.forEach(item => {
+          const updated = stateAfter.products.find(p => p.id === item.id);
+          if (updated) updateProductDB(updated.id, { stock: updated.stock }).catch(console.error);
+        });
+
+        // Insert new journal entries
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+
+        // Insert new member transaction
+        const newTxs = stateAfter.memberSalesTransactions.slice(oldTxLen);
+        if (newTxs.length > 0) newTxs.forEach(tx => insertMemberSalesTx(tx).catch(console.error));
+      },
+      checkoutConsignment: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        const oldTxLen = stateBefore.memberSalesTransactions.length;
+
+        origCheckoutConsignment(...args);
+
+        const stateAfter = useStore.getState();
+
+        // Update consignment stock
+        const cart = args[0] || [];
+        cart.forEach(item => {
+          const updated = stateAfter.consignmentProducts.find(p => p.id === item.id);
+          if (updated) updateConsignmentDB(updated.id, { stock: updated.stock }).catch(console.error);
+        });
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+
+        const newTxs = stateAfter.memberSalesTransactions.slice(oldTxLen);
+        if (newTxs.length > 0) newTxs.forEach(tx => insertMemberSalesTx(tx).catch(console.error));
+      },
+      checkoutService: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        const oldTxLen = stateBefore.memberSalesTransactions.length;
+
+        origCheckoutService(...args);
+
+        const stateAfter = useStore.getState();
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+
+        const newTxs = stateAfter.memberSalesTransactions.slice(oldTxLen);
+        if (newTxs.length > 0) newTxs.forEach(tx => insertMemberSalesTx(tx).catch(console.error));
+      },
+      restockProduct: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origRestockProduct(...args);
+        const stateAfter = useStore.getState();
+        
+        const productId = args[0];
+        const updated = stateAfter.products.find(p => p.id === productId);
+        if (updated) updateProductDB(productId, { stock: updated.stock, hpp: updated.hpp }).catch(console.error);
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      depositSavings: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origDepositSavings(...args);
+        const stateAfter = useStore.getState();
+        
+        const memberId = args[0];
+        const updated = stateAfter.members.find(m => m.id === memberId);
+        if (updated) updateMemberDB(memberId, { pokok: updated.pokok, wajib: updated.wajib, sukarela: updated.sukarela }).catch(console.error);
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      approveCashLoan: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origApproveCashLoan(...args);
+        const stateAfter = useStore.getState();
+
+        const loanId = args[0];
+        const updated = stateAfter.cashLoans.find(l => l.id === loanId);
+        if (updated) updateCashLoanDB(loanId, { status: updated.status, remainingAmount: updated.remainingAmount }).catch(console.error);
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      payCashLoan: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origPayCashLoan(...args);
+        const stateAfter = useStore.getState();
+
+        const loanId = args[0];
+        const updated = stateAfter.cashLoans.find(l => l.id === loanId);
+        if (updated) updateCashLoanDB(loanId, { status: updated.status, remainingAmount: updated.remainingAmount }).catch(console.error);
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      approveCreditGoods: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origApproveCreditGoods(...args);
+        const stateAfter = useStore.getState();
+
+        const creditId = args[0];
+        const updated = stateAfter.creditGoods.find(c => c.id === creditId);
+        if (updated) updateCreditGoodDB(creditId, { status: updated.status, remainingAmount: updated.remainingAmount }).catch(console.error);
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      payCreditGoods: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origPayCreditGoods(...args);
+        const stateAfter = useStore.getState();
+
+        const creditId = args[0];
+        const updated = stateAfter.creditGoods.find(c => c.id === creditId);
+        if (updated) updateCreditGoodDB(creditId, { status: updated.status, remainingAmount: updated.remainingAmount }).catch(console.error);
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      addExpense: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origAddExpense(...args);
+        const stateAfter = useStore.getState();
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      addIncome: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origAddIncome(...args);
+        const stateAfter = useStore.getState();
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
       },
     });
   }, []);
