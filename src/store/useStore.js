@@ -258,7 +258,7 @@ export const useStore = create(
     // Cash â†’ Kas, Kredit â†’ Piutang Dagang
     const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas';
     const desc = paymentMethod === 'Kredit'
-      ? `Penjualan Ritel (Kredit${dueDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
+      ? `Penjualan Ritel (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : 'Penjualan Barang Ritel';
 
     const journalEntries = [
@@ -290,7 +290,7 @@ export const useStore = create(
 
     const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas';
     const desc = paymentMethod === 'Kredit'
-      ? `Penjualan Titipan (Kredit${dueDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
+      ? `Penjualan Titipan (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : 'Penjualan Titipan';
 
     const journalEntries = [
@@ -314,7 +314,7 @@ export const useStore = create(
 
     const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas';
     const desc = paymentMethod === 'Kredit'
-      ? `Penjualan Jasa/PPOB (Kredit${dueDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
+      ? `Penjualan Jasa/PPOB (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : 'Penjualan Jasa/PPOB';
 
     const journalEntries = [
