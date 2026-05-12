@@ -10,6 +10,7 @@ const ConsignmentSales = () => {
   const consignmentProducts = useStore((state) => state.consignmentProducts);
   const members             = useStore((state) => state.members);
   const checkoutConsignment = useStore((state) => state.checkoutConsignment);
+  const currentUser         = useStore((state) => state.currentUser);
 
   const [cart, setCart]                     = useState([]);
   const [searchTerm, setSearchTerm]         = useState('');
@@ -66,6 +67,7 @@ const ConsignmentSales = () => {
       commission: totalCommission,
       supplierPayable: totalSupplierPayable,
       paymentMethod, takeDate, installments, startDate, notes, schedule,
+      pic: currentUser?.name || 'Admin',
     });
     setShowReceipt(true);
     setCart([]); setSelectedMember(''); setPaymentMethod('Cash');
@@ -243,6 +245,10 @@ const ConsignmentSales = () => {
             <span style={{ color: paymentMethod === 'Kredit' ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 600 }}>
               {paymentMethod === 'Kredit' ? `${installments === 1 ? 'Tempo' : `${installments}x Cicilan`}` : 'Cash'}
             </span>
+          </div>
+          <div className="summary-row" style={{ fontSize: '0.8rem' }}>
+            <span>PIC / Kasir</span>
+            <span style={{ fontWeight: 600 }}>{currentUser?.name || 'Admin'}</span>
           </div>
           <div className="summary-row total mt-2 pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
             <span>Total Bayar</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span>

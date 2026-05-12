@@ -6,7 +6,8 @@ const Receipt = ({
   memberName, date, transactionId,
   commission, supplierPayable,
   paymentMethod = 'Cash', takeDate,
-  installments = 1, startDate, notes, schedule = []
+  installments = 1, startDate, notes, schedule = [],
+  pic = ''
 }) => {
 
   const typeLabel = {
@@ -80,6 +81,7 @@ const Receipt = ({
   <div class="center" style="font-size:9px;margin-bottom:6px">================================</div>
 
   ${rows('No. Transaksi', transactionId || '-')}
+  ${pic ? rows('Kasir/PIC', pic) : ''}
   ${rows('Tanggal', displayDate)}
   ${rows('Jenis', typeLabel)}
   ${memberName ? rows('Anggota', memberName) : ''}
@@ -147,6 +149,7 @@ const Receipt = ({
         {/* Info */}
         {[
           ['No. Transaksi', <b>{transactionId || '-'}</b>],
+          ...(pic ? [['Kasir/PIC', <b>{pic}</b>]] : []),
           ['Tanggal', displayDate],
           ['Jenis', typeLabel],
           ...(memberName ? [['Anggota', <b>{memberName}</b>]] : []),

@@ -10,6 +10,7 @@ const RetailSales = () => {
   const products       = useStore((state) => state.products);
   const members        = useStore((state) => state.members);
   const checkoutRetail = useStore((state) => state.checkoutRetail);
+  const currentUser    = useStore((state) => state.currentUser);
 
   const [cart, setCart]                     = useState([]);
   const [searchTerm, setSearchTerm]         = useState('');
@@ -62,6 +63,7 @@ const RetailSales = () => {
       date: new Date().toISOString(),
       transactionId: txId,
       paymentMethod, takeDate, installments, startDate, notes, schedule,
+      pic: currentUser?.name || 'Admin',
     });
     setShowReceipt(true);
     setCart([]); setSelectedMember(''); setPaymentMethod('Cash');
@@ -230,6 +232,10 @@ const RetailSales = () => {
             <span style={{ color: paymentMethod === 'Kredit' ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 600 }}>
               {paymentMethod === 'Kredit' ? `💳 ${installments === 1 ? 'Tempo' : `${installments}x Cicilan`}` : '💵 Cash'}
             </span>
+          </div>
+          <div className="summary-row" style={{ fontSize: '0.8rem' }}>
+            <span>PIC / Kasir</span>
+            <span style={{ fontWeight: 600 }}>{currentUser?.name || 'Admin'}</span>
           </div>
           <div className="summary-row total">
             <span>Total</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span>
