@@ -221,12 +221,14 @@ const Header = ({ onMenuClick }) => {
         {/* User profile */}
         {(() => {
           const isPengurus  = ['uci', 'surtini', 'indah'].includes(currentUser?.username);
-          const avatarColor = isPengurus ? '#FF4D00' : 'var(--color-primary-light)';
+          const avatarColor = isPengurus ? '#FF4D00' : 'var(--color-primary)';
           const roleLabel   = isPengurus ? 'Pengurus' : (currentUser?.role || 'Administrator');
           return (
             <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div className="avatar" style={{ background: avatarColor }}><User size={18} /></div>
+                <div className="avatar" style={{ background: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, width: 36, height: 36, borderRadius: '50%', fontSize: '1rem' }}>
+                  {currentUser?.name?.charAt(0) || 'U'}
+                </div>
                 <div className="user-info">
                   <span className="user-name">{currentUser?.name || 'Admin Koperasi'}</span>
                   <span className="user-role" style={{ textTransform: 'capitalize' }}>{roleLabel}</span>
