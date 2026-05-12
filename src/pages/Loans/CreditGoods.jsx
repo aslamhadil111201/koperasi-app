@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Plus, FileText, CheckCircle, XCircle, Clock, Package, X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { buildSchedule } from '../../utils/installment';
+import SearchableSelect from '../../components/SearchableSelect';
 import './Loans.css';
 
 const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
@@ -306,14 +307,16 @@ const CreditGoods = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">
                     <label className="form-label">Anggota</label>
-                    <select className="form-control" value={creditForm.memberId}
-                      onChange={(e) => {
-                        const m = members.find(m => m.id === e.target.value);
-                        setCreditForm({...creditForm, memberId: e.target.value, name: m?.name || ''});
-                      }} required>
-                      <option value="">Pilih Anggota...</option>
-                      {members.map(m => <option key={m.id} value={m.id}>{m.id} - {m.name}</option>)}
-                    </select>
+                    <SearchableSelect
+                      options={members.map(m => ({ value: m.id, label: `${m.id} - ${m.name}` }))}
+                      value={creditForm.memberId}
+                      onChange={(val) => {
+                        const m = members.find(m => m.id === val);
+                        setCreditForm({...creditForm, memberId: val, name: m?.name || ''});
+                      }}
+                      placeholder="Ketik untuk mencari anggota..."
+                      required
+                    />
                   </div>
                   <div className="form-group">
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'0.4rem' }}>
@@ -325,16 +328,16 @@ const CreditGoods = () => {
                       </button>
                     </div>
                     {useProductList ? (
-                      <select className="form-control" value={creditForm.itemName}
-                        onChange={(e) => {
-                          const p = products.find(p => p.name === e.target.value);
-                          setCreditForm({...creditForm, itemName: e.target.value, amount: p?.price || creditForm.amount});
-                        }} required>
-                        <option value="">Pilih Barang...</option>
-                        {products.map(p => (
-                          <option key={p.id} value={p.name}>{p.name} — {fmt(p.price)}</option>
-                        ))}
-                      </select>
+                      <SearchableSelect
+                        options={products.map(p => ({ value: p.name, label: `${p.name} — ${fmt(p.price)}` }))}
+                        value={creditForm.itemName}
+                        onChange={(val) => {
+                          const p = products.find(p => p.name === val);
+                          setCreditForm({...creditForm, itemName: val, amount: p?.price || creditForm.amount});
+                        }}
+                        placeholder="Ketik untuk mencari barang..."
+                        required
+                      />
                     ) : (
                       <input type="text" className="form-control" placeholder="Nama barang..."
                         value={creditForm.itemName}

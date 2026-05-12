@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, X, TrendingUp, Calendar, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import SearchableSelect from '../../components/SearchableSelect';
 import './Loans.css';
 
 const Savings = () => {
@@ -319,17 +320,13 @@ const Savings = () => {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Anggota</label>
-                  <select
-                    className="form-control"
+                  <SearchableSelect
+                    options={members.map(m => ({ value: m.id, label: `${m.id} - ${m.name}` }))}
                     value={depositForm.memberId}
-                    onChange={(e) => setDepositForm({ ...depositForm, memberId: e.target.value })}
+                    onChange={(val) => setDepositForm({ ...depositForm, memberId: val })}
+                    placeholder="Ketik untuk mencari anggota..."
                     required
-                  >
-                    <option value="">Pilih Anggota...</option>
-                    {members.map(m => (
-                      <option key={m.id} value={m.id}>{m.id} - {m.name}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Simpanan Pokok (Rp)</label>

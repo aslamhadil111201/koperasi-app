@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, FileText, CheckCircle, XCircle, Clock, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import SearchableSelect from '../../components/SearchableSelect';
 import './Loans.css';
 
 const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
@@ -267,14 +268,16 @@ const CashLoans = () => {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">Anggota</label>
-                  <select className="form-control" value={loanForm.memberId}
-                    onChange={(e) => {
-                      const m = members.find(m => m.id === e.target.value);
-                      setLoanForm({...loanForm, memberId: e.target.value, name: m?.name || ''});
-                    }} required>
-                    <option value="">Pilih Anggota...</option>
-                    {members.map(m => <option key={m.id} value={m.id}>{m.id} - {m.name}</option>)}
-                  </select>
+                  <SearchableSelect
+                    options={members.map(m => ({ value: m.id, label: `${m.id} - ${m.name}` }))}
+                    value={loanForm.memberId}
+                    onChange={(val) => {
+                      const m = members.find(m => m.id === val);
+                      setLoanForm({...loanForm, memberId: val, name: m?.name || ''});
+                    }}
+                    placeholder="Ketik untuk mencari anggota..."
+                    required
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">

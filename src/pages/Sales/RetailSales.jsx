@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Minus, Trash2, Search, User, X, Banknote, CreditCar
 import { useStore } from '../../store/useStore';
 import { buildSchedule } from '../../utils/installment';
 import Receipt from '../../components/Receipt';
+import SearchableSelect from '../../components/SearchableSelect';
 import './Sales.css';
 
 const RetailSales = () => {
@@ -110,10 +111,12 @@ const RetailSales = () => {
 
         <div className="member-selector">
           <label className="member-selector-label"><User size={14} /> Anggota (Opsional)</label>
-          <select className="form-control" value={selectedMember} onChange={(e) => setSelectedMember(e.target.value)}>
-            <option value="">— Pembeli Umum —</option>
-            {members.map(m => <option key={m.id} value={m.id}>{m.name} ({m.id})</option>)}
-          </select>
+          <SearchableSelect
+            options={members.map(m => ({ value: m.id, label: `${m.name} (${m.id})` }))}
+            value={selectedMember}
+            onChange={setSelectedMember}
+            placeholder="— Pembeli Umum —"
+          />
           {selectedMember && <p className="member-selected-info">✅ Transaksi ini akan dihitung ke SHU anggota</p>}
         </div>
 
