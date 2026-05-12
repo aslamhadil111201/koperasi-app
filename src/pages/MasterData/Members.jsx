@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { Search, Users, UserPlus, X, UserCheck, UserCog, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import './MasterData.css';
@@ -8,11 +9,12 @@ const Members = () => {
   const addMember    = useStore((state) => state.addMember);
   const updateMember = useStore((state) => state.updateMember);
   const currentUser  = useStore((state) => state.currentUser);
+  const location     = useLocation();
 
-  // Akun yang tidak boleh edit data
-  const canEdit = !['uci', 'surtini', 'indah'].includes(currentUser?.username);
+  // Semua admin/pengurus boleh edit data
+  const canEdit = true;
 
-  const [searchTerm,  setSearchTerm]  = useState('');
+  const [searchTerm,  setSearchTerm]  = useState(location.state?.searchStr || '');
   const [showModal,   setShowModal]   = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);

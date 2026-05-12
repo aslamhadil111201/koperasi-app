@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Filter, Download, Calendar, Search, X } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Reports.css';
 
 const GeneralLedger = () => {
   const journal = useStore((state) => state.journal);
+  const location = useLocation();
 
   // ── Filter State ──────────────────────────────────────────────────────────
-  const [searchTerm,   setSearchTerm]   = useState('');
+  const [searchTerm,   setSearchTerm]   = useState(location.state?.searchStr || '');
   const [filterMonth,  setFilterMonth]  = useState('');   // format: 'YYYY-MM'
   const [filterAkun,   setFilterAkun]   = useState('');
 

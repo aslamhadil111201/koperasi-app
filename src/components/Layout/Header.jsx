@@ -92,15 +92,15 @@ const Header = ({ onMenuClick }) => {
         m.id.toLowerCase().includes(query.toLowerCase())
       )
       .slice(0, 3)
-      .map(m => ({ label: m.name, sub: `Anggota · ${m.id}`, path: '/master/members' })),
+      .map(m => ({ label: m.name, sub: `Anggota · ${m.id}`, path: '/master/members', searchStr: m.id })),
     ...journal
       .filter(j => j.description?.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 3)
-      .map(j => ({ label: j.description, sub: `Jurnal · ${j.date}`, path: '/reports/ledger' })),
+      .map(j => ({ label: j.description, sub: `Jurnal · ${j.date}`, path: '/reports/ledger', searchStr: j.description })),
   ];
 
-  const handleResultClick = (path) => {
-    navigate(path);
+  const handleResultClick = (r) => {
+    navigate(r.path, { state: { searchStr: r.searchStr } });
     setQuery('');
     setShowResults(false);
   };
@@ -143,7 +143,7 @@ const Header = ({ onMenuClick }) => {
         {showResults && results.length > 0 && (
           <div className="search-dropdown">
             {results.map((r, i) => (
-              <button key={i} className="search-result-item" onMouseDown={() => handleResultClick(r.path)}>
+              <button key={i} className="search-result-item" onMouseDown={() => handleResultClick(r)}>
                 <span className="search-result-label">{r.label}</span>
                 <span className="search-result-sub">{r.sub}</span>
               </button>
