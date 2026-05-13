@@ -35,7 +35,7 @@ const Inventory = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [itemForm, setItemForm] = useState({
-    name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0,
+    name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10,
     supplier: '', supplierPrice: 0, provider: '', type: '', image: ''
   });
 
@@ -47,7 +47,7 @@ const Inventory = () => {
   const openAddModal = () => {
     setEditingItem(null);
     setImagePreview(null);
-    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, supplier: '', supplierPrice: 0, provider: '', type: '', image: '' });
+    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10, supplier: '', supplierPrice: 0, provider: '', type: '', image: '' });
     setShowModal(true);
   };
 
@@ -60,6 +60,7 @@ const Inventory = () => {
       price: item.price,
       hpp: item.hpp ?? item.supplierPrice ?? 0,
       stock: item.stock ?? 0,
+      minStock: item.minStock ?? 10,
       supplier: item.supplier ?? '',
       supplierPrice: item.supplierPrice ?? 0,
       provider: item.provider ?? '',
@@ -126,11 +127,11 @@ const Inventory = () => {
     if (editingItem) {
       // UPDATE mode
       if (activeTab === 'retail') {
-        updateProduct(editingItem.id, { name: itemForm.name, category: itemForm.category, price: itemForm.price, hpp: itemForm.hpp, stock: itemForm.stock, image: itemForm.image });
+        updateProduct(editingItem.id, { name: itemForm.name, category: itemForm.category, price: itemForm.price, hpp: itemForm.hpp, stock: itemForm.stock, minStock: itemForm.minStock, image: itemForm.image });
       } else if (activeTab === 'consignment') {
         updateConsignment(editingItem.id, {
           name: itemForm.name, supplier: itemForm.supplier, price: itemForm.price,
-          stock: itemForm.stock, supplierPrice: itemForm.supplierPrice,
+          stock: itemForm.stock, minStock: itemForm.minStock, supplierPrice: itemForm.supplierPrice,
           commission: itemForm.price - itemForm.supplierPrice, image: itemForm.image
         });
       } else if (activeTab === 'services') {
@@ -139,11 +140,11 @@ const Inventory = () => {
     } else {
       // ADD mode
       if (activeTab === 'retail') {
-        addProduct({ name: itemForm.name, category: itemForm.category, price: itemForm.price, hpp: itemForm.hpp, stock: itemForm.stock, image: itemForm.image });
+        addProduct({ name: itemForm.name, category: itemForm.category, price: itemForm.price, hpp: itemForm.hpp, stock: itemForm.stock, minStock: itemForm.minStock, image: itemForm.image });
       } else if (activeTab === 'consignment') {
         addConsignment({
           name: itemForm.name, supplier: itemForm.supplier, price: itemForm.price,
-          stock: itemForm.stock, supplierPrice: itemForm.supplierPrice,
+          stock: itemForm.stock, minStock: itemForm.minStock, supplierPrice: itemForm.supplierPrice,
           commission: itemForm.price - itemForm.supplierPrice, image: itemForm.image
         });
       } else if (activeTab === 'services') {
@@ -153,7 +154,7 @@ const Inventory = () => {
     setShowModal(false);
     setEditingItem(null);
     setImagePreview(null);
-    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, supplier: '', supplierPrice: 0, provider: '', type: '', image: '' });
+    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10, supplier: '', supplierPrice: 0, provider: '', type: '', image: '' });
   };
 
   const handleDelete = (item) => {
@@ -215,13 +216,13 @@ const Inventory = () => {
     );
   };
 
-  const lowStockCount = products.filter(p => p.stock < 20).length;
+  const lowStockCount = products.filter(p => p.stock < (p.minStock || 10)).length;
 
   // Stock badge helper
-  const stockBadge = (stock) => {
-    if (stock < 10)  return <span className="stock-badge stock-low">{stock} Unit</span>;
-    if (stock < 20)  return <span className="stock-badge stock-mid">{stock} Unit</span>;
-    return              <span className="stock-badge stock-ok">{stock} Unit</span>;
+  const stockBadge = (stock, minStock = 10) => {
+    if (stock < minStock / 2) return <span className="stock-badge stock-low">{stock} Unit</span>;
+    if (stock < minStock)     return <span className="stock-badge stock-mid">{stock} Unit</span>;
+    return                    <span className="stock-badge stock-ok">{stock} Unit</span>;
   };
 
   const tabLabels = {
@@ -342,7 +343,7 @@ const Inventory = () => {
                       Rp {(item.hpp || 0).toLocaleString('id-ID')}
                     </td>
                     <td className="cell-amount">Rp {item.price.toLocaleString('id-ID')}</td>
-                    <td>{stockBadge(item.stock)}</td>
+                    <td>{stockBadge(item.stock, item.minStock)}</td>
                     <td>
                       <div className="table-action-group">
                         <button className="table-action-btn" onClick={() => openRestockModal(item)} style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)' }}>
@@ -398,7 +399,7 @@ const Inventory = () => {
                     <td className="cell-amount">
                       Rp {(item.commission ?? (item.price - item.supplierPrice)).toLocaleString('id-ID')}
                     </td>
-                    <td>{stockBadge(item.stock)}</td>
+                    <td>{stockBadge(item.stock, item.minStock)}</td>
                     <td>
                       <div className="table-action-group">
                         {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
@@ -540,15 +541,27 @@ const Inventory = () => {
                 </div>
 
                 {activeTab !== 'services' && (
-                  <div className="form-group">
-                    <label className="form-label">Stok Awal (Unit)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={itemForm.stock}
-                      onChange={(e) => setItemForm({ ...itemForm, stock: Number(e.target.value) })}
-                      required
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="form-group">
+                      <label className="form-label">Stok Awal (Unit)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={itemForm.stock}
+                        onChange={(e) => setItemForm({ ...itemForm, stock: Number(e.target.value) })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Min. Stok (Peringatan)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={itemForm.minStock}
+                        onChange={(e) => setItemForm({ ...itemForm, minStock: Number(e.target.value) })}
+                        required
+                      />
+                    </div>
                   </div>
                 )}
 

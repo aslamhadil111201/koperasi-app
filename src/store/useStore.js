@@ -5,29 +5,29 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 const INITIAL_MEMBERS = [];
 
 const INITIAL_PRODUCTS = [
-  { id: 1, name: 'Beras Pandan Wangi 5kg',        price: 68000,    hpp: 55000,    stock: 45, category: 'Sembako' },
-  { id: 2, name: 'Minyak Goreng Bimoli 2L',        price: 36000,    hpp: 29000,    stock: 30, category: 'Sembako' },
-  { id: 3, name: 'Gula Pasir 1kg',                 price: 15000,    hpp: 12000,    stock: 60, category: 'Sembako' },
-  { id: 4, name: 'Indomie Goreng (Karton)',         price: 115000,   hpp: 95000,    stock: 18, category: 'Makanan' },
-  { id: 5, name: 'Sabun Mandi Lifebuoy 3pcs',      price: 12500,    hpp: 10000,    stock: 40, category: 'Kebersihan' },
+  { id: 1, name: 'Beras Pandan Wangi 5kg',        price: 68000,    hpp: 55000,    stock: 45, minStock: 10, category: 'Sembako' },
+  { id: 2, name: 'Minyak Goreng Bimoli 2L',        price: 36000,    hpp: 29000,    stock: 30, minStock: 10, category: 'Sembako' },
+  { id: 3, name: 'Gula Pasir 1kg',                 price: 15000,    hpp: 12000,    stock: 60, minStock: 10, category: 'Sembako' },
+  { id: 4, name: 'Indomie Goreng (Karton)',         price: 115000,   hpp: 95000,    stock: 18, minStock: 10, category: 'Makanan' },
+  { id: 5, name: 'Sabun Mandi Lifebuoy 3pcs',      price: 12500,    hpp: 10000,    stock: 40, minStock: 10, category: 'Kebersihan' },
   // Elektronik & Perabot (untuk kredit barang)
-  { id: 6,  name: 'Mesin Cuci Sharp 1 Tabung',     price: 1800000,  hpp: 1500000,  stock: 5,  category: 'Elektronik' },
-  { id: 7,  name: 'Kulkas Aqua 1 Pintu',           price: 2200000,  hpp: 1850000,  stock: 4,  category: 'Elektronik' },
-  { id: 8,  name: 'Kipas Angin Cosmos',             price: 350000,   hpp: 280000,   stock: 10, category: 'Elektronik' },
-  { id: 9,  name: 'Rice Cooker Miyako 1.8L',       price: 280000,   hpp: 220000,   stock: 8,  category: 'Elektronik' },
-  { id: 10, name: 'Setrika Philips',                price: 180000,   hpp: 140000,   stock: 10, category: 'Elektronik' },
-  { id: 11, name: 'Kompor Gas Rinnai 2 Tungku',    price: 450000,   hpp: 370000,   stock: 6,  category: 'Perabot' },
-  { id: 12, name: 'Tabung Gas 3kg + Regulator',    price: 200000,   hpp: 160000,   stock: 15, category: 'Perabot' },
-  { id: 13, name: 'Kasur Busa 120x200cm',          price: 650000,   hpp: 520000,   stock: 5,  category: 'Perabot' },
-  { id: 14, name: 'Lemari Pakaian 2 Pintu',        price: 1200000,  hpp: 950000,   stock: 3,  category: 'Perabot' },
-  { id: 15, name: 'TV LED 32 inch',                price: 2500000,  hpp: 2100000,  stock: 4,  category: 'Elektronik' },
+  { id: 6,  name: 'Mesin Cuci Sharp 1 Tabung',     price: 1800000,  hpp: 1500000,  stock: 5,  minStock: 2,  category: 'Elektronik' },
+  { id: 7,  name: 'Kulkas Aqua 1 Pintu',           price: 2200000,  hpp: 1850000,  stock: 4,  minStock: 2,  category: 'Elektronik' },
+  { id: 8,  name: 'Kipas Angin Cosmos',             price: 350000,   hpp: 280000,   stock: 10, minStock: 5,  category: 'Elektronik' },
+  { id: 9,  name: 'Rice Cooker Miyako 1.8L',       price: 280000,   hpp: 220000,   stock: 8,  minStock: 3,  category: 'Elektronik' },
+  { id: 10, name: 'Setrika Philips',                price: 180000,   hpp: 140000,   stock: 10, minStock: 5,  category: 'Elektronik' },
+  { id: 11, name: 'Kompor Gas Rinnai 2 Tungku',    price: 450000,   hpp: 370000,   stock: 6,  minStock: 2,  category: 'Perabot' },
+  { id: 12, name: 'Tabung Gas 3kg + Regulator',    price: 200000,   hpp: 160000,   stock: 15, minStock: 5,  category: 'Perabot' },
+  { id: 13, name: 'Kasur Busa 120x200cm',          price: 650000,   hpp: 520000,   stock: 5,  minStock: 2,  category: 'Perabot' },
+  { id: 14, name: 'Lemari Pakaian 2 Pintu',        price: 1200000,  hpp: 950000,   stock: 3,  minStock: 1,  category: 'Perabot' },
+  { id: 15, name: 'TV LED 32 inch',                price: 2500000,  hpp: 2100000,  stock: 4,  minStock: 2,  category: 'Elektronik' },
 ];
 
 const INITIAL_CONSIGNMENT = [
-  { id: 101, name: 'Keripik Pisang Manis 150g', price: 15000, stock: 20, supplier: 'Ibu Yani Handayani', supplierPrice: 11000 },
-  { id: 102, name: 'Onde-Onde Kacang Hijau',    price: 8000,  stock: 15, supplier: 'Toko Kue Bu Sari',   supplierPrice: 5500  },
-  { id: 103, name: 'Kerupuk Udang Sidoarjo',    price: 22000, stock: 12, supplier: 'Pak Santoso',         supplierPrice: 17000 },
-  { id: 104, name: 'Tape Ketan Hitam 250g',     price: 12000, stock: 8,  supplier: 'Ibu Rini Wulandari', supplierPrice: 9000  },
+  { id: 101, name: 'Keripik Pisang Manis 150g', price: 15000, stock: 20, minStock: 10, supplier: 'Ibu Yani Handayani', supplierPrice: 11000 },
+  { id: 102, name: 'Onde-Onde Kacang Hijau',    price: 8000,  stock: 15, minStock: 10, supplier: 'Toko Kue Bu Sari',   supplierPrice: 5500  },
+  { id: 103, name: 'Kerupuk Udang Sidoarjo',    price: 22000, stock: 12, minStock: 10, supplier: 'Pak Santoso',         supplierPrice: 17000 },
+  { id: 104, name: 'Tape Ketan Hitam 250g',     price: 12000, stock: 8,  minStock: 10, supplier: 'Ibu Rini Wulandari', supplierPrice: 9000  },
 ];
 
 const INITIAL_SERVICES = [
@@ -231,7 +231,7 @@ export const useStore = create(
 
   addProduct: (product) => set((state) => {
     const newId = state.products.length + 1;
-    return { products: [...state.products, { ...product, id: newId }] };
+    return { products: [...state.products, { ...product, id: newId, minStock: product.minStock || 10 }] };
   }),
 
   updateProduct: (id, data) => set((state) => ({
@@ -244,7 +244,7 @@ export const useStore = create(
 
   addConsignment: (consignment) => set((state) => {
     const newId = 100 + state.consignmentProducts.length + 1;
-    return { consignmentProducts: [...state.consignmentProducts, { ...consignment, id: newId }] };
+    return { consignmentProducts: [...state.consignmentProducts, { ...consignment, id: newId, minStock: consignment.minStock || 10 }] };
   }),
 
   updateConsignment: (id, data) => set((state) => ({

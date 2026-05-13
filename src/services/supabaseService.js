@@ -51,17 +51,24 @@ export const updateMemberDB = async (memberId, updates) => {
 export const fetchProducts = async () => {
   const { data, error } = await supabase.from('products').select('*').order('id');
   if (error) throw error;
-  return data.map(p => ({ ...p, hpp: p.hpp || 0 }));
+  return data.map(p => ({ ...p, hpp: p.hpp || 0, minStock: p.min_stock || 10 }));
 };
 
 export const insertProduct = async (product) => {
-  const { data, error } = await supabase.from('products').insert(product).select().single();
+  const payload = { ...product, min_stock: product.minStock || 10 };
+  delete payload.minStock;
+  const { data, error } = await supabase.from('products').insert(payload).select().single();
   if (error) throw error;
   return data;
 };
 
 export const updateProductDB = async (id, updates) => {
-  const { error } = await supabase.from('products').update(updates).eq('id', id);
+  const payload = { ...updates };
+  if (payload.minStock !== undefined) {
+    payload.min_stock = payload.minStock;
+    delete payload.minStock;
+  }
+  const { error } = await supabase.from('products').update(payload).eq('id', id);
   if (error) throw error;
 };
 
@@ -77,6 +84,7 @@ export const fetchConsignments = async () => {
   return data.map(p => ({
     ...p, supplierPrice: p.supplier_price,
     commission: p.price - p.supplier_price,
+    minStock: p.min_stock || 10,
   }));
 };
 
@@ -84,6 +92,7 @@ export const insertConsignment = async (item) => {
   const { data, error } = await supabase.from('consignment_products').insert({
     name: item.name, price: item.price, stock: item.stock,
     supplier: item.supplier, supplier_price: item.supplierPrice, image: item.image,
+    min_stock: item.minStock || 10,
   }).select().single();
   if (error) throw error;
   return data;
@@ -93,6 +102,7 @@ export const updateConsignmentDB = async (id, updates) => {
   const { error } = await supabase.from('consignment_products').update({
     name: updates.name, price: updates.price, stock: updates.stock,
     supplier: updates.supplier, supplier_price: updates.supplierPrice, image: updates.image,
+    min_stock: updates.minStock,
   }).eq('id', id);
   if (error) throw error;
 };
