@@ -225,7 +225,14 @@ const CreditGoods = () => {
                     <td style={{ color:'var(--color-secondary)', fontWeight:600 }}>{fmt(cicilan)}</td>
                     <td>{credit.tenor} Bln</td>
                     <td className="font-medium text-primary">{fmt(credit.remainingAmount)}</td>
-                    <td>{getStatusBadge(credit.status)}</td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {getStatusBadge(credit.status)}
+                        {credit.installments && credit.installments.some(s => s.status === 'Pending' && s.dueDate < new Date().toISOString().split('T')[0]) && (
+                          <span className="badge badge-danger" style={{ fontSize: '0.65rem', padding: '2px 4px' }}>Nunggak</span>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <div className="flex gap-2">
                         <button
@@ -488,19 +495,29 @@ const CreditGoods = () => {
                 ));
               })()}
 
-              {detailSchedule.length > 0 && (
+              {selectedCredit.installments && selectedCredit.installments.length > 0 && (
                 <div style={{ marginTop:'1rem', background:'rgba(6,182,212,0.06)', border:'1px solid rgba(6,182,212,0.2)', borderRadius:'var(--radius-md)', padding:'0.875rem 1rem' }}>
                   <div style={{ fontSize:'0.8rem', fontWeight:700, color:'var(--color-secondary)', marginBottom:'0.5rem' }}>
                     <Calendar size={14} style={{ display:'inline', marginRight:6, verticalAlign:'text-bottom' }} />
                     Jadwal Cicilan
                   </div>
                   <div style={{ maxHeight:'150px', overflowY:'auto' }}>
-                    {detailSchedule.map(s => (
-                      <div key={s.no} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8rem', padding:'0.25rem 0', borderBottom:'1px dashed var(--color-border)' }}>
-                        <span>Cicilan ke-{s.no} ({s.date})</span>
-                        <span style={{ fontWeight:500 }}>{fmt(s.amount)}</span>
-                      </div>
-                    ))}
+                    {selectedCredit.installments.map(s => {
+                      const isOverdue = s.status === 'Pending' && s.dueDate < new Date().toISOString().split('T')[0];
+                      const statusColor = s.status === 'Paid' ? 'var(--color-success)' : isOverdue ? 'var(--color-danger)' : 'var(--color-text-muted)';
+                      const statusText = s.status === 'Paid' ? 'Lunas' : isOverdue ? 'Nunggak' : 'Pending';
+                      return (
+                        <div key={s.no} style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8rem', padding:'0.25rem 0', borderBottom:'1px dashed var(--color-border)' }}>
+                          <div>
+                            <span>Cicilan ke-{s.no} ({s.dueDate})</span>
+                            <span style={{ marginLeft: 8, fontSize: '0.7rem', padding: '2px 6px', borderRadius: 4, background: s.status === 'Paid' ? 'rgba(16,185,129,0.1)' : isOverdue ? 'rgba(239,68,68,0.1)' : 'rgba(156,163,175,0.1)', color: statusColor }}>
+                              {statusText}
+                            </span>
+                          </div>
+                          <span style={{ fontWeight:500 }}>{fmt(s.amount)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

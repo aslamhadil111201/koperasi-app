@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { buildSchedule } from '../utils/installment';
 
 // â”€â”€â”€ Master Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const INITIAL_MEMBERS = [];
@@ -387,10 +388,21 @@ export const useStore = create(
     const loan = state.cashLoans.find(l => l.id === loanId);
     if (!loan) return state;
 
-    const newLoans = state.cashLoans.map(l => l.id === loanId ? { ...l, status: 'Active' } : l);
+    const date = new Date().toISOString().split('T')[0];
+    
+    // Generate schedule
+    const rawSchedule = buildSchedule(loan.amount, loan.tenor, date);
+    const schedule = rawSchedule.map(s => ({
+      no: s.no,
+      dueDate: s.date,
+      amount: s.amount,
+      status: 'Pending',
+      paidDate: null
+    }));
+
+    const newLoans = state.cashLoans.map(l => l.id === loanId ? { ...l, status: 'Active', installments: schedule } : l);
     
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
-    const date = new Date().toISOString().split('T')[0];
     const journalEntries = [
       { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: loan.amount, credit: 0, account: 'Piutang Anggota' },
       { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: loan.amount, account: 'Kas' }
@@ -406,10 +418,23 @@ export const useStore = create(
     const newRemaining = Math.max(0, loan.remainingAmount - paymentAmount);
     const newStatus = newRemaining === 0 ? 'Completed' : loan.status;
 
-    const newLoans = state.cashLoans.map(l => l.id === loanId ? { ...l, remainingAmount: newRemaining, status: newStatus } : l);
+    const date = new Date().toISOString().split('T')[0];
+
+    // Mark corresponding installments as paid
+    let amountLeft = paymentAmount;
+    const newInstallments = [...(loan.installments || [])].map(inst => {
+      if (amountLeft > 0 && inst.status !== 'Paid') {
+        if (amountLeft >= inst.amount * 0.9) { // close enough to full installment
+          amountLeft -= inst.amount;
+          return { ...inst, status: 'Paid', paidDate: date };
+        }
+      }
+      return inst;
+    });
+
+    const newLoans = state.cashLoans.map(l => l.id === loanId ? { ...l, remainingAmount: newRemaining, status: newStatus, installments: newInstallments } : l);
 
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
-    const date = new Date().toISOString().split('T')[0];
     
     // Simplification: Not calculating interest separation, just pure deduction for simulation
     const journalEntries = [
@@ -424,13 +449,24 @@ export const useStore = create(
     const credit = state.creditGoods.find(c => c.id === creditId);
     if (!credit) return state;
 
-    const newCredits = state.creditGoods.map(c => c.id === creditId ? { ...c, status: 'Active' } : c);
-    
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     const date = new Date().toISOString().split('T')[0];
-    
     const sisaPokok = credit.amount - credit.dp;
     const totalBunga = sisaPokok * ((credit.interest || 0) / 100) * (credit.tenor || 1);
+    const totalPiutang = sisaPokok + totalBunga;
+
+    // Generate schedule
+    const rawSchedule = buildSchedule(totalPiutang, credit.tenor, credit.startDate || date);
+    const schedule = rawSchedule.map(s => ({
+      no: s.no,
+      dueDate: s.date,
+      amount: s.amount,
+      status: 'Pending',
+      paidDate: null
+    }));
+
+    const newCredits = state.creditGoods.map(c => c.id === creditId ? { ...c, status: 'Active', installments: schedule } : c);
+    
+    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     
     const journalEntries = [
       { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: credit.amount, credit: 0, account: 'Piutang Barang' },
@@ -456,11 +492,23 @@ export const useStore = create(
 
     const newRemaining = Math.max(0, credit.remainingAmount - paymentAmount);
     const newStatus = newRemaining === 0 ? 'Completed' : credit.status;
+    const date = new Date().toISOString().split('T')[0];
 
-    const newCredits = state.creditGoods.map(c => c.id === creditId ? { ...c, remainingAmount: newRemaining, status: newStatus } : c);
+    // Mark corresponding installments as paid
+    let amountLeft = paymentAmount;
+    const newInstallments = [...(credit.installments || [])].map(inst => {
+      if (amountLeft > 0 && inst.status !== 'Paid') {
+        if (amountLeft >= inst.amount * 0.9) { // close enough to full installment
+          amountLeft -= inst.amount;
+          return { ...inst, status: 'Paid', paidDate: date };
+        }
+      }
+      return inst;
+    });
+
+    const newCredits = state.creditGoods.map(c => c.id === creditId ? { ...c, remainingAmount: newRemaining, status: newStatus, installments: newInstallments } : c);
 
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
-    const date = new Date().toISOString().split('T')[0];
     
     const journalEntries = [
       { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: paymentAmount, credit: 0, account: 'Kas' },

@@ -165,27 +165,32 @@ export const insertJournalEntries = async (entries) => {
 export const fetchCashLoans = async () => {
   const { data, error } = await supabase.from('cash_loans').select('*').order('id');
   if (error) throw error;
-  return data.map(l => ({
-    id: l.loan_id, memberId: l.member_id, name: l.name,
-    amount: l.amount, tenor: l.tenor, interest: l.interest,
-    status: l.status, remainingAmount: l.remaining_amount,
-    applyDate: l.apply_date, takeDate: l.take_date,
+  return data.map(dbRow => ({
+    id: dbRow.loan_id, memberId: dbRow.member_id, name: dbRow.name,
+    amount: dbRow.amount, tenor: dbRow.tenor, interest: dbRow.interest,
+    status: dbRow.status, remainingAmount: dbRow.remaining_amount,
+    applyDate: dbRow.apply_date,
+    takeDate: dbRow.take_date,
+    installments: typeof dbRow.installments === 'string' ? JSON.parse(dbRow.installments) : (dbRow.installments || [])
   }));
 };
 
 export const insertCashLoan = async (loan) => {
-  const { error } = await supabase.from('cash_loans').insert({
+  const { error } = await supabase.from('cash_loans').insert([{
     loan_id: loan.id, member_id: loan.memberId, name: loan.name,
     amount: loan.amount, tenor: loan.tenor, interest: loan.interest,
-    status: loan.status, remaining_amount: loan.remainingAmount,
-    apply_date: loan.applyDate || null, take_date: loan.takeDate || null,
-  });
+    status: loan.status,
+    remaining_amount: loan.remainingAmount,
+    apply_date: loan.applyDate,
+    take_date: loan.takeDate,
+    installments: loan.installments || []
+  }]);
   if (error) throw error;
 };
 
 export const updateCashLoanDB = async (loanId, updates) => {
   const { error } = await supabase.from('cash_loans').update({
-    status: updates.status, remaining_amount: updates.remainingAmount,
+    status: updates.status, remaining_amount: updates.remainingAmount, installments: updates.installments
   }).eq('loan_id', loanId);
   if (error) throw error;
 };
@@ -194,30 +199,35 @@ export const updateCashLoanDB = async (loanId, updates) => {
 export const fetchCreditGoods = async () => {
   const { data, error } = await supabase.from('credit_goods').select('*').order('id');
   if (error) throw error;
-  return data.map(c => ({
-    id: c.credit_id, memberId: c.member_id, name: c.name,
-    itemName: c.item_name, amount: c.amount, dp: c.dp,
-    tenor: c.tenor, interest: c.interest, status: c.status,
-    remainingAmount: c.remaining_amount,
-    applyDate: c.apply_date, takeDate: c.take_date, startDate: c.start_date,
+  return data.map(dbRow => ({
+    id: dbRow.credit_id, memberId: dbRow.member_id, name: dbRow.name,
+    itemName: dbRow.item_name, amount: dbRow.amount, dp: dbRow.dp,
+    tenor: dbRow.tenor, interest: dbRow.interest, status: dbRow.status,
+    remainingAmount: dbRow.remaining_amount,
+    applyDate: dbRow.apply_date,
+    takeDate: dbRow.take_date,
+    startDate: dbRow.start_date,
+    installments: typeof dbRow.installments === 'string' ? JSON.parse(dbRow.installments) : (dbRow.installments || [])
   }));
 };
 
 export const insertCreditGood = async (credit) => {
-  const { error } = await supabase.from('credit_goods').insert({
+  const { error } = await supabase.from('credit_goods').insert([{
     credit_id: credit.id, member_id: credit.memberId, name: credit.name,
     item_name: credit.itemName, amount: credit.amount, dp: credit.dp,
     tenor: credit.tenor, interest: credit.interest,
-    status: credit.status, remaining_amount: credit.remainingAmount,
-    apply_date: credit.applyDate || null, take_date: credit.takeDate || null,
-    start_date: credit.startDate || null,
-  });
+    status: credit.status,    remaining_amount: credit.remainingAmount,
+    apply_date: credit.applyDate,
+    take_date: credit.takeDate,
+    start_date: credit.startDate,
+    installments: credit.installments || []
+  }]);
   if (error) throw error;
 };
 
 export const updateCreditGoodDB = async (creditId, updates) => {
   const { error } = await supabase.from('credit_goods').update({
-    status: updates.status, remaining_amount: updates.remainingAmount,
+    status: updates.status, remaining_amount: updates.remainingAmount, installments: updates.installments
   }).eq('credit_id', creditId);
   if (error) throw error;
 };

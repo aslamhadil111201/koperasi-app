@@ -40,6 +40,8 @@ const Dashboard = () => {
   const members = useStore((state) => state.members);
   const cashLoans = useStore((state) => state.cashLoans);
   const creditGoods = useStore((state) => state.creditGoods);
+  const products = useStore((state) => state.products);
+  const consignmentProducts = useStore((state) => state.consignmentProducts);
 
   // ── Tanggal referensi ──────────────────────────────────────────────────────
   const today = new Date();
@@ -113,29 +115,42 @@ const Dashboard = () => {
     ? (((todaySales - yesterdaySales) / Math.abs(yesterdaySales)) * 100).toFixed(1)
     : todaySales > 0 ? '100.0' : '0.0';
 
-  // ── Pinjaman Aktif untuk card ──────────────────────────────────────────────
-  const loansNearingDue = [
-    ...cashLoans
-      .filter(l => l.status === 'Active' && l.remainingAmount > 0)
-      .map(l => ({
-        id: l.id,
-        name: l.name,
-        type: 'Pinjaman Tunai',
-        remaining: l.remainingAmount,
-        tenor: l.tenor,
-        colorClass: 'bg-warning-light text-warning',
-      })),
-    ...creditGoods
-      .filter(c => c.status === 'Active' && c.remainingAmount > 0)
-      .map(c => ({
-        id: c.id,
-        name: c.name,
-        type: c.itemName,
-        remaining: c.remainingAmount,
-        tenor: c.tenor,
-        colorClass: 'bg-danger-light text-danger',
-      })),
-  ];
+  // ── Peringatan Stok Menipis ────────────────────────────────────────────────
+  const lowStockItems = [
+    ...products.map(p => ({ ...p, type: 'Ritel' })),
+    ...consignmentProducts.map(c => ({ ...c, type: 'Konsinyasi' }))
+  ]
+  .filter(item => item.stock < (item.minStock || 10))
+  .map(item => {
+    const isCritical = item.stock < (item.minStock || 10) / 2;
+    return {
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      stock: item.stock,
+      minStock: item.minStock || 10,
+      colorClass: isCritical ? 'bg-danger-light text-danger' : 'bg-warning-light text-warning',
+      textColor: isCritical ? 'text-danger' : 'text-warning'
+    };
+  })
+  .sort((a, b) => a.stock - b.stock)
+  .slice(0, 5); // Ambil 5 teratas
+
+  // ── Tagihan Nunggak ────────────────────────────────────────────────────────
+  const overdueInstallments = [];
+  const addOverdue = (loan, type) => {
+    if (loan.status === 'Active' && loan.installments) {
+      loan.installments.forEach(inst => {
+        if (inst.status === 'Pending' && inst.dueDate < todayStr) {
+          overdueInstallments.push({ ...inst, loanName: loan.name, loanType: type, loanId: loan.id });
+        }
+      });
+    }
+  };
+  cashLoans.forEach(l => addOverdue(l, 'Pinjaman Tunai'));
+  creditGoods.forEach(l => addOverdue(l, 'Kredit Barang'));
+  // Sort by oldest due date first
+  overdueInstallments.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
   // ── Transaksi terakhir ─────────────────────────────────────────────────────
   const recentTransactions = [...journal].reverse().slice(0, 5);
@@ -245,20 +260,20 @@ const Dashboard = () => {
     </tbody>
   </table>
 
-  ${loansNearingDue.length > 0 ? `
-  <h2>Pinjaman Aktif</h2>
+  ${lowStockItems.length > 0 ? `
+  <h2>Peringatan Stok Menipis</h2>
   <table>
     <thead>
-      <tr><th>ID</th><th>Nama Anggota</th><th>Jenis</th><th class="text-right">Sisa Tagihan</th><th>Tenor</th></tr>
+      <tr><th>ID</th><th>Nama Barang</th><th>Jenis</th><th class="text-right">Sisa Stok</th><th>Min. Stok</th></tr>
     </thead>
     <tbody>
-      ${loansNearingDue.map(l => `
+      ${lowStockItems.map(item => `
       <tr>
-        <td style="font-family:monospace;font-size:10px">${l.id}</td>
-        <td>${l.name}</td>
-        <td>${l.type}</td>
-        <td class="text-right badge-minus">Rp ${l.remaining.toLocaleString('id-ID')}</td>
-        <td>${l.tenor} bln</td>
+        <td style="font-family:monospace;font-size:10px">${item.type === 'Ritel' ? 'BRG' : 'KNS'}-${item.id}</td>
+        <td>${item.name}</td>
+        <td>${item.type}</td>
+        <td class="text-right"><strong style="color: ${item.textColor === 'text-danger' ? '#ef4444' : '#f59e0b'}">${item.stock} Unit</strong></td>
+        <td>${item.minStock} Unit</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
@@ -286,6 +301,38 @@ const Dashboard = () => {
         </div>
         <button className="btn btn-primary" onClick={handleUnduhLaporan}>Unduh Laporan</button>
       </div>
+
+      {/* ── Banner Tagihan Nunggak ── */}
+      {overdueInstallments.length > 0 && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+          <div style={{ background: 'var(--color-danger)', color: 'white', padding: '0.5rem', borderRadius: '50%' }}>
+            <AlertTriangle size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: 'var(--color-danger)', marginBottom: '0.5rem' }}>Peringatan: {overdueInstallments.length} Tagihan Nunggak!</h3>
+            <p style={{ color: 'var(--color-text)', fontSize: '0.9rem', marginBottom: '1rem' }}>Terdapat anggota yang telah melewati batas tanggal jatuh tempo pembayaran cicilan.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '0.75rem' }}>
+              {overdueInstallments.slice(0, 4).map((inst, idx) => (
+                <div key={idx} style={{ background: 'white', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{inst.loanName}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{inst.loanType} - Cicilan ke-{inst.no}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--color-danger)', fontSize: '0.85rem' }}>Rp {inst.amount.toLocaleString('id-ID')}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Jatuh tempo: {inst.dueDate}</div>
+                  </div>
+                </div>
+              ))}
+              {overdueInstallments.length > 4 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.75rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                  +{overdueInstallments.length - 4} tagihan lainnya...
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-4 gap-6 mb-6">
         <StatCard 
@@ -390,40 +437,42 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ── Pinjaman Aktif Card ── */}
+        {/* ── Peringatan Stok Menipis Card ── */}
         <div className="glass-panel">
           <div className="flex items-center justify-between mb-4">
-            <h3>Pinjaman Aktif</h3>
-            <span className="loan-badge-count">{loansNearingDue.length} aktif</span>
+            <h3>Peringatan Stok Menipis</h3>
+            <span className="loan-badge-count" style={{ background: 'rgba(245,158,11,0.15)', color: '#d97706' }}>
+              {lowStockItems.length} item
+            </span>
           </div>
           <div className="transaction-list">
-            {loansNearingDue.map((loan) => (
-              <div key={loan.id} className="transaction-item">
+            {lowStockItems.map((item) => (
+              <div key={`${item.type}-${item.id}`} className="transaction-item">
                 <div className="flex items-center gap-3">
-                  <div className={`transaction-icon ${loan.colorClass}`}>
-                    <CreditCard size={16} />
+                  <div className={`transaction-icon ${item.colorClass}`}>
+                    <AlertTriangle size={16} />
                   </div>
                   <div>
                     <p className="transaction-title" style={{ maxWidth: '130px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {loan.name}
+                      {item.name}
                     </p>
                     <p className="transaction-time text-muted text-xs truncate" style={{ maxWidth: '130px' }}>
-                      {loan.type}
+                      {item.type}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="transaction-amount font-medium text-danger">
-                    Rp {loan.remaining.toLocaleString('id-ID')}
+                  <p className={`transaction-amount font-medium ${item.textColor}`}>
+                    {item.stock} Unit
                   </p>
-                  <p className="text-muted text-xs">{loan.tenor} bln</p>
+                  <p className="text-muted text-xs">Min: {item.minStock}</p>
                 </div>
               </div>
             ))}
-            {loansNearingDue.length === 0 && (
+            {lowStockItems.length === 0 && (
               <div className="dashboard-empty-state">
-                <Clock size={36} />
-                <p>Tidak ada pinjaman aktif.</p>
+                <ShoppingCart size={36} />
+                <p>Stok barang aman.</p>
               </div>
             )}
           </div>
