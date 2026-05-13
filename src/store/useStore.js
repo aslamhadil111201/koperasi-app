@@ -288,8 +288,8 @@ export const useStore = create(
       : 'Penjualan Barang Ritel';
 
     const journalEntries = [
-      { id: newJournalId, date, description: desc, ref: 'BKM-RTL', debit: totalAmount, credit: 0, account: akunDebit },
-      { id: newJournalId, date, description: desc, ref: 'BKM-RTL', debit: 0, credit: totalAmount, account: 'Pendapatan Penjualan Ritel' },
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: totalAmount, credit: 0, account: akunDebit },
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: 0, credit: totalAmount, account: 'Pendapatan Penjualan Ritel' },
       ...(totalHPP > 0 ? [
         { id: newJournalId, date, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
         { id: newJournalId, date, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
@@ -320,9 +320,9 @@ export const useStore = create(
       : 'Penjualan Titipan';
 
     const journalEntries = [
-      { id: newJournalId, date, description: desc, ref: 'BKM-KNS', debit: totalAmount, credit: 0, account: akunDebit },
-      { id: newJournalId, date, description: 'Komisi Konsinyasi', ref: 'BKM-KNS', debit: 0, credit: totalCommission, account: 'Pendapatan Komisi' },
-      { id: newJournalId, date, description: 'Hutang Titipan', ref: 'BKM-KNS', debit: 0, credit: totalSupplier, account: 'Hutang Konsinyasi' }
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: totalAmount, credit: 0, account: akunDebit },
+      { id: newJournalId, date, description: 'Komisi Konsinyasi', ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: 0, credit: totalCommission, account: 'Pendapatan Komisi' },
+      { id: newJournalId, date, description: 'Hutang Titipan', ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: 0, credit: totalSupplier, account: 'Hutang Konsinyasi' }
     ];
 
     const member = memberId ? state.members.find(m => m.id === memberId) : null;
@@ -344,8 +344,8 @@ export const useStore = create(
       : 'Penjualan Jasa/PPOB';
 
     const journalEntries = [
-      { id: newJournalId, date, description: desc, ref: 'BKM-JSA', debit: totalAmount, credit: 0, account: akunDebit },
-      { id: newJournalId, date, description: desc, ref: 'BKM-JSA', debit: 0, credit: totalAmount, account: 'Pendapatan Jasa' },
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: totalAmount, credit: 0, account: akunDebit },
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: totalAmount, account: 'Pendapatan Jasa' },
       ...(totalHPP > 0 ? [
         { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
         { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
@@ -468,6 +468,59 @@ export const useStore = create(
     ];
 
     return { creditGoods: newCredits, journal: [...state.journal, ...journalEntries] };
+  }),
+
+  // Payroll Deduction (Potong Gaji Massal)
+  processPayrollDeduction: (memberIds, paymentMap) => set((state) => {
+    // paymentMap: { [memberId]: { piutangDagang, piutangAnggota, piutangBarang } }
+    const date = new Date().toISOString().split('T')[0];
+    const journalEntries = [];
+    const newCashLoans = [...state.cashLoans];
+    const newCreditGoods = [...state.creditGoods];
+
+    let journalBaseId = Math.floor(state.journal.length / 2) + 1;
+
+    memberIds.forEach(mId => {
+      const p = paymentMap[mId];
+      if (!p) return;
+
+      const totalPaid = (p.piutangDagang || 0) + (p.piutangAnggota || 0) + (p.piutangBarang || 0);
+      if (totalPaid <= 0) return;
+
+      const newJournalId = `JU-${String(journalBaseId++).padStart(4, '0')}`;
+      
+      // Kas bertambah
+      journalEntries.push({ id: newJournalId, date, description: `Pelunasan Potong Gaji`, ref: mId, debit: totalPaid, credit: 0, account: 'Kas' });
+
+      // Piutang berkurang
+      if (p.piutangDagang > 0) {
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kasbon Ritel/Jasa`, ref: mId, debit: 0, credit: p.piutangDagang, account: 'Piutang Dagang' });
+      }
+      if (p.piutangAnggota > 0) {
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Pinjaman Tunai`, ref: mId, debit: 0, credit: p.piutangAnggota, account: 'Piutang Anggota' });
+        // Mark all active cash loans for this member as completed
+        state.cashLoans.forEach((l, idx) => {
+          if (l.memberId === mId && l.status === 'Active' && l.remainingAmount > 0) {
+            newCashLoans[idx] = { ...l, remainingAmount: 0, status: 'Completed' };
+          }
+        });
+      }
+      if (p.piutangBarang > 0) {
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kredit Barang`, ref: mId, debit: 0, credit: p.piutangBarang, account: 'Piutang Barang' });
+        // Mark all active credit goods for this member as completed
+        state.creditGoods.forEach((c, idx) => {
+          if (c.memberId === mId && c.status === 'Active' && c.remainingAmount > 0) {
+            newCreditGoods[idx] = { ...c, remainingAmount: 0, status: 'Completed' };
+          }
+        });
+      }
+    });
+
+    return {
+      cashLoans: newCashLoans,
+      creditGoods: newCreditGoods,
+      journal: [...state.journal, ...journalEntries]
+    };
   }),
     }),
     {

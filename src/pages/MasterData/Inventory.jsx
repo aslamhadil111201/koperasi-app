@@ -10,8 +10,8 @@ const Inventory = () => {
   const services            = useStore((state) => state.services);
   const currentUser         = useStore((state) => state.currentUser);
 
-  // Akun yang tidak boleh edit data
-  const canEdit = !['uci', 'surtini', 'indah'].includes(currentUser?.username);
+  // Buka akses edit untuk semua akun pengurus/admin
+  const canEdit = true;
 
   const addProduct        = useStore((state) => state.addProduct);
   const addConsignment    = useStore((state) => state.addConsignment);

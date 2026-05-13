@@ -133,6 +133,24 @@ const Receipt = ({
   return (
     <>
       <div style={{
+        background: 'rgba(16, 185, 129, 0.1)',
+        color: 'var(--color-success)',
+        border: '1px solid rgba(16, 185, 129, 0.3)',
+        padding: '0.6rem',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        borderRadius: 'var(--radius-sm)',
+        marginBottom: '1.25rem',
+        fontSize: '0.9rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5rem'
+      }}>
+        ✅ Transaksi Berhasil Disimpan!
+      </div>
+
+      <div style={{
         fontFamily: "'Courier New', Courier, monospace",
         fontSize: 12,
         color: '#000',

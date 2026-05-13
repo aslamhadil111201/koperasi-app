@@ -54,6 +54,7 @@ export const useSupabaseWrite = () => {
     const origPayCreditGoods = store.payCreditGoods;
     const origAddExpense = store.addExpense;
     const origAddIncome = store.addIncome;
+    const origProcessPayrollDeduction = store.processPayrollDeduction;
 
     // Override dengan versi yang juga write ke Supabase
     const patchedActions = {
@@ -278,6 +279,38 @@ export const useSupabaseWrite = () => {
         const creditId = args[0];
         const updated = stateAfter.creditGoods.find(c => c.id === creditId);
         if (updated) updateCreditGoodDB(creditId, { status: updated.status, remainingAmount: updated.remainingAmount }).catch(console.error);
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      processPayrollDeduction: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origProcessPayrollDeduction(...args);
+        const stateAfter = useStore.getState();
+
+        const memberIds = args[0];
+        const paymentMap = args[1];
+
+        // Update DB
+        memberIds.forEach(mId => {
+          const p = paymentMap[mId];
+          if (!p) return;
+          if (p.piutangAnggota > 0) {
+            stateAfter.cashLoans.forEach(l => {
+              if (l.memberId === mId && l.status === 'Completed') {
+                updateCashLoanDB(l.id, { status: l.status, remainingAmount: l.remainingAmount }).catch(console.error);
+              }
+            });
+          }
+          if (p.piutangBarang > 0) {
+            stateAfter.creditGoods.forEach(c => {
+              if (c.memberId === mId && c.status === 'Completed') {
+                updateCreditGoodDB(c.id, { status: c.status, remainingAmount: c.remainingAmount }).catch(console.error);
+              }
+            });
+          }
+        });
 
         const newJournals = stateAfter.journal.slice(oldJournalLen);
         if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);

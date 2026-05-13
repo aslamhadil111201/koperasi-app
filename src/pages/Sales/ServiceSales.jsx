@@ -65,6 +65,7 @@ const ServiceSales = () => {
       paymentMethod, takeDate, installments, startDate, notes, schedule,
       pic: currentUser?.name || 'Admin',
     });
+    alert('Transaksi Berhasil Disimpan!');
     setShowReceipt(true);
     setCart([]); setSelectedMember(''); setPaymentMethod('Cash');
     setTakeDate(''); setInstallments(1); setStartDate(''); setNotes('');

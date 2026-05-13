@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Wrench,
   PiggyBank, Banknote, CreditCard, BookOpen, TrendingUp,
   LogOut, Users, Database, PieChart, Scale, PackagePlus,
-  BookMarked, Waves, ChevronLeft, ChevronRight, X
+  BookMarked, Waves, ChevronLeft, ChevronRight, X, ListChecks
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Sidebar.css';
@@ -33,6 +33,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
     { title: 'Simpanan',        path: '/loans/savings',      icon: <PiggyBank size={20} /> },
     { title: 'Pinjaman Tunai',  path: '/loans/cash',         icon: <Banknote size={20} /> },
     { title: 'Kredit Barang',   path: '/loans/credit-goods', icon: <CreditCard size={20} /> },
+    { title: 'Piutang & Potong Gaji', path: '/loans/receivables', icon: <ListChecks size={20} /> },
   ];
 
   if (currentUser?.role === 'admin') {

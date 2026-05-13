@@ -15,6 +15,7 @@ import ConsignmentSales from './pages/Sales/ConsignmentSales';
 import ServiceSales from './pages/Sales/ServiceSales';
 import CashLoans from './pages/Loans/CashLoans';
 import CreditGoods from './pages/Loans/CreditGoods';
+import Receivables from './pages/Loans/Receivables';
 import ProfitLoss from './pages/Reports/ProfitLoss';
 import Members from './pages/MasterData/Members';
 import Inventory from './pages/MasterData/Inventory';
@@ -104,6 +105,7 @@ function App() {
         <Route path="/loans/savings" element={<ProtectedRoute><AppLayout><Savings /></AppLayout></ProtectedRoute>} />
         <Route path="/loans/cash" element={<ProtectedRoute><AppLayout><CashLoans /></AppLayout></ProtectedRoute>} />
         <Route path="/loans/credit-goods" element={<ProtectedRoute><AppLayout><CreditGoods /></AppLayout></ProtectedRoute>} />
+        <Route path="/loans/receivables" element={<ProtectedRoute><AppLayout><Receivables /></AppLayout></ProtectedRoute>} />
         
         {/* Report Routes (Admin Only) */}
         <Route path="/reports/ledger" element={<ProtectedRoute requiredRole="admin"><AppLayout><GeneralLedger /></AppLayout></ProtectedRoute>} />

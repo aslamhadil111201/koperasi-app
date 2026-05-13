@@ -49,6 +49,7 @@ const Savings = () => {
     e.preventDefault();
     if (!depositForm.memberId) return alert('Pilih anggota terlebih dahulu');
     depositSavings(depositForm.memberId, depositForm.pokok, depositForm.wajib, depositForm.sukarela, depositForm.date);
+    alert('Setoran Simpanan Berhasil Disimpan!');
     setShowDeposit(false);
     setDepositForm({ memberId: '', pokok: 0, wajib: 0, sukarela: 0, date: new Date().toLocaleDateString('en-CA') });
   };
