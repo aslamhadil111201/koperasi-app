@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Search, User, LogOut, X, Sun, Moon, AlertTriangle, Clock, Package, Menu } from 'lucide-react';
+import { Bell, Search, User, LogOut, X, Sun, Moon, AlertTriangle, Clock, Package, Menu, Users } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { useNavigate } from 'react-router-dom';
+import { usePresence } from '../../hooks/usePresence';
 import './Header.css';
 
 const Header = ({ onMenuClick }) => {
@@ -15,12 +16,15 @@ const Header = ({ onMenuClick }) => {
   const darkMode       = useStore((state) => state.darkMode);
   const toggleDarkMode = useStore((state) => state.toggleDarkMode);
   const navigate       = useNavigate();
+  const onlineUsers    = usePresence(currentUser);
 
   const [query,       setQuery]       = useState('');
   const [showResults, setShowResults] = useState(false);
   const [showNotif,   setShowNotif]   = useState(false);
+  const [showPresence,setShowPresence]= useState(false);
   const [readIds,     setReadIds]     = useState([]);
   const notifRef = useRef(null);
+  const presenceRef = useRef(null);
 
   // ── Generate notifications from real data ──────────────────────────────────
   const notifications = [
@@ -66,6 +70,9 @@ const Header = ({ onMenuClick }) => {
     const handler = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setShowNotif(false);
+      }
+      if (presenceRef.current && !presenceRef.current.contains(e.target)) {
+        setShowPresence(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -165,6 +172,47 @@ const Header = ({ onMenuClick }) => {
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
           {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
+
+        {/* ── Online Users (Only for aslamhadilmatin) ── */}
+        {currentUser?.username === 'aslamhadilmatin' && (
+          <div style={{ position: 'relative' }} ref={presenceRef}>
+            <button className="icon-btn" onClick={() => setShowPresence(v => !v)} title="Pengguna Online">
+              <Users size={20} />
+              {onlineUsers.length > 0 && (
+                <span className="presence-badge">{onlineUsers.length}</span>
+              )}
+            </button>
+
+            {showPresence && (
+              <div className="notif-dropdown">
+                <div className="notif-header">
+                  <span className="notif-title">Pengguna Online</span>
+                </div>
+                <div className="notif-list">
+                  {onlineUsers.length === 0 ? (
+                    <div className="notif-empty">
+                      <Users size={28} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
+                      <p>Tidak ada pengguna online</p>
+                    </div>
+                  ) : (
+                    onlineUsers.map(user => (
+                      <div key={user.username} className="notif-item" style={{ cursor: 'default' }}>
+                        <div className="notif-icon-wrap" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#22c55e' }}>
+                          <User size={15} />
+                        </div>
+                        <div className="notif-body">
+                          <p className="notif-item-title">{user.name}</p>
+                          <p className="notif-item-msg" style={{ textTransform: 'capitalize' }}>{user.role}</p>
+                        </div>
+                        <span className="presence-dot" />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Notification Bell ── */}
         <div style={{ position: 'relative' }} ref={notifRef}>

@@ -462,10 +462,17 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`transaction-amount font-medium ${item.textColor}`}>
-                    {item.stock} Unit
-                  </p>
-                  <p className="text-muted text-xs">Min: {item.minStock}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                    {item.stock === 0 ? (
+                      <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'var(--color-danger)', color: 'white', fontWeight: 600 }}>Habis!</span>
+                    ) : (
+                      <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem', borderRadius: '4px', background: 'var(--color-warning)', color: 'white', fontWeight: 600 }}>Menipis</span>
+                    )}
+                    <p className={`transaction-amount font-medium ${item.textColor}`} style={{ margin: 0 }}>
+                      {item.stock} Unit
+                    </p>
+                  </div>
+                  <p className="text-muted text-xs" style={{ margin: 0 }}>Min: {item.minStock}</p>
                 </div>
               </div>
             ))}
