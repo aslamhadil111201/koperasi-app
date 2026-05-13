@@ -58,7 +58,6 @@ const GeneralLedger = () => {
   const paginatedData = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const PaginationBar = () => {
-    if (totalPages <= 1) return null;
     return (
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1.5rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem', background: '#fff' }}>
         <span style={{ color:'var(--color-text-muted)' }}>
@@ -342,7 +341,7 @@ const GeneralLedger = () => {
               <tr style={{ background: 'rgba(249, 250, 251, 0.5)', fontWeight: 'bold' }}>
                 <td colSpan="6" className="text-right p-4">Total</td>
                 <td className="text-right text-primary p-4">{totalDebit.toLocaleString('id-ID')}</td>
-                <td className="text-right text-primary p-4">{totalCredit.toLocaleString('id-ID')}</td>
+                <td className="text-right text-success p-4">{totalCredit.toLocaleString('id-ID')}</td>
               </tr>
             </tfoot>
           </table>
