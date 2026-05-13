@@ -28,6 +28,7 @@ const GeneralLedger = () => {
       const matchSearch = !searchTerm ||
         item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.ref?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.account?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchMonth = !filterMonth || item.date?.startsWith(filterMonth);
       const matchAkun  = !filterAkun  || item.account === filterAkun;
@@ -65,6 +66,7 @@ const GeneralLedger = () => {
           return `<tr style="background:${i%2===0?'#fff':'#f9fafb'}">
             <td>${item.date}</td>
             <td style="font-family:monospace;font-size:10px">${item.id}</td>
+            <td style="font-family:monospace;font-size:10px;color:#6b7280">${item.ref || '-'}</td>
             <td>${item.description}</td>
             <td>${item.account}</td>
             <td style="text-align:center">
@@ -116,6 +118,7 @@ const GeneralLedger = () => {
       <tr>
         <th>Tanggal</th>
         <th>No. Bukti</th>
+        <th>Ref</th>
         <th>Keterangan</th>
         <th>Akun</th>
         <th style="text-align:center">Tipe</th>
@@ -126,7 +129,7 @@ const GeneralLedger = () => {
     <tbody>${rowsHTML}</tbody>
     <tfoot>
       <tr>
-        <td colspan="5" style="text-align:right">TOTAL</td>
+        <td colspan="6" style="text-align:right">TOTAL</td>
         <td style="text-align:right;color:#FF4D00">Rp ${totalDebit.toLocaleString('id-ID')}</td>
         <td style="text-align:right;color:#10b981">Rp ${totalCredit.toLocaleString('id-ID')}</td>
       </tr>
@@ -225,6 +228,7 @@ const GeneralLedger = () => {
               <tr>
                 <th>Tanggal</th>
                 <th>No. Bukti</th>
+                <th>Ref</th>
                 <th>Keterangan</th>
                 <th>Akun</th>
                 <th style={{ textAlign: 'center', width: 60 }}>Tipe</th>
@@ -242,6 +246,9 @@ const GeneralLedger = () => {
                     </td>
                     <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                       {item.id}
+                    </td>
+                    <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                      {item.ref || '-'}
                     </td>
                     <td style={{ fontSize: '0.875rem' }}>
                       {item.description}
@@ -276,7 +283,7 @@ const GeneralLedger = () => {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)' }}>
                     Tidak ada data jurnal ditemukan.
                   </td>
                 </tr>
@@ -284,7 +291,7 @@ const GeneralLedger = () => {
             </tbody>
             <tfoot>
               <tr style={{ background: 'rgba(249, 250, 251, 0.5)', fontWeight: 'bold' }}>
-                <td colSpan="5" className="text-right p-4">Total</td>
+                <td colSpan="6" className="text-right p-4">Total</td>
                 <td className="text-right text-primary p-4">{totalDebit.toLocaleString('id-ID')}</td>
                 <td className="text-right text-primary p-4">{totalCredit.toLocaleString('id-ID')}</td>
               </tr>
