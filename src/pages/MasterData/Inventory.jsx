@@ -22,7 +22,6 @@ const Inventory = () => {
   const deleteProduct     = useStore((state) => state.deleteProduct);
   const deleteConsignment = useStore((state) => state.deleteConsignment);
   const deleteService     = useStore((state) => state.deleteService);
-  const restockProduct    = useStore((state) => state.restockProduct);
 
   const [activeTab, setActiveTab] = useState('retail');
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,11 +37,6 @@ const Inventory = () => {
     name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10,
     supplier: '', supplierPrice: 0, provider: '', type: '', image: ''
   });
-
-  // Restock modal state
-  const [showRestock, setShowRestock] = useState(false);
-  const [restockItem, setRestockItem] = useState(null);
-  const [restockForm, setRestockForm] = useState({ qty: 1, hpp: 0 });
 
   const openAddModal = () => {
     setEditingItem(null);
@@ -68,20 +62,6 @@ const Inventory = () => {
       image: item.image ?? '',
     });
     setShowModal(true);
-  };
-
-  const openRestockModal = (item) => {
-    setRestockItem(item);
-    setRestockForm({ qty: 1, hpp: item.hpp ?? 0 });
-    setShowRestock(true);
-  };
-
-  const handleRestockSubmit = (e) => {
-    e.preventDefault();
-    if (!restockItem) return;
-    restockProduct(restockItem.id, Number(restockForm.qty), Number(restockForm.hpp));
-    setShowRestock(false);
-    setRestockItem(null);
   };
 
   const handleImageChange = async (e) => {
@@ -346,9 +326,6 @@ const Inventory = () => {
                     <td>{stockBadge(item.stock, item.minStock)}</td>
                     <td>
                       <div className="table-action-group">
-                        <button className="table-action-btn" onClick={() => openRestockModal(item)} style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)' }}>
-                          <RefreshCw size={13} /> Restock
-                        </button>
                         {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
                         {canEdit && <button className="table-action-btn table-action-delete" onClick={() => handleDelete(item)}><Trash2 size={13} /> Hapus</button>}
                       </div>
@@ -674,62 +651,6 @@ const Inventory = () => {
                 <button type="submit" className="btn btn-primary">
                   Simpan Data
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Restock Modal */}
-      {showRestock && restockItem && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowRestock(false)}>
-          <div className="modal-content" style={{ maxWidth: 420 }}>
-            <div className="modal-header">
-              <h3><RefreshCw size={18} /> Restock Barang</h3>
-              <button className="modal-close-btn" onClick={() => setShowRestock(false)}>
-                <X size={16} />
-              </button>
-            </div>
-            <form onSubmit={handleRestockSubmit}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label className="form-label">Nama Barang</label>
-                  <input type="text" className="form-control" value={restockItem.name} readOnly style={{ background: 'var(--color-background)', cursor: 'default' }} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Stok Saat Ini</label>
-                  <input type="text" className="form-control" value={`${restockItem.stock} Unit`} readOnly style={{ background: 'var(--color-background)', cursor: 'default' }} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Qty Diterima (Unit)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    min={1}
-                    value={restockForm.qty}
-                    onChange={(e) => setRestockForm(f => ({ ...f, qty: Number(e.target.value) }))}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">HPP / Harga Beli Baru (Rp)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    min={0}
-                    value={restockForm.hpp}
-                    onChange={(e) => setRestockForm(f => ({ ...f, hpp: Number(e.target.value) }))}
-                    required
-                  />
-                </div>
-                <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-                  Total biaya restock: <strong style={{ color: 'var(--color-success)' }}>Rp {(restockForm.qty * restockForm.hpp).toLocaleString('id-ID')}</strong>
-                  <br />Akan dicatat sebagai jurnal Persediaan Barang &amp; Kas.
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowRestock(false)}>Batal</button>
-                <button type="submit" className="btn btn-primary"><RefreshCw size={14} /> Konfirmasi Restock</button>
               </div>
             </form>
           </div>
