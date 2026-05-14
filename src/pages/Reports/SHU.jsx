@@ -23,18 +23,21 @@ const SHU = () => {
 
   // ── Hitung Laba Bersih dari jurnal (sama persis dengan ProfitLoss) ──────────
   const labaBersih = useMemo(() => {
+    // Abaikan jurnal penutup
+    const activeJournal = journal.filter(e => !e.isClosingEntry);
+
     const INCOME_ACCOUNTS = accounts.filter(a => a.category.includes('Pendapatan')).map(a => a.name);
     const HPP_ACCOUNTS = accounts.filter(a => a.category === 'Harga Pokok Penjualan').map(a => a.name);
     
     const totalRevenue = INCOME_ACCOUNTS.reduce((s, akun) =>
-      s + journal.filter(e => e.account === akun).reduce((a, e) => a + e.credit, 0), 0);
+      s + activeJournal.filter(e => e.account === akun).reduce((a, e) => a + e.credit, 0), 0);
     const totalHPP = HPP_ACCOUNTS.reduce((s, akun) =>
-      s + journal.filter(e => e.account === akun).reduce((a, e) => a + e.debit, 0), 0);
+      s + activeJournal.filter(e => e.account === akun).reduce((a, e) => a + e.debit, 0), 0);
     const bebanAccounts = accounts.filter(a => a.category.includes('Beban')).map(a => a.name);
     const totalBeban = bebanAccounts.reduce((s, akun) =>
-      s + journal.filter(e => e.account === akun).reduce((a, e) => a + e.debit, 0), 0);
+      s + activeJournal.filter(e => e.account === akun).reduce((a, e) => a + e.debit, 0), 0);
     return Math.max(0, totalRevenue - totalHPP - totalBeban);
-  }, [journal]);
+  }, [journal, accounts]);
 
   // ── Persentase distribusi SHU (editable) ────────────────────────────────────
   const [pctCadangan,    setPctCadangan]    = useState(30); // Dana Cadangan/Modal

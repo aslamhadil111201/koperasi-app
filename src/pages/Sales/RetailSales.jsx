@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, Search, User, X, Banknote, CreditCard, Calendar } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { buildSchedule } from '../../utils/installment';
@@ -9,18 +9,40 @@ import './Sales.css';
 const RetailSales = () => {
   const products       = useStore((state) => state.products);
   const members        = useStore((state) => state.members);
+  const customers      = useStore((state) => state.customers) || [];
+  const addCustomer    = useStore((state) => state.addCustomer);
   const checkoutRetail = useStore((state) => state.checkoutRetail);
   const currentUser    = useStore((state) => state.currentUser);
 
   const [cart, setCart]                     = useState([]);
   const [searchTerm, setSearchTerm]         = useState('');
+  const [buyerType, setBuyerType]           = useState('member'); // 'member' or 'customer'
   const [selectedMember, setSelectedMember] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [newCustomer, setNewCustomer]       = useState({ name: '', address: '', npwp: '', phone: '' });
+
   const [paymentMethod, setPaymentMethod]   = useState('Cash');
   const [txDate, setTxDate]                 = useState(new Date().toISOString().split('T')[0]);
   const [takeDate, setTakeDate]             = useState('');
   const [installments, setInstallments]     = useState(1);
-  const [startDate, setStartDate]           = useState('');
-  const [notes, setNotes]                   = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [notes, setNotes] = useState('');
+
+  // Handle default payment rules for customers vs members
+  useEffect(() => {
+    if (buyerType === 'customer') {
+      setPaymentMethod('Kredit');
+      setInstallments(1);
+      const tx = new Date(txDate);
+      tx.setMonth(tx.getMonth() + 1);
+      setStartDate(tx.toISOString().split('T')[0]);
+    } else {
+      setPaymentMethod('Cash');
+    }
+  }, [buyerType, txDate]);
+
   const [showReceipt, setShowReceipt]       = useState(false);
   const [lastTransaction, setLastTransaction] = useState(null);
 
@@ -73,15 +95,26 @@ const RetailSales = () => {
 
   const handleCheckout = () => {
     if (cart.length === 0) return alert('Keranjang kosong!');
-    if (paymentMethod === 'Kredit' && !selectedMember) return alert('Metode Kredit harus memilih anggota!');
+    if (paymentMethod === 'Kredit' && buyerType === 'member' && !selectedMember) return alert('Metode Kredit harus memilih anggota/customer!');
+    if (paymentMethod === 'Kredit' && buyerType === 'customer' && !selectedCustomer) return alert('Metode Kredit harus memilih anggota/customer!');
     if (paymentMethod === 'Kredit' && !startDate) return alert('Isi tanggal mulai cicilan!');
-    const member = selectedMember ? members.find(m => m.id === selectedMember) : null;
+    
+    let buyer = null;
+    if (buyerType === 'member' && selectedMember) {
+      const m = members.find(x => x.id === selectedMember);
+      if (m) buyer = { id: m.id, name: m.name, type: 'member' };
+    } else if (buyerType === 'customer' && selectedCustomer) {
+      const c = customers.find(x => x.id === selectedCustomer);
+      if (c) buyer = { id: c.id, name: c.name, type: 'customer', address: c.address, npwp: c.npwp, phone: c.phone };
+    }
+
     const txId = `RTL-${Date.now()}`;
-    checkoutRetail(cart, totalAmount, markupAmount, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
+    checkoutRetail(cart, totalAmount, markupAmount, buyer, paymentMethod, installments, startDate || null, notes, txDate);
     setLastTransaction({
       items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, hpp: i.hpp })),
       total: grandTotal, subtotal: totalAmount, markupAmount, type: 'retail',
-      memberName: member?.name || null,
+      memberName: buyer?.name || null,
+      buyer: buyer,
       date: txDate || new Date().toISOString(),
       transactionId: txId,
       paymentMethod, takeDate, installments, startDate, notes, schedule,
@@ -89,8 +122,15 @@ const RetailSales = () => {
     });
     alert('Transaksi Berhasil Disimpan!');
     setShowReceipt(true);
-    setCart([]); setSelectedMember(''); setPaymentMethod('Cash');
+    setCart([]); setSelectedMember(''); setSelectedCustomer(''); setBuyerType('member'); setPaymentMethod('Cash');
     setTakeDate(''); setInstallments(1); setStartDate(''); setNotes('');
+  };
+
+  const submitAddCustomer = () => {
+    if (!newCustomer.name) return alert('Nama wajib diisi');
+    addCustomer(newCustomer);
+    setShowAddCustomer(false);
+    setNewCustomer({ name: '', address: '', npwp: '', phone: '' });
   };
 
   return (
@@ -134,15 +174,48 @@ const RetailSales = () => {
       <div className="cart-section glass-panel">
         <h3 className="mb-4 flex items-center gap-2"><ShoppingCart size={20} /> Keranjang Belanja</h3>
 
-        <div className="member-selector">
-          <label className="member-selector-label"><User size={14} /> Anggota (Opsional)</label>
-          <SearchableSelect
-            options={members.map(m => ({ value: m.id, label: `${m.name} (${m.id})` }))}
-            value={selectedMember}
-            onChange={setSelectedMember}
-            placeholder="— Pembeli Umum —"
-          />
-          {selectedMember && <p className="member-selected-info">✅ Transaksi ini akan dihitung ke SHU anggota</p>}
+        <div style={{ padding: '1rem', border: '1px dashed rgba(234, 88, 12, 0.4)', borderRadius: '8px', backgroundColor: 'rgba(234, 88, 12, 0.04)', marginBottom: '1rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ea580c', fontWeight: 700, marginBottom: '0.75rem', fontSize: '0.85rem', letterSpacing: '0.5px' }}>
+            <User size={16} /> KATEGORI PEMBELI
+          </label>
+          <div className="flex gap-4 mb-3">
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="radio" name="buyerType" checked={buyerType === 'member'} onChange={() => setBuyerType('member')} style={{ accentColor: '#ea580c', width: '16px', height: '16px' }} /> Anggota
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input type="radio" name="buyerType" checked={buyerType === 'customer'} onChange={() => setBuyerType('customer')} style={{ accentColor: '#ea580c', width: '16px', height: '16px' }} /> Non-Anggota (Customer)
+            </label>
+          </div>
+
+          {buyerType === 'member' ? (
+            <div style={{ marginTop: '0.5rem' }}>
+              <SearchableSelect
+                options={members.map(m => ({ value: m.id, label: `${m.name} (${m.id})` }))}
+                value={selectedMember}
+                onChange={setSelectedMember}
+                placeholder="— Pilih Anggota (Opsional) —"
+              />
+              {selectedMember && <p style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '4px' }}>✅ Transaksi ini akan dihitung ke SHU anggota</p>}
+            </div>
+          ) : (
+            <div className="flex gap-2 items-center" style={{ marginTop: '0.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <SearchableSelect
+                  options={customers.map(c => ({ value: c.id, label: c.name }))}
+                  value={selectedCustomer}
+                  onChange={setSelectedCustomer}
+                  placeholder="— Pilih Customer —"
+                />
+              </div>
+              <button 
+                className="btn" 
+                style={{ height: '38px', padding: '0 1rem', background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#334155', display: 'flex', alignItems: 'center', gap: '4px', borderRadius: '6px', fontWeight: 500 }} 
+                onClick={() => setShowAddCustomer(true)}
+              >
+                <Plus size={16} /> Baru
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="form-group" style={{ marginBottom: '0.75rem' }}>
@@ -150,22 +223,24 @@ const RetailSales = () => {
           <input type="date" className="form-control" value={txDate} onChange={(e) => setTxDate(e.target.value)} required />
         </div>
 
-        <div className="payment-method-selector">
-          <label className="member-selector-label"><Banknote size={14} /> Metode Pembayaran</label>
-          <div className="payment-method-btns">
-            <button type="button" className={`payment-btn ${paymentMethod === 'Cash' ? 'active-cash' : ''}`}
-              onClick={() => setPaymentMethod('Cash')}><Banknote size={15} /> Cash</button>
-            <button type="button" className={`payment-btn ${paymentMethod === 'Kredit' ? 'active-kredit' : ''}`}
-              onClick={() => setPaymentMethod('Kredit')}><CreditCard size={15} /> Kredit / Cicilan</button>
+        {buyerType !== 'customer' && (
+          <div className="payment-method-selector">
+            <label className="member-selector-label"><Banknote size={14} /> Metode Pembayaran</label>
+            <div className="payment-method-btns">
+              <button type="button" className={`payment-btn ${paymentMethod === 'Cash' ? 'active-cash' : ''}`}
+                onClick={() => setPaymentMethod('Cash')}><Banknote size={15} /> Cash</button>
+              <button type="button" className={`payment-btn ${paymentMethod === 'Kredit' ? 'active-kredit' : ''}`}
+                onClick={() => setPaymentMethod('Kredit')}><CreditCard size={15} /> Kredit / Cicilan</button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="form-group" style={{ marginBottom: '0.75rem' }}>
           <label className="member-selector-label"><Calendar size={14} /> Tanggal Pengambilan</label>
           <input type="date" className="form-control" value={takeDate} onChange={(e) => setTakeDate(e.target.value)} />
         </div>
 
-        {paymentMethod === 'Kredit' && (
+        {paymentMethod === 'Kredit' && buyerType !== 'customer' && (
           <div className="kredit-fields">
             <div className="grid grid-cols-2 gap-4" style={{ marginBottom: '0.5rem' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
@@ -204,6 +279,21 @@ const RetailSales = () => {
             )}
             <div className="kredit-info-note">
               ⚠️ Dicatat sebagai <strong>Piutang Dagang</strong> — bukan Kas.
+            </div>
+          </div>
+        )}
+
+        {buyerType === 'customer' && (
+          <div className="kredit-fields" style={{ background: 'var(--color-surface-hover)', border: '1px dashed var(--color-border)' }}>
+            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+              <label className="member-selector-label"><Calendar size={14} /> Tanggal Jatuh Tempo</label>
+              <input type="date" className="form-control" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <small style={{ color:'#64748b', fontSize:'11px', display:'block', marginTop:'4px' }}>Secara otomatis diatur 1 bulan dari Tanggal Transaksi.</small>
+            </div>
+            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+              <label className="member-selector-label">Keterangan (Opsional)</label>
+              <input type="text" className="form-control" placeholder="Contoh: Jatuh tempo dibayar via transfer"
+                value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
           </div>
         )}
@@ -261,12 +351,14 @@ const RetailSales = () => {
               <span>Rp {Math.floor(grandTotal / installments).toLocaleString('id-ID')}</span>
             </div>
           )}
-          <div className="summary-row" style={{ fontSize: '0.8rem' }}>
-            <span>Metode</span>
-            <span style={{ color: paymentMethod === 'Kredit' ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 600 }}>
-              {paymentMethod === 'Kredit' ? `💳 ${installments === 1 ? 'Tempo' : `${installments}x Cicilan`}` : '💵 Cash'}
-            </span>
-          </div>
+          {buyerType !== 'customer' && (
+            <div className="summary-row" style={{ fontSize: '0.8rem' }}>
+              <span>Metode</span>
+              <span style={{ color: paymentMethod === 'Kredit' ? 'var(--color-warning)' : 'var(--color-success)', fontWeight: 600 }}>
+                {paymentMethod === 'Kredit' ? `💳 ${installments === 1 ? 'Tempo' : `${installments}x Cicilan`}` : '💵 Cash'}
+              </span>
+            </div>
+          )}
           <div className="summary-row" style={{ fontSize: '0.8rem' }}>
             <span>PIC / Kasir</span>
             <span style={{ fontWeight: 600 }}>{currentUser?.name || 'Admin'}</span>
@@ -280,6 +372,43 @@ const RetailSales = () => {
         </div>
       </div>
 
+      {/* Modal Add Customer */}
+      {showAddCustomer && (
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
+          <div className="modal-content" style={{ maxWidth: '420px', padding: 0, overflow: 'hidden', borderRadius: '12px' }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Tambah Customer Baru</h3>
+              <button className="icon-btn" onClick={() => setShowAddCustomer(false)} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '50%', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} color="#64748b" /></button>
+            </div>
+            
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>NAMA LENGKAP</label>
+                <input type="text" style={{ width: '100%', padding: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none', color: '#0f172a' }} value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} placeholder="Contoh: Aslam Hadil Matin" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>ALAMAT LENGKAP</label>
+                <textarea rows="3" style={{ width: '100%', padding: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none', resize: 'vertical', color: '#0f172a', fontFamily: 'monospace', fontSize: '0.85rem' }} value={newCustomer.address} onChange={e => setNewCustomer({...newCustomer, address: e.target.value})} placeholder="Jalan Ciracas No.01..."></textarea>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>NPWP</label>
+                <input type="text" style={{ width: '100%', padding: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none', color: '#0f172a' }} value={newCustomer.npwp} onChange={e => setNewCustomer({...newCustomer, npwp: e.target.value})} placeholder="Contoh: 00000" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>NOMOR TELEPON</label>
+                <input type="text" style={{ width: '100%', padding: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', outline: 'none', color: '#0f172a' }} value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="Contoh: 08579..." />
+              </div>
+            </div>
+
+            <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', background: '#fff' }}>
+              <button style={{ padding: '0.6rem 1.5rem', background: '#f1f5f9', color: '#334155', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => setShowAddCustomer(false)}>Batal</button>
+              <button style={{ padding: '0.6rem 1.5rem', background: '#f97316', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} onClick={submitAddCustomer}>Simpan</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Struk */}
       {showReceipt && lastTransaction && (
         <div className="modal-overlay" style={{ zIndex: 1000 }}
           onClick={(e) => e.target === e.currentTarget && setShowReceipt(false)}>

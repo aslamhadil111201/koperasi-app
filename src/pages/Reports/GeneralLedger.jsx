@@ -6,6 +6,8 @@ import './Reports.css';
 
 const GeneralLedger = () => {
   const journal = useStore((state) => state.journal);
+  const currentUser = useStore((state) => state.currentUser);
+  const deleteTransaction = useStore((state) => state.deleteTransaction);
   const location = useLocation();
 
   // ── Filter State ──────────────────────────────────────────────────────────
@@ -73,7 +75,7 @@ const GeneralLedger = () => {
 
   const PaginationBar = () => {
     return (
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1.5rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem', background: '#fff' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.875rem 1.5rem', borderTop:'1px solid var(--color-border)', fontSize:'0.82rem', background: 'transparent' }}>
         <span style={{ color:'var(--color-text-muted)' }}>
           Halaman {currentPage} dari {totalPages} · {filtered.length} entri
         </span>
@@ -311,15 +313,40 @@ const GeneralLedger = () => {
                   <tr key={`${item.id}-${index}`}>
                     <td style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
                       {item.date}
+                      {currentUser?.username === 'aslamhadilmatin' && item.timestamp && (
+                        <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '2px' }}>
+                          {new Date(item.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
                     </td>
                     <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                      {item.id}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {item.id}
+                        {currentUser?.username === 'aslamhadilmatin' && item.id !== 'JU-INIT' && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Hapus seluruh jurnal dan riwayat untuk transaksi ${item.id}?\n\nCATATAN: Stok barang tidak otomatis kembali, harap sesuaikan di menu Inventory.`)) {
+                                deleteTransaction(item.id);
+                              }
+                            }}
+                            style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: 0, display: 'flex' }}
+                            title="Batalkan / Hapus Transaksi Ini"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                       {item.ref || '-'}
                     </td>
                     <td style={{ fontSize: '0.875rem' }}>
                       {item.description}
+                      {item.isClosingEntry && (
+                        <span style={{ marginLeft: 8, fontSize: '0.65rem', padding: '0.15rem 0.4rem', background: 'var(--color-danger)', color: 'white', borderRadius: 999 }}>
+                          JURNAL PENUTUP
+                        </span>
+                      )}
                     </td>
                     <td style={{ fontSize: '0.875rem', fontWeight: 500 }}>
                       {item.account}
@@ -358,7 +385,7 @@ const GeneralLedger = () => {
               )}
             </tbody>
             <tfoot>
-              <tr style={{ background: 'rgba(249, 250, 251, 0.5)', fontWeight: 'bold' }}>
+              <tr style={{ background: 'var(--color-surface-hover)', fontWeight: 'bold' }}>
                 <td colSpan="6" className="text-right p-4">Total</td>
                 <td className="text-right text-primary p-4">{totalDebit.toLocaleString('id-ID')}</td>
                 <td className="text-right text-success p-4">{totalCredit.toLocaleString('id-ID')}</td>

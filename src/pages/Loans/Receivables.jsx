@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
-import { Search, FileText, X, CheckSquare } from 'lucide-react';
+import { Search, FileText, X, CheckSquare, Trash2 } from 'lucide-react';
 
 export default function Receivables() {
-  const { members, journal, cashLoans, creditGoods, processPayrollDeduction } = useStore();
+  const { members, journal, cashLoans, creditGoods, processPayrollDeduction, currentUser, deleteCreditGoods, deleteCashLoan } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal states
@@ -179,10 +179,26 @@ export default function Receivables() {
                     <td className="text-right">{item.pBarang > 0 ? `Rp ${item.pBarang.toLocaleString('id-ID')}` : '-'}</td>
                     <td className="text-right font-bold text-danger">Rp {item.total.toLocaleString('id-ID')}</td>
                     <td className="text-center">
-                      <button className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
-                        onClick={() => openPaymentModal(item)}>
-                        <FileText size={14} style={{ marginRight: 4 }} /> Detail & Bayar
-                      </button>
+                      <div style={{ display:'flex', gap:'0.5rem', justifyContent:'center' }}>
+                        <button className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
+                          onClick={() => openPaymentModal(item)}>
+                          <FileText size={14} style={{ marginRight: 4 }} /> Detail & Bayar
+                        </button>
+                        {currentUser?.username === 'aslamhadilmatin' && (
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding:'0.25rem 0.5rem', fontSize:'0.8rem', color:'var(--color-danger)' }}
+                            title="Hapus semua kredit aktif anggota ini"
+                            onClick={() => {
+                              if (window.confirm(`Hapus SEMUA data kredit aktif untuk "${item.name}"? Data akan dihapus dari daftar piutang.`)) {
+                                item.cGoods.forEach(c => deleteCreditGoods(c.id));
+                                item.cLoans.forEach(l => deleteCashLoan(l.id));
+                              }
+                            }}>
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

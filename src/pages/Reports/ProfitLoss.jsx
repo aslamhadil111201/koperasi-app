@@ -29,8 +29,10 @@ const ProfitLoss = () => {
   };
 
   const filtered = useMemo(() => {
-    if (!selectedMonth) return journal;
-    return journal.filter(e => e.date?.startsWith(selectedMonth));
+    // Kecualikan jurnal penutup agar Laba Rugi tetap menampilkan performa asli
+    const activeJournal = journal.filter(e => !e.isClosingEntry);
+    if (!selectedMonth) return activeJournal;
+    return activeJournal.filter(e => e.date?.startsWith(selectedMonth));
   }, [journal, selectedMonth]);
 
   // ── Modal State ───────────────────────────────────────────────────────────

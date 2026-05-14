@@ -14,6 +14,7 @@ import {
   insertCashLoan, updateCashLoanDB,
   insertCreditGood, updateCreditGoodDB,
   insertMemberSalesTx,
+  deleteTransactionDB, deleteCreditGoodsDB, deleteCashLoanDB,
 } from '../services/supabaseService';
 
 export const useSupabaseWrite = () => {
@@ -57,6 +58,9 @@ export const useSupabaseWrite = () => {
     const origProcessPayrollDeduction = store.processPayrollDeduction;
     const origReplenishPettyCash = store.replenishPettyCash;
     const origAddPettyCashExpense = store.addPettyCashExpense;
+    const origDeleteTransaction = store.deleteTransaction;
+    const origDeleteCreditGoods = store.deleteCreditGoods;
+    const origDeleteCashLoan = store.deleteCashLoan;
 
     // Override dengan versi yang juga write ke Supabase
     const patchedActions = {
@@ -118,6 +122,10 @@ export const useSupabaseWrite = () => {
       addTransaction: (entries) => {
         origAddTransaction(entries);
         insertJournalEntries(entries).catch(console.error);
+      },
+      deleteTransaction: (id) => {
+        origDeleteTransaction(id);
+        deleteTransactionDB(id).catch(console.error);
       },
       addCashLoan: (loan) => {
         origAddCashLoan(loan);
@@ -300,19 +308,20 @@ export const useSupabaseWrite = () => {
         origProcessPayrollDeduction(...args);
         const stateAfter = useStore.getState();
 
-        const memberId = args[0];
         const payments = args[1];
 
         // Update DB
-        payments.forEach(pay => {
-          if (pay.type === 'CashLoan') {
-            const l = stateAfter.cashLoans.find(loan => loan.id === pay.id);
-            if (l) updateCashLoanDB(l.id, { status: l.status, remainingAmount: l.remainingAmount, installments: l.installments }).catch(console.error);
-          } else if (pay.type === 'CreditGood') {
-            const c = stateAfter.creditGoods.find(credit => credit.id === pay.id);
-            if (c) updateCreditGoodDB(c.id, { status: c.status, remainingAmount: c.remainingAmount, installments: c.installments }).catch(console.error);
-          }
-        });
+        if (payments) {
+          payments.forEach(pay => {
+            if (pay.type === 'CashLoan') {
+              const l = stateAfter.cashLoans.find(loan => loan.id === pay.id);
+              if (l) updateCashLoanDB(l.id, { status: l.status, remainingAmount: l.remainingAmount, installments: l.installments }).catch(console.error);
+            } else if (pay.type === 'CreditGood') {
+              const c = stateAfter.creditGoods.find(credit => credit.id === pay.id);
+              if (c) updateCreditGoodDB(c.id, { status: c.status, remainingAmount: c.remainingAmount, installments: c.installments }).catch(console.error);
+            }
+          });
+        }
 
         const newJournals = stateAfter.journal.slice(oldJournalLen);
         if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
@@ -353,11 +362,56 @@ export const useSupabaseWrite = () => {
         const newJournals = stateAfter.journal.slice(oldJournalLen);
         if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
       },
+      deleteTransaction: (id) => {
+        origDeleteTransaction(id);
+        deleteTransactionDB(id).catch(console.error);
+      },
+      deleteCreditGoods: (id) => {
+        if (origDeleteCreditGoods) origDeleteCreditGoods(id);
+        deleteCreditGoodsDB(id).catch(console.error);
+      },
+      deleteCashLoan: (id) => {
+        if (origDeleteCashLoan) origDeleteCashLoan(id);
+        deleteCashLoanDB(id).catch(console.error);
+      },
     };
 
     // Tandai agar tidak di-patch berulang kali saat hot reload
     Object.values(patchedActions).forEach(fn => { fn._isPatched = true; });
 
-    useStore.setState(patchedActions);
+    useStore.setState({
+      addMember: patchedActions.addMember,
+      updateMember: patchedActions.updateMember,
+      addProduct: patchedActions.addProduct,
+      updateProduct: patchedActions.updateProduct,
+      deleteProduct: patchedActions.deleteProduct,
+      addConsignment: patchedActions.addConsignment,
+      updateConsignment: patchedActions.updateConsignment,
+      deleteConsignment: patchedActions.deleteConsignment,
+      addService: patchedActions.addService,
+      updateService: patchedActions.updateService,
+      deleteService: patchedActions.deleteService,
+      addTransaction: patchedActions.addTransaction,
+      addCashLoan: patchedActions.addCashLoan,
+      addCreditGoods: patchedActions.addCreditGoods,
+      checkoutRetail: patchedActions.checkoutRetail,
+      checkoutConsignment: patchedActions.checkoutConsignment,
+      checkoutService: patchedActions.checkoutService,
+      restockProduct: patchedActions.restockProduct,
+      depositSavings: patchedActions.depositSavings,
+      depositSavingsBulk: patchedActions.depositSavingsBulk,
+      approveCashLoan: patchedActions.approveCashLoan,
+      payCashLoan: patchedActions.payCashLoan,
+      approveCreditGoods: patchedActions.approveCreditGoods,
+      payCreditGoods: patchedActions.payCreditGoods,
+      addExpense: patchedActions.addExpense,
+      addIncome: patchedActions.addIncome,
+      processPayrollDeduction: patchedActions.processPayrollDeduction,
+      replenishPettyCash: patchedActions.replenishPettyCash,
+      addPettyCashExpense: patchedActions.addPettyCashExpense,
+      deleteTransaction: patchedActions.deleteTransaction,
+      deleteCreditGoods: patchedActions.deleteCreditGoods,
+      deleteCashLoan: patchedActions.deleteCashLoan,
+    });
   }, []);
 };

@@ -117,6 +117,7 @@ export const useStore = create(
   journal: INITIAL_JOURNAL,
   cashLoans: INITIAL_CASH_LOANS,
   creditGoods: INITIAL_CREDIT_GOODS,
+  customers: [],
 
   // Tracks sales transactions per member for SHU JUA calculation
   // Shape: [{ id, date, memberId, memberName, type, amount }]
@@ -133,6 +134,18 @@ export const useStore = create(
   })),
   deleteAccount: (id) => set((state) => ({
     accounts: state.accounts.filter(a => a.id !== id || a.isDefault)
+  })),
+  deleteTransaction: (id) => set((state) => ({
+    journal: state.journal.filter(j => j.id !== id),
+    memberSalesTransactions: state.memberSalesTransactions.filter(t => t.id !== id),
+    cashLoans: state.cashLoans.filter(l => l.id !== id),
+    creditGoods: state.creditGoods.filter(c => c.id !== id),
+  })),
+  deleteCreditGoods: (id) => set((state) => ({
+    creditGoods: state.creditGoods.filter(c => c.id !== id),
+  })),
+  deleteCashLoan: (id) => set((state) => ({
+    cashLoans: state.cashLoans.filter(l => l.id !== id),
   })),
   setSaldoAwal: (accountName, amount) => set((state) => {
     // 1. Hapus entri JU-INIT untuk akun ini yang sebelumnya (jika ada)
@@ -250,6 +263,92 @@ export const useStore = create(
         { id: newId, date, description, ref: 'BKK', debit: 0, credit: amount, account: 'Kas Kecil' },
       ]
     };
+  }),
+
+  // Tutup Buku (Closing Entries)
+  closePeriod: (periodDate, notes) => set((state) => {
+    // 1. Ambil semua akun nominal (Pendapatan, HPP, Beban)
+    const nominalAccounts = state.accounts.filter(a => 
+      a.category.includes('Pendapatan') || 
+      a.category.includes('Beban') || 
+      a.category === 'Harga Pokok Penjualan'
+    );
+    const nominalAccountNames = nominalAccounts.map(a => a.name);
+
+    // 2. Ambil semua jurnal sampai dengan periodDate untuk akun nominal
+    // Kita memasukkan isClosingEntry sebelumnya jika ada, agar tidak double-counting
+    const relevantJournal = state.journal.filter(j => 
+      j.date <= periodDate && nominalAccountNames.includes(j.account)
+    );
+
+    // 3. Hitung saldo saat ini (bersih) tiap akun nominal
+    const balances = {};
+    nominalAccounts.forEach(acc => {
+      balances[acc.name] = { debit: 0, credit: 0, type: acc.type };
+    });
+
+    relevantJournal.forEach(e => {
+      if (balances[e.account]) {
+        balances[e.account].debit += (e.debit || 0);
+        balances[e.account].credit += (e.credit || 0);
+      }
+    });
+
+    const closingEntries = [];
+    const newJournalId = `JU-CLS-${String(Date.now()).slice(-6)}`;
+    let totalLaba = 0; // Positif jika Laba, Negatif jika Rugi
+
+    // 4. Buat jurnal pembalik (penutup)
+    Object.keys(balances).forEach(accName => {
+      const b = balances[accName];
+      const netBalance = b.type === 'debit' ? (b.debit - b.credit) : (b.credit - b.debit);
+      
+      if (netBalance === 0) return;
+
+      if (b.type === 'debit') {
+        // Saldo normal Debit (Beban/HPP). Tutup di Kredit.
+        closingEntries.push({
+          id: newJournalId,
+          date: periodDate,
+          description: `Tutup Buku: ${notes}`,
+          ref: 'CLS',
+          debit: 0,
+          credit: netBalance,
+          account: accName,
+          isClosingEntry: true
+        });
+        totalLaba -= netBalance;
+      } else {
+        // Saldo normal Kredit (Pendapatan). Tutup di Debit.
+        closingEntries.push({
+          id: newJournalId,
+          date: periodDate,
+          description: `Tutup Buku: ${notes}`,
+          ref: 'CLS',
+          debit: netBalance,
+          credit: 0,
+          account: accName,
+          isClosingEntry: true
+        });
+        totalLaba += netBalance;
+      }
+    });
+
+    // 5. Entri lawan ke SHU Tahun Berjalan
+    if (closingEntries.length > 0) {
+      closingEntries.push({
+        id: newJournalId,
+        date: periodDate,
+        description: `Ikhtisar Laba Rugi / Pemindahan SHU: ${notes}`,
+        ref: 'CLS',
+        debit: totalLaba < 0 ? Math.abs(totalLaba) : 0,
+        credit: totalLaba > 0 ? totalLaba : 0,
+        account: 'SHU Tahun Berjalan',
+        isClosingEntry: true
+      });
+    }
+
+    return { journal: [...state.journal, ...closingEntries] };
   }),
 
   updateProductStock: (productId, qtyChange) => set((state) => ({
@@ -383,8 +482,13 @@ export const useStore = create(
     services: state.services.filter(s => s.id !== id)
   })),
 
+  addCustomer: (customer) => set((state) => {
+    const newId = `CST-${Date.now()}`;
+    return { customers: [...(state.customers || []), { ...customer, id: newId }] };
+  }),
+
   // Transactions Actions
-  checkoutRetail: (cart, totalAmount, markupAmount = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
+  checkoutRetail: (cart, totalAmount, markupAmount = 0, buyer, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
     // Deduct stock
     const newProducts = state.products.map(p => {
       const cartItem = cart.find(c => c.id === p.id);
@@ -396,41 +500,46 @@ export const useStore = create(
     const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
-    // Cash â†’ Kas, Kredit â†’ Piutang Dagang
+    // Create item details string
+    const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
+
+    // Cash -> Kas, Kredit -> Piutang Dagang
     const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
     const desc = paymentMethod === 'Kredit'
-      ? `Penjualan Ritel (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
-      : 'Penjualan Barang Ritel';
+      ? `Penjualan Ritel [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
+      : `Penjualan Ritel [${itemDetails}]`;
 
     const grandTotal = totalAmount + markupAmount;
 
+    const buyerId = buyer ? buyer.id : 'BKM-RTL';
+    const timestamp = new Date().toISOString();
     const journalEntries = [
-      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: grandTotal, credit: 0, account: akunDebit },
-      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: 0, credit: totalAmount, account: 'Pendapatan Penjualan Ritel' },
+      { id: newJournalId, date, timestamp, description: desc, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: grandTotal, credit: 0, account: akunDebit },
+      { id: newJournalId, date, timestamp, description: desc, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: 0, credit: totalAmount, account: 'Pendapatan Penjualan Ritel' },
       ...(markupAmount > 0 ? [
-        { id: newJournalId, date, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: 0, credit: markupAmount, account: 'Pendapatan Bunga Cicilan' }
+        { id: newJournalId, date, timestamp, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: 0, credit: markupAmount, account: 'Pendapatan Bunga Cicilan' }
       ] : []),
       ...(totalHPP > 0 ? [
-        { id: newJournalId, date, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
-        { id: newJournalId, date, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
+        { id: newJournalId, date, timestamp, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
+        { id: newJournalId, date, timestamp, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
       ] : []),
     ];
 
-    const member = memberId ? state.members.find(m => m.id === memberId) : null;
-    const newMemberTx = member
-      ? [...state.memberSalesTransactions, { id: newJournalId, date, memberId, memberName: member.name, type: 'Ritel', amount: grandTotal }]
+    const isMember = buyer && buyer.type === 'member';
+    const newMemberTx = isMember
+      ? [...state.memberSalesTransactions, { id: newJournalId, date, memberId: buyer.id, memberName: buyer.name, type: 'Ritel', amount: grandTotal }]
       : state.memberSalesTransactions;
 
     let newCreditGoods = state.creditGoods;
-    if (paymentMethod === 'Kredit' && member) {
+    if (paymentMethod === 'Kredit' && buyer) {
       const schedule = buildSchedule(grandTotal, installments, startDate || date);
       const newCreditId = `KRG-RTL-${String(Date.now()).slice(-6)}`;
       newCreditGoods = [
         ...state.creditGoods,
         {
           id: newCreditId,
-          memberId: member.id,
-          name: member.name,
+          memberId: buyer.id,
+          name: buyer.name,
           itemName: `Kasbon Penjualan Ritel`,
           amount: grandTotal,
           dp: 0,
@@ -459,10 +568,13 @@ export const useStore = create(
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     const date = txDate || new Date().toISOString().split('T')[0];
 
+    // Create item details string
+    const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
+
     const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
     const desc = paymentMethod === 'Kredit'
-      ? `Penjualan Titipan (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
-      : 'Penjualan Titipan';
+      ? `Penjualan Titipan [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
+      : `Penjualan Titipan [${itemDetails}]`;
 
     const journalEntries = [
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: totalAmount, credit: 0, account: akunDebit },
@@ -483,10 +595,11 @@ export const useStore = create(
     const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
+    const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
     const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
     const desc = paymentMethod === 'Kredit'
-      ? `Penjualan Jasa/PPOB (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
-      : 'Penjualan Jasa/PPOB';
+      ? `Penjualan Jasa/PPOB [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
+      : `Penjualan Jasa/PPOB [${itemDetails}]`;
 
     const grandTotal = totalAmount + markupAmount;
 
@@ -802,6 +915,7 @@ export const useStore = create(
         // Simpan semua data kecuali session login (keamanan)
         accounts:               state.accounts,
         members:                state.members,
+        customers:              state.customers,
         products:               state.products,
         consignmentProducts:    state.consignmentProducts,
         services:               state.services,

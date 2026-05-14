@@ -255,3 +255,34 @@ export const insertMemberSalesTx = async (tx) => {
   });
   if (error) throw error;
 };
+
+// ── Shared Deletion ───────────────────────────────────────────────────────────
+export const deleteTransactionDB = async (id) => {
+  if (!isSupabaseReady()) return;
+  try {
+    await supabase.from('journal').delete().eq('journal_id', id);
+    await supabase.from('member_sales_transactions').delete().eq('tx_id', id);
+    await supabase.from('cash_loans').delete().eq('loan_id', id);
+    await supabase.from('credit_goods').delete().eq('credit_id', id);
+  } catch (error) {
+    console.error('Failed to delete transaction from Supabase:', error);
+  }
+};
+
+export const deleteCreditGoodsDB = async (id) => {
+  if (!isSupabaseReady()) return;
+  try {
+    await supabase.from('credit_goods').delete().eq('credit_id', id);
+  } catch (error) {
+    console.error('Failed to delete credit goods from Supabase:', error);
+  }
+};
+
+export const deleteCashLoanDB = async (id) => {
+  if (!isSupabaseReady()) return;
+  try {
+    await supabase.from('cash_loans').delete().eq('loan_id', id);
+  } catch (error) {
+    console.error('Failed to delete cash loan from Supabase:', error);
+  }
+};
