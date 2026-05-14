@@ -55,6 +55,8 @@ export const useSupabaseWrite = () => {
     const origAddExpense = store.addExpense;
     const origAddIncome = store.addIncome;
     const origProcessPayrollDeduction = store.processPayrollDeduction;
+    const origReplenishPettyCash = store.replenishPettyCash;
+    const origAddPettyCashExpense = store.addPettyCashExpense;
 
     // Override dengan versi yang juga write ke Supabase
     const patchedActions = {
@@ -133,6 +135,7 @@ export const useSupabaseWrite = () => {
         const stateBefore = useStore.getState();
         const oldJournalLen = stateBefore.journal.length;
         const oldTxLen = stateBefore.memberSalesTransactions.length;
+        const oldCreditLen = stateBefore.creditGoods.length;
 
         origCheckoutRetail(...args);
 
@@ -152,6 +155,10 @@ export const useSupabaseWrite = () => {
         // Insert new member transaction
         const newTxs = stateAfter.memberSalesTransactions.slice(oldTxLen);
         if (newTxs.length > 0) newTxs.forEach(tx => insertMemberSalesTx(tx).catch(console.error));
+
+        // Insert new credit goods (kasbon)
+        const newCredits = stateAfter.creditGoods.slice(oldCreditLen);
+        if (newCredits.length > 0) newCredits.forEach(c => insertCreditGood(c).catch(console.error));
       },
       checkoutConsignment: (...args) => {
         const stateBefore = useStore.getState();
@@ -179,6 +186,7 @@ export const useSupabaseWrite = () => {
         const stateBefore = useStore.getState();
         const oldJournalLen = stateBefore.journal.length;
         const oldTxLen = stateBefore.memberSalesTransactions.length;
+        const oldCreditLen = stateBefore.creditGoods.length;
 
         origCheckoutService(...args);
 
@@ -189,6 +197,9 @@ export const useSupabaseWrite = () => {
 
         const newTxs = stateAfter.memberSalesTransactions.slice(oldTxLen);
         if (newTxs.length > 0) newTxs.forEach(tx => insertMemberSalesTx(tx).catch(console.error));
+
+        const newCredits = stateAfter.creditGoods.slice(oldCreditLen);
+        if (newCredits.length > 0) newCredits.forEach(c => insertCreditGood(c).catch(console.error));
       },
       restockProduct: (...args) => {
         const stateBefore = useStore.getState();
@@ -289,26 +300,17 @@ export const useSupabaseWrite = () => {
         origProcessPayrollDeduction(...args);
         const stateAfter = useStore.getState();
 
-        const memberIds = args[0];
-        const paymentMap = args[1];
+        const memberId = args[0];
+        const payments = args[1];
 
         // Update DB
-        memberIds.forEach(mId => {
-          const p = paymentMap[mId];
-          if (!p) return;
-          if (p.piutangAnggota > 0) {
-            stateAfter.cashLoans.forEach(l => {
-              if (l.memberId === mId && l.status === 'Completed') {
-                updateCashLoanDB(l.id, { status: l.status, remainingAmount: l.remainingAmount }).catch(console.error);
-              }
-            });
-          }
-          if (p.piutangBarang > 0) {
-            stateAfter.creditGoods.forEach(c => {
-              if (c.memberId === mId && c.status === 'Completed') {
-                updateCreditGoodDB(c.id, { status: c.status, remainingAmount: c.remainingAmount }).catch(console.error);
-              }
-            });
+        payments.forEach(pay => {
+          if (pay.type === 'CashLoan') {
+            const l = stateAfter.cashLoans.find(loan => loan.id === pay.id);
+            if (l) updateCashLoanDB(l.id, { status: l.status, remainingAmount: l.remainingAmount, installments: l.installments }).catch(console.error);
+          } else if (pay.type === 'CreditGood') {
+            const c = stateAfter.creditGoods.find(credit => credit.id === pay.id);
+            if (c) updateCreditGoodDB(c.id, { status: c.status, remainingAmount: c.remainingAmount, installments: c.installments }).catch(console.error);
           }
         });
 
@@ -328,6 +330,24 @@ export const useSupabaseWrite = () => {
         const stateBefore = useStore.getState();
         const oldJournalLen = stateBefore.journal.length;
         origAddIncome(...args);
+        const stateAfter = useStore.getState();
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      replenishPettyCash: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origReplenishPettyCash(...args);
+        const stateAfter = useStore.getState();
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
+      addPettyCashExpense: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origAddPettyCashExpense(...args);
         const stateAfter = useStore.getState();
 
         const newJournals = stateAfter.journal.slice(oldJournalLen);

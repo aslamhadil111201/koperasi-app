@@ -54,7 +54,7 @@ const Dashboard = () => {
   const lastMonth  = lastMonthDate.toISOString().slice(0, 7);
 
   // ── Helper: hitung kas bersih dari entri jurnal ────────────────────────────
-  const kasEntries = journal.filter(j => j.account === 'Kas');
+  const kasEntries = journal.filter(j => j.account === 'Kas Bank');
 
   const kasNetForMonth = (ym) =>
     kasEntries

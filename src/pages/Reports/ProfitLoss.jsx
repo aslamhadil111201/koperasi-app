@@ -3,30 +3,16 @@ import { Download, Calendar, TrendingUp, TrendingDown, DollarSign, Plus, X, File
 import { useStore } from '../../store/useStore';
 import './Reports.css';
 
-// Daftar kategori beban & pendapatan
-const EXPENSE_ACCOUNTS = [
-  'Beban Gaji Karyawan',
-  'Beban Listrik & Air',
-  'Beban Sewa Gedung',
-  'Beban Perlengkapan & ATK',
-  'Beban Transportasi',
-  'Beban Penyusutan',
-  'Beban Pemasaran',
-  'Beban Lainnya',
-];
 
-const INCOME_ACCOUNTS = [
-  'Pendapatan Penjualan Ritel',
-  'Pendapatan Jasa',
-  'Pendapatan Komisi',
-  'Pendapatan Bunga Pinjaman',
-  'Pendapatan Lainnya',
-];
 
 const ProfitLoss = () => {
   const journal    = useStore((state) => state.journal);
+  const accounts   = useStore((state) => state.accounts) || [];
   const addExpense = useStore((state) => state.addExpense);
   const addIncome  = useStore((state) => state.addIncome);
+
+  const EXPENSE_ACCOUNTS = useMemo(() => accounts.filter(a => a.category.includes('Beban')).map(a => a.name), [accounts]);
+  const INCOME_ACCOUNTS = useMemo(() => accounts.filter(a => a.category.includes('Pendapatan')).map(a => a.name), [accounts]);
 
   // ── Period Filter ─────────────────────────────────────────────────────────
   const monthOptions = useMemo(() => {
@@ -83,8 +69,8 @@ const ProfitLoss = () => {
   }));
   const totalRevenue = revenues.reduce((s, r) => s + r.value, 0);
 
-  // HPP — dari akun 'Harga Pokok Penjualan'
-  const hppAccounts = [...new Set(filtered.filter(e => e.account.startsWith('Harga Pokok')).map(e => e.account))].sort();
+  // HPP — dari kategori Harga Pokok Penjualan
+  const hppAccounts = [...new Set([...accounts.filter(a => a.category === 'Harga Pokok Penjualan').map(a => a.name), ...filtered.filter(e => e.account.startsWith('Harga Pokok')).map(e => e.account)])].sort();
   const hppItems = hppAccounts.map(akun => ({
     akun,
     value: filtered.filter(e => e.account === akun).reduce((s, e) => s + e.debit, 0),
@@ -94,8 +80,8 @@ const ProfitLoss = () => {
   // Laba Kotor = Pendapatan - HPP
   const grossProfit = totalRevenue - totalHPP;
 
-  // Expenses — group all "Beban" accounts found in filtered journal
-  const bebanAccounts = [...new Set(filtered.filter(e => e.account.startsWith('Beban')).map(e => e.account))].sort();
+  // Expenses — dari kategori Beban
+  const bebanAccounts = [...new Set([...EXPENSE_ACCOUNTS, ...filtered.filter(e => e.account.startsWith('Beban')).map(e => e.account)])].sort();
   const expenses = bebanAccounts.map(akun => ({
     akun,
     value: filtered.filter(e => e.account === akun).reduce((s, e) => s + e.debit, 0),

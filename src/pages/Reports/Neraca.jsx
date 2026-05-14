@@ -26,7 +26,7 @@ const Neraca = () => {
   const today = new Date(filterDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const balances = useMemo(() => {
-    const kas              = netBalance(journal, 'Kas',               'debit',  filterDate);
+    const kas              = netBalance(journal, 'Kas Bank',          'debit',  filterDate);
     const piutangAnggota   = netBalance(journal, 'Piutang Anggota',   'debit',  filterDate);
     const piutangBarang    = netBalance(journal, 'Piutang Barang',    'debit',  filterDate);
     const persediaan       = netBalance(journal, 'Persediaan Barang', 'debit',  filterDate);
@@ -105,7 +105,7 @@ const Neraca = () => {
     <div class="section">
       <div class="section-title aktiva-title">AKTIVA</div>
       <div class="sub-title">Aktiva Lancar</div>
-      <div class="row indent"><span>Kas</span><span>${fmt(balances.kas)}</span></div>
+      <div class="row indent"><span>Kas Bank</span><span>${fmt(balances.kas)}</span></div>
       <div class="row indent"><span>Piutang Anggota</span><span>${fmt(balances.piutangAnggota)}</span></div>
       <div class="row indent"><span>Piutang Barang</span><span>${fmt(balances.piutangBarang)}</span></div>
       <div class="row indent"><span>Persediaan Barang</span><span>${fmt(balances.persediaan)}</span></div>
@@ -198,7 +198,7 @@ const Neraca = () => {
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
               Aktiva Lancar
             </div>
-            <RowItem label="Kas" value={balances.kas} indent />
+            <RowItem label="Kas Bank" value={balances.kas} indent />
             <RowItem label="Piutang Anggota" value={balances.piutangAnggota} indent />
             <RowItem label="Piutang Barang" value={balances.piutangBarang} indent />
             <RowItem label="Persediaan Barang" value={balances.persediaan} indent />

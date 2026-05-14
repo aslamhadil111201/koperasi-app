@@ -25,7 +25,7 @@ const ReceiveNew = () => {
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [modalItem, setModalItem] = useState(null);
-  const [form, setForm] = useState({ qty: 1, hpp: 0, date: new Date().toISOString().split('T')[0], notes: '' });
+  const [form, setForm] = useState({ qty: 1, hpp: 0, date: new Date().toISOString().split('T')[0], notes: '', supplier: '', paymentMethod: 'Kas Bank' });
 
   // Restock history from journal (ref = BKK-RST)
   const restockHistory = useMemo(() => {
@@ -42,6 +42,8 @@ const ReceiveNew = () => {
       hpp: item.hpp ?? item.supplierPrice ?? 0,
       date: new Date().toISOString().split('T')[0],
       notes: '',
+      supplier: '',
+      paymentMethod: 'Kas Bank'
     });
     setShowModal(true);
   };
@@ -53,7 +55,7 @@ const ReceiveNew = () => {
     const hpp = Number(form.hpp);
 
     if (activeTab === 'retail') {
-      restockProduct(modalItem.id, qty, hpp);
+      restockProduct(modalItem.id, qty, hpp, form.supplier, form.paymentMethod, form.notes, form.date);
     } else if (activeTab === 'consignment') {
       restockConsignment(modalItem.id, qty);
     } else if (activeTab === 'services') {
@@ -130,9 +132,9 @@ const ReceiveNew = () => {
         <div className="master-header-title">
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <PackagePlus size={22} style={{ color: 'var(--color-primary)' }} />
-            Terima Barang / Restock
+            Pembelian / Terima Barang
           </h2>
-          <p>Catat penerimaan stok baru dan perbarui HPP barang.</p>
+          <p>Catat pembelian dan penerimaan stok baru, serta perbarui HPP barang.</p>
         </div>
       </div>
 
@@ -379,7 +381,7 @@ const ReceiveNew = () => {
             <div className="modal-header">
               <h3>
                 <PackagePlus size={18} />
-                {activeTab === 'services' ? 'Update HPP Layanan' : 'Terima Barang'}
+                {activeTab === 'services' ? 'Update HPP Layanan' : 'Pembelian / Terima Barang'}
               </h3>
               <button className="modal-close-btn" onClick={() => setShowModal(false)}>
                 <X size={16} />
@@ -391,6 +393,11 @@ const ReceiveNew = () => {
                   <label className="form-label">Nama Item</label>
                   <input type="text" className="form-control" value={modalItem.name} readOnly
                     style={{ background: 'var(--color-background)', cursor: 'default' }} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Tanggal Transaksi</label>
+                  <input type="date" className="form-control" value={form.date} onChange={(e) => setForm(f => ({ ...f, date: e.target.value }))} required />
                 </div>
 
                 {activeTab !== 'services' && (
@@ -426,6 +433,33 @@ const ReceiveNew = () => {
                   </div>
                 )}
 
+                {activeTab === 'retail' && (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Nama Supplier</label>
+                      <input
+                        type="text" className="form-control"
+                        placeholder="Masukkan nama supplier..."
+                        value={form.supplier}
+                        onChange={(e) => setForm(f => ({ ...f, supplier: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Metode Pembayaran</label>
+                      <select
+                        className="form-control"
+                        value={form.paymentMethod}
+                        onChange={(e) => setForm(f => ({ ...f, paymentMethod: e.target.value }))}
+                      >
+                        <option value="Kas Bank">Tunai (Kas Bank)</option>
+                        <option value="Kas Kecil">Kas Kecil</option>
+                        <option value="Hutang Dagang">Hutang Dagang</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
                 <div className="form-group">
                   <label className="form-label">Tanggal Terima</label>
                   <input
@@ -450,7 +484,7 @@ const ReceiveNew = () => {
                     Total biaya restock: <strong style={{ color: 'var(--color-success)' }}>
                       {fmt(Number(form.qty) * Number(form.hpp))}
                     </strong>
-                    <br />Akan dicatat sebagai jurnal Persediaan Barang &amp; Kas.
+                    <br />Akan dicatat sebagai jurnal Persediaan Barang &amp; {form.paymentMethod}.
                   </div>
                 )}
               </div>

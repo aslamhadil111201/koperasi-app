@@ -25,6 +25,7 @@ const CreditGoods = () => {
   const [showPayModal,    setShowPayModal]    = useState(false);
   const [selectedCredit,  setSelectedCredit]  = useState(null);
   const [payAmount,       setPayAmount]       = useState(0);
+  const [payDate,         setPayDate]         = useState(todayStr);
   const [useProductList,  setUseProductList]  = useState(true);
   const [currentPage,     setCurrentPage]     = useState(1);
   const PAGE_SIZE = 10;
@@ -70,8 +71,10 @@ const CreditGoods = () => {
   };
 
   const handleApprove = (credit) => {
-    if (window.confirm(`Setujui kredit ${credit.itemName} untuk ${credit.name}?\nKas DP (${fmt(credit.dp)}) akan dicatat ke jurnal.`)) {
-      approveCreditGoods(credit.id);
+    const txDate = window.prompt('Masukkan tanggal persetujuan (YYYY-MM-DD):', todayStr);
+    if (!txDate) return;
+    if (window.confirm(`Setujui kredit ${credit.itemName} untuk ${credit.name} pada tanggal ${txDate}?\nKas DP (${fmt(credit.dp)}) akan dicatat ke jurnal.`)) {
+      approveCreditGoods(credit.id, txDate);
     }
   };
 
@@ -87,6 +90,7 @@ const CreditGoods = () => {
     }
     
     setPayAmount(cicilan);
+    setPayDate(todayStr);
     setShowPayModal(true);
   };
 
@@ -96,7 +100,7 @@ const CreditGoods = () => {
     const amount = Number(payAmount);
     if (amount <= 0) return alert('Jumlah bayar harus lebih dari 0');
     if (amount > selectedCredit.remainingAmount) return alert('Jumlah melebihi sisa tagihan!');
-    payCreditGoods(selectedCredit.id, amount);
+    payCreditGoods(selectedCredit.id, amount, payDate);
     setShowPayModal(false);
     setSelectedCredit(null);
   };
@@ -592,6 +596,11 @@ const CreditGoods = () => {
                       return fmt(Math.ceil((sp + tb) / selectedCredit.tenor));
                     })()} / bulan
                   </p>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tanggal Bayar</label>
+                  <input type="date" className="form-control" value={payDate}
+                    onChange={(e) => setPayDate(e.target.value)} required />
                 </div>
               </div>
               <div className="modal-footer">

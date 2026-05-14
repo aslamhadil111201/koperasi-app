@@ -18,8 +18,16 @@ const GeneralLedger = () => {
   // Reset halaman saat filter berubah
   React.useEffect(() => { setCurrentPage(1); }, [searchTerm, filterMonth, filterAkun]);
 
-  // Unique akun list for dropdown
-  const akunList = useMemo(() => [...new Set(journal.map(j => j.account))].sort(), [journal]);
+  const accounts = useStore((state) => state.accounts) || [];
+
+  // Unique akun list for dropdown (gabungan dari master data dan jurnal lama)
+  const akunList = useMemo(() => {
+    const list = new Set([
+      ...accounts.map(a => a.name),
+      ...journal.map(j => j.account)
+    ]);
+    return [...list].sort();
+  }, [journal, accounts]);
 
   // Unique months list for dropdown
   const monthList = useMemo(() => {
@@ -29,7 +37,7 @@ const GeneralLedger = () => {
 
   // ── Filtered Journal ──────────────────────────────────────────────────────
   const filtered = useMemo(() => {
-    return journal.filter(item => {
+    const result = journal.filter(item => {
       const matchSearch = !searchTerm ||
         item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -38,6 +46,12 @@ const GeneralLedger = () => {
       const matchMonth = !filterMonth || item.date?.startsWith(filterMonth);
       const matchAkun  = !filterAkun  || item.account === filterAkun;
       return matchSearch && matchMonth && matchAkun;
+    });
+
+    // Urutkan dari yang terbaru (Descending) untuk UI
+    return result.sort((a, b) => {
+      if (a.date !== b.date) return new Date(b.date) - new Date(a.date);
+      return b.id.localeCompare(a.id); // Jika tanggal sama, ID terbaru di atas
     });
   }, [journal, searchTerm, filterMonth, filterAkun]);
 
@@ -107,9 +121,15 @@ const GeneralLedger = () => {
     const periodeLabel = filterMonth ? fmtMonth(filterMonth) : 'Semua Periode';
     const akunLabel    = filterAkun  ? filterAkun             : 'Semua Akun';
 
-    const rowsHTML = filtered.length === 0
-      ? `<tr><td colspan="6" style="text-align:center;padding:20px;color:#9ca3af">Tidak ada data jurnal.</td></tr>`
-      : filtered.map((item, i) => {
+    // Urutkan dari yang terlama (Ascending) untuk Print
+    const printData = [...filtered].sort((a, b) => {
+      if (a.date !== b.date) return new Date(a.date) - new Date(b.date);
+      return a.id.localeCompare(b.id);
+    });
+
+    const rowsHTML = printData.length === 0
+      ? `<tr><td colspan="7" style="text-align:center;padding:20px;color:#9ca3af">Tidak ada data jurnal.</td></tr>`
+      : printData.map((item, i) => {
           const isDebit = item.debit > 0;
           return `<tr style="background:${i%2===0?'#fff':'#f9fafb'}">
             <td>${item.date}</td>

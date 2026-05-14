@@ -16,6 +16,7 @@ const ServiceSales = () => {
   const [searchTerm, setSearchTerm]         = useState('');
   const [selectedMember, setSelectedMember] = useState('');
   const [paymentMethod, setPaymentMethod]   = useState('Cash');
+  const [txDate, setTxDate]                 = useState(new Date().toISOString().split('T')[0]);
   const [takeDate, setTakeDate]             = useState('');
   const [installments, setInstallments]     = useState(1);
   const [startDate, setStartDate]           = useState('');
@@ -43,10 +44,12 @@ const ServiceSales = () => {
   const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const markupAmount = paymentMethod === 'Kredit' ? Math.floor(totalAmount * 0.10) : 0;
+  const grandTotal = totalAmount + markupAmount;
 
   const schedule = useMemo(() =>
-    paymentMethod === 'Kredit' ? buildSchedule(totalAmount, installments, startDate) : [],
-    [paymentMethod, totalAmount, installments, startDate]
+    paymentMethod === 'Kredit' ? buildSchedule(grandTotal, installments, startDate) : [],
+    [paymentMethod, grandTotal, installments, startDate]
   );
 
   const handleCheckout = () => {
@@ -55,12 +58,12 @@ const ServiceSales = () => {
     if (paymentMethod === 'Kredit' && !startDate) return alert('Isi tanggal mulai cicilan!');
     const member = selectedMember ? members.find(m => m.id === selectedMember) : null;
     const txId = `JSA-${Date.now()}`;
-    checkoutService(cart, totalAmount, selectedMember || null, paymentMethod, installments, startDate || null, notes);
+    checkoutService(cart, totalAmount, markupAmount, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
     setLastTransaction({
       items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, hpp: i.hpp })),
-      total: totalAmount, type: 'service',
+      total: grandTotal, subtotal: totalAmount, markupAmount, type: 'service',
       memberName: member?.name || null,
-      date: new Date().toISOString(),
+      date: txDate || new Date().toISOString(),
       transactionId: txId,
       paymentMethod, takeDate, installments, startDate, notes, schedule,
       pic: currentUser?.name || 'Admin',
@@ -133,6 +136,11 @@ const ServiceSales = () => {
             placeholder="— Pembeli Umum —"
           />
           {selectedMember && <p className="member-selected-info">Transaksi ini akan dihitung ke SHU anggota</p>}
+        </div>
+
+        <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+          <label className="member-selector-label"><Calendar size={14} /> Tanggal Transaksi</label>
+          <input type="date" className="form-control" value={txDate} onChange={(e) => setTxDate(e.target.value)} required />
         </div>
 
         <div className="payment-method-selector">
@@ -228,10 +236,17 @@ const ServiceSales = () => {
               ))}
             </div>
           )}
+          <div className="summary-row"><span>Subtotal</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span></div>
+          {paymentMethod === 'Kredit' && markupAmount > 0 && (
+            <div className="summary-row" style={{ color: 'var(--color-warning)' }}>
+              <span>Markup Kredit (10%)</span>
+              <span>Rp {markupAmount.toLocaleString('id-ID')}</span>
+            </div>
+          )}
           {paymentMethod === 'Kredit' && installments > 1 && (
             <div className="summary-row" style={{ fontSize: '0.8rem', color: 'var(--color-warning)' }}>
               <span>Per cicilan ({installments}x)</span>
-              <span>Rp {Math.floor(totalAmount / installments).toLocaleString('id-ID')}</span>
+              <span>Rp {Math.floor(grandTotal / installments).toLocaleString('id-ID')}</span>
             </div>
           )}
           <div className="summary-row" style={{ fontSize: '0.8rem' }}>
@@ -245,7 +260,7 @@ const ServiceSales = () => {
             <span style={{ fontWeight: 600 }}>{currentUser?.name || 'Admin'}</span>
           </div>
           <div className="summary-row total">
-            <span>Total Bayar</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span>
+            <span>Total Bayar</span><span>Rp {grandTotal.toLocaleString('id-ID')}</span>
           </div>
           <button className="btn btn-primary checkout-btn" onClick={handleCheckout}>
             {paymentMethod === 'Kredit' ? (installments === 1 ? 'Catat Tempo' : `Catat ${installments}x Cicilan`) : 'Proses Pembayaran'}

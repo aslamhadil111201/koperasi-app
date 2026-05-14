@@ -20,10 +20,12 @@ import ProfitLoss from './pages/Reports/ProfitLoss';
 import Members from './pages/MasterData/Members';
 import Inventory from './pages/MasterData/Inventory';
 import ReceiveNew from './pages/MasterData/ReceiveNew';
+import ChartOfAccounts from './pages/MasterData/ChartOfAccounts';
 import SHU from './pages/Reports/SHU';
 import Neraca from './pages/Reports/Neraca';
 import BukuBesar from './pages/Reports/BukuBesar';
 import ArusKas from './pages/Reports/ArusKas';
+import PettyCash from './pages/Reports/PettyCash';
 
 const AppLayout = ({ children }) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
@@ -45,6 +47,8 @@ function App() {
   const darkMode = useStore((state) => state.darkMode);
   const members = useStore((state) => state.members);
   const setMembers = useStore((state) => state.setMembers);
+  const journal = useStore((state) => state.journal);
+  const migrateKasToKasBank = useStore((state) => state.migrateKasToKasBank);
   const { syncing } = useSupabaseSync();
   useSupabaseWrite();
 
@@ -65,6 +69,16 @@ function App() {
       setMembers(migrated);
     }
   }, [members, setMembers]);
+
+  // Otomatis Migrasi 'Kas' ke 'Kas Bank'
+  useEffect(() => {
+    if (journal.some(j => j.account === 'Kas')) {
+      migrateKasToKasBank();
+      import('./services/supabaseService').then(({ migrateKasToKasBankDB }) => {
+        migrateKasToKasBankDB();
+      }).catch(err => console.error(err));
+    }
+  }, [journal, migrateKasToKasBank]);
 
   // Global fix: Mencegah input bertipe "number" berubah value-nya saat di-scroll pakai mouse
   useEffect(() => {
@@ -108,6 +122,7 @@ function App() {
         <Route path="/loans/receivables" element={<ProtectedRoute><AppLayout><Receivables /></AppLayout></ProtectedRoute>} />
         
         {/* Report Routes (Admin Only) */}
+        <Route path="/finance/petty-cash" element={<ProtectedRoute requiredRole="admin"><AppLayout><PettyCash /></AppLayout></ProtectedRoute>} />
         <Route path="/reports/ledger" element={<ProtectedRoute requiredRole="admin"><AppLayout><GeneralLedger /></AppLayout></ProtectedRoute>} />
         <Route path="/reports/profit-loss" element={<ProtectedRoute requiredRole="admin"><AppLayout><ProfitLoss /></AppLayout></ProtectedRoute>} />
         <Route path="/reports/shu" element={<ProtectedRoute requiredRole="admin"><AppLayout><SHU /></AppLayout></ProtectedRoute>} />
@@ -119,6 +134,7 @@ function App() {
         <Route path="/master/members" element={<ProtectedRoute requiredRole="admin"><AppLayout><Members /></AppLayout></ProtectedRoute>} />
         <Route path="/master/inventory" element={<ProtectedRoute requiredRole="admin"><AppLayout><Inventory /></AppLayout></ProtectedRoute>} />
         <Route path="/master/receive" element={<ProtectedRoute requiredRole="admin"><AppLayout><ReceiveNew /></AppLayout></ProtectedRoute>} />
+        <Route path="/master/accounts" element={<ProtectedRoute requiredRole="admin"><AppLayout><ChartOfAccounts /></AppLayout></ProtectedRoute>} />
         
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

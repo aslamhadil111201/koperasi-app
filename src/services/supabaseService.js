@@ -161,6 +161,12 @@ export const insertJournalEntries = async (entries) => {
   if (error) throw error;
 };
 
+export const migrateKasToKasBankDB = async () => {
+  if (!isSupabaseReady()) return;
+  const { error } = await supabase.from('journal').update({ account: 'Kas Bank' }).eq('account', 'Kas');
+  if (error) console.error('Failed to migrate Kas to Kas Bank in DB:', error);
+};
+
 // ── Cash Loans ────────────────────────────────────────────────────────────────
 export const fetchCashLoans = async () => {
   const { data, error } = await supabase.from('cash_loans').select('*').order('id');

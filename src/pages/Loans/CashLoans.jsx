@@ -25,6 +25,7 @@ const CashLoans = () => {
   const [showDetail,   setShowDetail]   = useState(false);
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [payAmount,    setPayAmount]    = useState(0);
+  const [payDate,      setPayDate]      = useState(todayStr);
   const [currentPage,  setCurrentPage]  = useState(1);
   const PAGE_SIZE = 10;
 
@@ -42,8 +43,10 @@ const CashLoans = () => {
   };
 
   const handleApprove = (loan) => {
-    if (window.confirm(`Setujui pinjaman ${fmt(loan.amount)} untuk ${loan.name}?\nKas akan otomatis berkurang.`)) {
-      approveCashLoan(loan.id);
+    const txDate = window.prompt('Masukkan tanggal pencairan (YYYY-MM-DD):', todayStr);
+    if (!txDate) return;
+    if (window.confirm(`Setujui pinjaman ${fmt(loan.amount)} untuk ${loan.name} pada tanggal ${txDate}?\nKas akan otomatis berkurang.`)) {
+      approveCashLoan(loan.id, txDate);
     }
   };
 
@@ -51,6 +54,7 @@ const CashLoans = () => {
     setSelectedLoan(loan);
     const cicilan = Math.ceil(loan.amount / loan.tenor);
     setPayAmount(Math.min(cicilan, loan.remainingAmount));
+    setPayDate(todayStr);
     setShowPayModal(true);
   };
 
@@ -60,7 +64,7 @@ const CashLoans = () => {
     const amount = Number(payAmount);
     if (amount <= 0) return alert('Jumlah bayar harus lebih dari 0');
     if (amount > selectedLoan.remainingAmount) return alert('Jumlah melebihi sisa tagihan!');
-    payCashLoan(selectedLoan.id, amount);
+    payCashLoan(selectedLoan.id, amount, payDate);
     setShowPayModal(false);
     setSelectedLoan(null);
   };
@@ -93,7 +97,7 @@ const CashLoans = () => {
     .filter(j => j.account === 'Piutang Anggota' && j.debit > 0 && j.date.startsWith(thisMonth))
     .reduce((s,j) => s + j.debit, 0);
   const angsuranBulanIni   = journal
-    .filter(j => j.account === 'Kas' && j.debit > 0 && j.date.startsWith(thisMonth) &&
+    .filter(j => j.account === 'Kas Bank' && j.debit > 0 && j.date.startsWith(thisMonth) &&
                  j.description.toLowerCase().includes('angsuran pinjaman'))
     .reduce((s,j) => s + j.debit, 0);
 
@@ -441,6 +445,11 @@ const CashLoans = () => {
                   <p style={{ fontSize:'0.75rem', color:'var(--color-text-muted)', marginTop:'0.35rem' }}>
                     Maks: {fmt(selectedLoan.remainingAmount)}
                   </p>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tanggal Bayar</label>
+                  <input type="date" className="form-control" value={payDate}
+                    onChange={(e) => setPayDate(e.target.value)} required />
                 </div>
               </div>
               <div className="modal-footer">

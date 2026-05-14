@@ -36,7 +36,7 @@ const Savings = () => {
   // Riwayat setoran simpanan anggota dari jurnal
   const getMemberHistory = (memberId) =>
     journal
-      .filter(j => j.ref === memberId && j.account === 'Kas' && j.debit > 0 &&
+      .filter(j => j.ref === memberId && j.account === 'Kas Bank' && j.debit > 0 &&
                    j.description.toLowerCase().includes('simpanan'))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
 

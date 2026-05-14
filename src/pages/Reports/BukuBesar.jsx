@@ -11,11 +11,16 @@ const BukuBesar = () => {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-  // Semua akun unik dari jurnal
-  const allAccounts = useMemo(() =>
-    [...new Set(journal.map(j => j.account))].sort(),
-    [journal]
-  );
+  const accounts = useStore((s) => s.accounts) || [];
+
+  // Semua akun unik dari jurnal dan master data
+  const allAccounts = useMemo(() => {
+    const list = new Set([
+      ...accounts.map(a => a.name),
+      ...journal.map(j => j.account)
+    ]);
+    return [...list].sort();
+  }, [journal, accounts]);
 
   const [selectedAccount, setSelectedAccount] = useState('');
   const [selectedMonth,   setSelectedMonth]   = useState('');
@@ -41,26 +46,56 @@ const BukuBesar = () => {
     });
   }, [journal, selectedAccount, selectedMonth]);
 
-  // Group by akun
+  // Group by akun dengan perhitungan Saldo Awal
   const groupedByAccount = useMemo(() => {
     const map = {};
+
+    // 1. Jika ada filter bulan, hitung saldo awal (akumulasi transaksi sebelum bulan terpilih)
+    if (selectedMonth) {
+      journal.forEach(entry => {
+        const matchAccount = !selectedAccount || entry.account === selectedAccount;
+        if (matchAccount && entry.date < `${selectedMonth}-01`) {
+          if (!map[entry.account]) map[entry.account] = { saldoAwal: 0, entries: [] };
+          map[entry.account].saldoAwal += (entry.debit || 0) - (entry.credit || 0);
+        }
+      });
+    }
+
+    // 2. Masukkan transaksi bulan terpilih
     filtered.forEach(entry => {
-      if (!map[entry.account]) map[entry.account] = [];
-      map[entry.account].push(entry);
+      if (!map[entry.account]) map[entry.account] = { saldoAwal: 0, entries: [] };
+      map[entry.account].entries.push(entry);
     });
+
     return map;
-  }, [filtered]);
+  }, [filtered, journal, selectedMonth, selectedAccount]);
 
   // Hitung saldo berjalan per akun
-  const getEntriesWithBalance = (entries) => {
-    let balance = 0;
-    return entries
-      .slice()
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .map(e => {
-        balance += e.debit - e.credit;
-        return { ...e, balance };
+  const getEntriesWithBalance = (akunData) => {
+    let balance = akunData?.saldoAwal || 0;
+    const entries = (akunData?.entries || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+    
+    const result = [];
+    
+    // Jika ada saldo awal, sisipkan sebagai entri pertama
+    if (selectedMonth && balance !== 0) {
+      result.push({
+        date: `${selectedMonth}-01`,
+        id: '-',
+        description: 'Saldo Awal',
+        debit: balance > 0 ? balance : 0,
+        credit: balance < 0 ? Math.abs(balance) : 0,
+        balance: balance,
+        isSaldoAwal: true
       });
+    }
+
+    entries.forEach(e => {
+      balance += (e.debit || 0) - (e.credit || 0);
+      result.push({ ...e, balance });
+    });
+    
+    return result;
   };
 
   const toggleAccount = (akun) =>

@@ -39,6 +39,42 @@ const INITIAL_SERVICES = [
   { id: 205, name: 'Fotokopi (per lembar)',       price: 500,    hpp: 200,    type: 'Administrasi', provider: 'Koperasi'  },
 ];
 
+const INITIAL_ACCOUNTS = [
+  // Aset Lancar
+  { id: '101', name: 'Kas Bank', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '102', name: 'Kas Kecil', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '103', name: 'Piutang Anggota', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '104', name: 'Piutang Dagang', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '105', name: 'Piutang Barang', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '106', name: 'Persediaan Barang', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  // Aset Tetap
+  // Kewajiban Jangka Pendek
+  { id: '201', name: 'Hutang Konsinyasi', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
+  { id: '202', name: 'Hutang Dagang', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
+  { id: '203', name: 'Simpanan Anggota', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
+  // Ekuitas
+  { id: '301', name: 'Modal Koperasi', category: 'Ekuitas', type: 'credit', isDefault: true },
+  { id: '302', name: 'SHU Tahun Berjalan', category: 'Ekuitas', type: 'credit', isDefault: true },
+  { id: '399', name: 'Saldo Penyeimbang', category: 'Ekuitas', type: 'credit', isDefault: true },
+  // Pendapatan
+  { id: '401', name: 'Pendapatan Penjualan Ritel', category: 'Pendapatan', type: 'credit', isDefault: true },
+  { id: '402', name: 'Pendapatan Jasa', category: 'Pendapatan', type: 'credit', isDefault: true },
+  { id: '403', name: 'Pendapatan Komisi', category: 'Pendapatan', type: 'credit', isDefault: true },
+  { id: '404', name: 'Pendapatan Bunga Pinjaman', category: 'Pendapatan', type: 'credit', isDefault: true },
+  { id: '405', name: 'Pendapatan Lainnya', category: 'Pendapatan Lain-lain', type: 'credit', isDefault: true },
+  // HPP
+  { id: '501', name: 'Harga Pokok Penjualan', category: 'Harga Pokok Penjualan', type: 'debit', isDefault: true },
+  // Beban Operasional
+  { id: '601', name: 'Beban Gaji Karyawan', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '602', name: 'Beban Listrik & Air', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '603', name: 'Beban Sewa Gedung', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '604', name: 'Beban Perlengkapan & ATK', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '605', name: 'Beban Transportasi', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '606', name: 'Beban Penyusutan', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '607', name: 'Beban Pemasaran', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '608', name: 'Beban Lainnya', category: 'Beban Lain-lain', type: 'debit', isDefault: true },
+];
+
 // ─── Jurnal Saldo Awal Persediaan ────────────────────────────────────────────
 // Debit Persediaan Barang = total nilai HPP × stok awal semua produk
 const NILAI_PERSEDIAAN_AWAL = INITIAL_PRODUCTS.reduce((s, p) => s + (p.hpp || 0) * p.stock, 0);
@@ -73,6 +109,7 @@ export const useStore = create(
   persist(
     (set) => ({
   // Data State
+  accounts: INITIAL_ACCOUNTS,
   members: INITIAL_MEMBERS,
   products: INITIAL_PRODUCTS,
   consignmentProducts: INITIAL_CONSIGNMENT,
@@ -90,6 +127,57 @@ export const useStore = create(
   darkMode: false,
   
   // Actions
+  addAccount: (acc) => set((state) => ({ accounts: [...state.accounts, { ...acc, isDefault: false }] })),
+  updateAccount: (id, updates) => set((state) => ({
+    accounts: state.accounts.map(a => a.id === id ? { ...a, ...updates } : a)
+  })),
+  deleteAccount: (id) => set((state) => ({
+    accounts: state.accounts.filter(a => a.id !== id || a.isDefault)
+  })),
+  setSaldoAwal: (accountName, amount) => set((state) => {
+    // 1. Hapus entri JU-INIT untuk akun ini yang sebelumnya (jika ada)
+    const oldJournal = state.journal.filter(j => !(j.id === 'JU-INIT' && j.account === accountName));
+    
+    // 2. Tambahkan entri baru jika amount > 0
+    const newEntries = [];
+    if (amount > 0) {
+      const isDebit = ['Aktiva', 'HPP', 'Beban'].includes(state.accounts.find(a => a.name === accountName)?.category || 'Aktiva');
+      newEntries.push({
+        id: 'JU-INIT',
+        date: '2026-01-01',
+        description: `Saldo Awal ${accountName}`,
+        ref: 'INIT',
+        debit: isDebit ? amount : 0,
+        credit: isDebit ? 0 : amount,
+        account: accountName
+      });
+    }
+
+    // 3. Hitung ulang total Debit & Credit dari semua JU-INIT kecuali Saldo Penyeimbang
+    const allInit = [...oldJournal, ...newEntries].filter(j => j.id === 'JU-INIT' && j.account !== 'Saldo Penyeimbang');
+    const totDeb = allInit.reduce((s, j) => s + (j.debit || 0), 0);
+    const totCre = allInit.reduce((s, j) => s + (j.credit || 0), 0);
+    const selisih = totDeb - totCre;
+
+    // 4. Tambahkan Saldo Penyeimbang agar jurnal seimbang
+    // Jika selisih > 0 (Debit lebih besar), Penyeimbang harus di Kredit (selisih)
+    // Jika selisih < 0 (Kredit lebih besar), Penyeimbang harus di Debit (abs(selisih))
+    const finalJournal = [...oldJournal, ...newEntries].filter(j => j.id !== 'JU-INIT' || j.account !== 'Saldo Penyeimbang');
+    if (selisih !== 0) {
+      finalJournal.push({
+        id: 'JU-INIT',
+        date: '2026-01-01',
+        description: 'Saldo Penyeimbang Historis',
+        ref: 'INIT',
+        debit: selisih < 0 ? Math.abs(selisih) : 0,
+        credit: selisih > 0 ? selisih : 0,
+        account: 'Saldo Penyeimbang'
+      });
+    }
+
+    return { journal: finalJournal };
+  }),
+
   login: (user) => set({ currentUser: user }),
   logout: () => set({ currentUser: null }),
   toggleDarkMode: () => set((state) => {
@@ -113,27 +201,53 @@ export const useStore = create(
   })),
 
   // Manual entry: Beban (expense) â€” Debet Beban X, Kredit Kas
-  addExpense: (akunBeban, description, amount) => set((state) => {
+  addExpense: (akunBeban, description, amount, txDate) => set((state) => {
     const newId = `JU-${String(state.journal.length + 1).padStart(4, '0')}`;
-    const date  = new Date().toISOString().split('T')[0];
+    const date  = txDate || new Date().toISOString().split('T')[0];
     return {
       journal: [
         ...state.journal,
         { id: newId, date, description, ref: 'BKK', debit: amount,  credit: 0,      account: akunBeban },
-        { id: newId, date, description, ref: 'BKK', debit: 0,       credit: amount, account: 'Kas'     },
+        { id: newId, date, description, ref: 'BKK', debit: 0,       credit: amount, account: 'Kas Bank'     },
       ]
     };
   }),
 
   // Manual entry: Pendapatan lain â€” Debet Kas, Kredit Pendapatan X
-  addIncome: (akunPendapatan, description, amount) => set((state) => {
+  addIncome: (akunPendapatan, description, amount, txDate) => set((state) => {
     const newId = `JU-${String(state.journal.length + 1).padStart(4, '0')}`;
-    const date  = new Date().toISOString().split('T')[0];
+    const date  = txDate || new Date().toISOString().split('T')[0];
     return {
       journal: [
         ...state.journal,
-        { id: newId, date, description, ref: 'BKM', debit: amount, credit: 0,      account: 'Kas'            },
+        { id: newId, date, description, ref: 'BKM', debit: amount, credit: 0,      account: 'Kas Bank'            },
         { id: newId, date, description, ref: 'BKM', debit: 0,      credit: amount, account: akunPendapatan    },
+      ]
+    };
+  }),
+
+  // Kas Kecil: Pengisian Saldo
+  replenishPettyCash: (amount, description = 'Pengisian Kas Kecil', txDate) => set((state) => {
+    const newId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const date  = txDate || new Date().toISOString().split('T')[0];
+    return {
+      journal: [
+        ...state.journal,
+        { id: newId, date, description, ref: 'BKK', debit: amount, credit: 0, account: 'Kas Kecil' },
+        { id: newId, date, description, ref: 'BKK', debit: 0, credit: amount, account: 'Kas Bank' },
+      ]
+    };
+  }),
+
+  // Kas Kecil: Pencatatan Pengeluaran
+  addPettyCashExpense: (akunBeban, amount, description, txDate) => set((state) => {
+    const newId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const date  = txDate || new Date().toISOString().split('T')[0];
+    return {
+      journal: [
+        ...state.journal,
+        { id: newId, date, description, ref: 'BKK', debit: amount, credit: 0, account: akunBeban },
+        { id: newId, date, description, ref: 'BKK', debit: 0, credit: amount, account: 'Kas Kecil' },
       ]
     };
   }),
@@ -187,7 +301,7 @@ export const useStore = create(
     const today = new Date();
     const date = customDate || `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     const journalEntries = [
-      { id: newJournalId, date, description: 'Setoran Simpanan Anggota', ref: memberId, debit: totalDeposit, credit: 0, account: 'Kas' },
+      { id: newJournalId, date, description: 'Setoran Simpanan Anggota', ref: memberId, debit: totalDeposit, credit: 0, account: 'Kas Bank' },
       { id: newJournalId, date, description: 'Setoran Simpanan Anggota', ref: memberId, debit: 0, credit: totalDeposit, account: 'Simpanan Anggota' }
     ];
 
@@ -209,7 +323,7 @@ export const useStore = create(
     memberIds.forEach((mId, index) => {
       const newJournalId = `JU-${String(baseId + index).padStart(3, '0')}`;
       journalEntries.push(
-        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: Number(wajibAmount), credit: 0, account: 'Kas' },
+        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: Number(wajibAmount), credit: 0, account: 'Kas Bank' },
         { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: 0, credit: Number(wajibAmount), account: 'Simpanan Anggota' }
       );
     });
@@ -270,7 +384,7 @@ export const useStore = create(
   })),
 
   // Transactions Actions
-  checkoutRetail: (cart, totalAmount, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '') => set((state) => {
+  checkoutRetail: (cart, totalAmount, markupAmount = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
     // Deduct stock
     const newProducts = state.products.map(p => {
       const cartItem = cart.find(c => c.id === p.id);
@@ -279,18 +393,23 @@ export const useStore = create(
     });
 
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
-    const date = new Date().toISOString().split('T')[0];
+    const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
     // Cash â†’ Kas, Kredit â†’ Piutang Dagang
-    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas';
+    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Ritel (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : 'Penjualan Barang Ritel';
 
+    const grandTotal = totalAmount + markupAmount;
+
     const journalEntries = [
-      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: totalAmount, credit: 0, account: akunDebit },
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: grandTotal, credit: 0, account: akunDebit },
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: 0, credit: totalAmount, account: 'Pendapatan Penjualan Ritel' },
+      ...(markupAmount > 0 ? [
+        { id: newJournalId, date, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-RTL', debit: 0, credit: markupAmount, account: 'Pendapatan Bunga Cicilan' }
+      ] : []),
       ...(totalHPP > 0 ? [
         { id: newJournalId, date, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
         { id: newJournalId, date, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
@@ -299,13 +418,38 @@ export const useStore = create(
 
     const member = memberId ? state.members.find(m => m.id === memberId) : null;
     const newMemberTx = member
-      ? [...state.memberSalesTransactions, { id: newJournalId, date, memberId, memberName: member.name, type: 'Ritel', amount: totalAmount }]
+      ? [...state.memberSalesTransactions, { id: newJournalId, date, memberId, memberName: member.name, type: 'Ritel', amount: grandTotal }]
       : state.memberSalesTransactions;
 
-    return { products: newProducts, journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx };
+    let newCreditGoods = state.creditGoods;
+    if (paymentMethod === 'Kredit' && member) {
+      const schedule = buildSchedule(grandTotal, installments, startDate || date);
+      const newCreditId = `KRG-RTL-${String(Date.now()).slice(-6)}`;
+      newCreditGoods = [
+        ...state.creditGoods,
+        {
+          id: newCreditId,
+          memberId: member.id,
+          name: member.name,
+          itemName: `Kasbon Penjualan Ritel`,
+          amount: grandTotal,
+          dp: 0,
+          tenor: installments,
+          interest: 0,
+          status: 'Active',
+          remainingAmount: grandTotal,
+          applyDate: date,
+          takeDate: date,
+          startDate: startDate || date,
+          installments: schedule
+        }
+      ];
+    }
+
+    return { products: newProducts, journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx, creditGoods: newCreditGoods };
   }),
 
-  checkoutConsignment: (cart, totalAmount, totalCommission, totalSupplier, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '') => set((state) => {
+  checkoutConsignment: (cart, totalAmount, totalCommission, totalSupplier, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
     const newConsignment = state.consignmentProducts.map(p => {
       const cartItem = cart.find(c => c.id === p.id);
       if (cartItem) return { ...p, stock: p.stock - cartItem.qty };
@@ -313,9 +457,9 @@ export const useStore = create(
     });
 
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
-    const date = new Date().toISOString().split('T')[0];
+    const date = txDate || new Date().toISOString().split('T')[0];
 
-    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas';
+    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Titipan (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : 'Penjualan Titipan';
@@ -334,19 +478,24 @@ export const useStore = create(
     return { consignmentProducts: newConsignment, journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx };
   }),
 
-  checkoutService: (cart, totalAmount, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '') => set((state) => {
+  checkoutService: (cart, totalAmount, markupAmount = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
-    const date = new Date().toISOString().split('T')[0];
+    const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
-    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas';
+    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Jasa/PPOB (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : 'Penjualan Jasa/PPOB';
 
+    const grandTotal = totalAmount + markupAmount;
+
     const journalEntries = [
-      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: totalAmount, credit: 0, account: akunDebit },
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: grandTotal, credit: 0, account: akunDebit },
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: totalAmount, account: 'Pendapatan Jasa' },
+      ...(markupAmount > 0 ? [
+        { id: newJournalId, date, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: markupAmount, account: 'Pendapatan Bunga Cicilan' }
+      ] : []),
       ...(totalHPP > 0 ? [
         { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
         { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
@@ -355,22 +504,55 @@ export const useStore = create(
 
     const member = memberId ? state.members.find(m => m.id === memberId) : null;
     const newMemberTx = member
-      ? [...state.memberSalesTransactions, { id: newJournalId, date, memberId, memberName: member.name, type: 'Jasa', amount: totalAmount }]
+      ? [...state.memberSalesTransactions, { id: newJournalId, date, memberId, memberName: member.name, type: 'Jasa', amount: grandTotal }]
       : state.memberSalesTransactions;
 
-    return { journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx };
+    let newCreditGoods = state.creditGoods;
+    if (paymentMethod === 'Kredit' && member) {
+      const schedule = buildSchedule(grandTotal, installments, startDate || date);
+      const newCreditId = `KRG-JSA-${String(Date.now()).slice(-6)}`;
+      newCreditGoods = [
+        ...state.creditGoods,
+        {
+          id: newCreditId,
+          memberId: member.id,
+          name: member.name,
+          itemName: `Kasbon Penjualan Jasa`,
+          amount: grandTotal,
+          dp: 0,
+          tenor: installments,
+          interest: 0,
+          status: 'Active',
+          remainingAmount: grandTotal,
+          applyDate: date,
+          takeDate: date,
+          startDate: startDate || date,
+          installments: schedule
+        }
+      ];
+    }
+
+    return { journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx, creditGoods: newCreditGoods };
   }),
 
-  restockProduct: (productId, qty, hpp) => set((state) => {
-    const date = new Date().toISOString().split('T')[0];
+  restockProduct: (productId, qty, hpp, supplier = '', paymentMethod = 'Kas Bank', notes = '', txDate) => set((state) => {
+    const date = txDate || new Date().toISOString().split('T')[0];
     const newId = `JU-${String(Math.floor(state.journal.length / 2) + 1).padStart(4, '0')}`;
     const product = state.products.find(p => p.id === productId);
     const totalCost = qty * hpp;
+    
+    let desc = `Pembelian ${product?.name}`;
+    if (supplier) desc += ` (Supplier: ${supplier})`;
+    if (notes) desc += ` - ${notes}`;
+
+    const kreditAccount = paymentMethod === 'Hutang Dagang' ? 'Hutang Dagang' : 
+                          paymentMethod === 'Kas Kecil' ? 'Kas Kecil' : 'Kas Bank';
+
     return {
       products: state.products.map(p => p.id === productId ? { ...p, stock: p.stock + qty, hpp } : p),
       journal: [...state.journal,
-        { id: newId, date, description: `Restock ${product?.name}`, ref: 'BKK-RST', debit: totalCost, credit: 0, account: 'Persediaan Barang' },
-        { id: newId, date, description: `Restock ${product?.name}`, ref: 'BKK-RST', debit: 0, credit: totalCost, account: 'Kas' },
+        { id: newId, date, description: desc, ref: 'BKK-RST', debit: totalCost, credit: 0, account: 'Persediaan Barang' },
+        { id: newId, date, description: desc, ref: 'BKK-RST', debit: 0, credit: totalCost, account: kreditAccount },
       ]
     };
   }),
@@ -384,11 +566,11 @@ export const useStore = create(
   })),
 
   // Loan Actions
-  approveCashLoan: (loanId) => set((state) => {
+  approveCashLoan: (loanId, txDate) => set((state) => {
     const loan = state.cashLoans.find(l => l.id === loanId);
     if (!loan) return state;
 
-    const date = new Date().toISOString().split('T')[0];
+    const date = txDate || new Date().toISOString().split('T')[0];
     
     // Generate schedule
     const rawSchedule = buildSchedule(loan.amount, loan.tenor, date);
@@ -405,20 +587,20 @@ export const useStore = create(
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     const journalEntries = [
       { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: loan.amount, credit: 0, account: 'Piutang Anggota' },
-      { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: loan.amount, account: 'Kas' }
+      { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: loan.amount, account: 'Kas Bank' }
     ];
 
     return { cashLoans: newLoans, journal: [...state.journal, ...journalEntries] };
   }),
 
-  payCashLoan: (loanId, paymentAmount) => set((state) => {
+  payCashLoan: (loanId, paymentAmount, txDate) => set((state) => {
     const loan = state.cashLoans.find(l => l.id === loanId);
     if (!loan) return state;
 
     const newRemaining = Math.max(0, loan.remainingAmount - paymentAmount);
     const newStatus = newRemaining === 0 ? 'Completed' : loan.status;
 
-    const date = new Date().toISOString().split('T')[0];
+    const date = txDate || new Date().toISOString().split('T')[0];
 
     // Mark corresponding installments as paid
     let amountLeft = paymentAmount;
@@ -438,18 +620,18 @@ export const useStore = create(
     
     // Simplification: Not calculating interest separation, just pure deduction for simulation
     const journalEntries = [
-      { id: newJournalId, date, description: `Angsuran Pinjaman ${loan.name}`, ref: loan.id, debit: paymentAmount, credit: 0, account: 'Kas' },
+      { id: newJournalId, date, description: `Angsuran Pinjaman ${loan.name}`, ref: loan.id, debit: paymentAmount, credit: 0, account: 'Kas Bank' },
       { id: newJournalId, date, description: `Angsuran Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: paymentAmount, account: 'Piutang Anggota' }
     ];
 
     return { cashLoans: newLoans, journal: [...state.journal, ...journalEntries] };
   }),
 
-  approveCreditGoods: (creditId) => set((state) => {
+  approveCreditGoods: (creditId, txDate) => set((state) => {
     const credit = state.creditGoods.find(c => c.id === creditId);
     if (!credit) return state;
 
-    const date = new Date().toISOString().split('T')[0];
+    const date = txDate || new Date().toISOString().split('T')[0];
     const sisaPokok = credit.amount - credit.dp;
     const totalBunga = sisaPokok * ((credit.interest || 0) / 100) * (credit.tenor || 1);
     const totalPiutang = sisaPokok + totalBunga;
@@ -473,7 +655,7 @@ export const useStore = create(
       { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.amount, account: 'Persediaan Barang' },
       // DP Handling
       ...(credit.dp > 0 ? [
-        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: credit.dp, credit: 0, account: 'Kas' },
+        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: credit.dp, credit: 0, account: 'Kas Bank' },
         { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.dp, account: 'Piutang Barang' }
       ] : []),
       // Bunga Handling
@@ -486,13 +668,13 @@ export const useStore = create(
     return { creditGoods: newCredits, journal: [...state.journal, ...journalEntries] };
   }),
 
-  payCreditGoods: (creditId, paymentAmount) => set((state) => {
+  payCreditGoods: (creditId, paymentAmount, txDate) => set((state) => {
     const credit = state.creditGoods.find(c => c.id === creditId);
     if (!credit) return state;
 
     const newRemaining = Math.max(0, credit.remainingAmount - paymentAmount);
     const newStatus = newRemaining === 0 ? 'Completed' : credit.status;
-    const date = new Date().toISOString().split('T')[0];
+    const date = txDate || new Date().toISOString().split('T')[0];
 
     // Mark corresponding installments as paid
     let amountLeft = paymentAmount;
@@ -511,58 +693,87 @@ export const useStore = create(
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     
     const journalEntries = [
-      { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: paymentAmount, credit: 0, account: 'Kas' },
+      { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: paymentAmount, credit: 0, account: 'Kas Bank' },
       { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: paymentAmount, account: 'Piutang Barang' }
     ];
 
     return { creditGoods: newCredits, journal: [...state.journal, ...journalEntries] };
   }),
 
-  // Payroll Deduction (Potong Gaji Massal)
-  processPayrollDeduction: (memberIds, paymentMap) => set((state) => {
-    // paymentMap: { [memberId]: { piutangDagang, piutangAnggota, piutangBarang } }
-    const date = new Date().toISOString().split('T')[0];
+  // Payroll Deduction (Potong Gaji per Member)
+  processPayrollDeduction: (memberId, payments, txDate) => set((state) => {
+    const date = txDate || new Date().toISOString().split('T')[0];
+    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     const journalEntries = [];
     const newCashLoans = [...state.cashLoans];
     const newCreditGoods = [...state.creditGoods];
 
-    let journalBaseId = Math.floor(state.journal.length / 2) + 1;
+    let totalCash = 0;
+    let totalDagang = 0;
+    let totalAnggota = 0;
+    let totalBarang = 0;
 
-    memberIds.forEach(mId => {
-      const p = paymentMap[mId];
-      if (!p) return;
+    payments.forEach(pay => {
+      if (pay.amount <= 0) return;
+      totalCash += pay.amount;
 
-      const totalPaid = (p.piutangDagang || 0) + (p.piutangAnggota || 0) + (p.piutangBarang || 0);
-      if (totalPaid <= 0) return;
+      if (pay.type === 'CashLoan') {
+        totalAnggota += pay.amount;
+        const idx = newCashLoans.findIndex(l => l.id === pay.id);
+        if (idx !== -1) {
+          const loan = newCashLoans[idx];
+          const newRemaining = Math.max(0, loan.remainingAmount - pay.amount);
+          
+          let amountLeft = pay.amount;
+          const newInstallments = [...(loan.installments || [])].map(inst => {
+            if (amountLeft >= inst.amount * 0.9 && inst.status !== 'Paid') {
+              amountLeft -= inst.amount;
+              return { ...inst, status: 'Paid', paidDate: date };
+            }
+            return inst;
+          });
 
-      const newJournalId = `JU-${String(journalBaseId++).padStart(4, '0')}`;
-      
-      // Kas bertambah
-      journalEntries.push({ id: newJournalId, date, description: `Pelunasan Potong Gaji`, ref: mId, debit: totalPaid, credit: 0, account: 'Kas' });
-
-      // Piutang berkurang
-      if (p.piutangDagang > 0) {
-        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kasbon Ritel/Jasa`, ref: mId, debit: 0, credit: p.piutangDagang, account: 'Piutang Dagang' });
-      }
-      if (p.piutangAnggota > 0) {
-        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Pinjaman Tunai`, ref: mId, debit: 0, credit: p.piutangAnggota, account: 'Piutang Anggota' });
-        // Mark all active cash loans for this member as completed
-        state.cashLoans.forEach((l, idx) => {
-          if (l.memberId === mId && l.status === 'Active' && l.remainingAmount > 0) {
-            newCashLoans[idx] = { ...l, remainingAmount: 0, status: 'Completed' };
+          newCashLoans[idx] = { ...loan, remainingAmount: newRemaining, status: newRemaining === 0 ? 'Completed' : 'Active', installments: newInstallments };
+        }
+      } else if (pay.type === 'CreditGood') {
+        const idx = newCreditGoods.findIndex(c => c.id === pay.id);
+        if (idx !== -1) {
+          const credit = newCreditGoods[idx];
+          if (credit.itemName.includes('Kasbon Penjualan Ritel') || credit.itemName.includes('Kasbon Penjualan Jasa')) {
+            totalDagang += pay.amount;
+          } else {
+            totalBarang += pay.amount;
           }
-        });
-      }
-      if (p.piutangBarang > 0) {
-        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kredit Barang`, ref: mId, debit: 0, credit: p.piutangBarang, account: 'Piutang Barang' });
-        // Mark all active credit goods for this member as completed
-        state.creditGoods.forEach((c, idx) => {
-          if (c.memberId === mId && c.status === 'Active' && c.remainingAmount > 0) {
-            newCreditGoods[idx] = { ...c, remainingAmount: 0, status: 'Completed' };
-          }
-        });
+          const newRemaining = Math.max(0, credit.remainingAmount - pay.amount);
+
+          let amountLeft = pay.amount;
+          const newInstallments = [...(credit.installments || [])].map(inst => {
+            if (amountLeft >= inst.amount * 0.9 && inst.status !== 'Paid') {
+              amountLeft -= inst.amount;
+              return { ...inst, status: 'Paid', paidDate: date };
+            }
+            return inst;
+          });
+
+          newCreditGoods[idx] = { ...credit, remainingAmount: newRemaining, status: newRemaining === 0 ? 'Completed' : 'Active', installments: newInstallments };
+        }
+      } else if (pay.type === 'LegacyDagang') {
+        totalDagang += pay.amount;
       }
     });
+
+    if (totalCash > 0) {
+      journalEntries.push({ id: newJournalId, date, description: `Pelunasan Potong Gaji`, ref: memberId, debit: totalCash, credit: 0, account: 'Kas Bank' });
+      if (totalDagang > 0) {
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kasbon Ritel/Jasa`, ref: memberId, debit: 0, credit: totalDagang, account: 'Piutang Dagang' });
+      }
+      if (totalAnggota > 0) {
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Pinjaman Tunai`, ref: memberId, debit: 0, credit: totalAnggota, account: 'Piutang Anggota' });
+      }
+      if (totalBarang > 0) {
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kredit Barang`, ref: memberId, debit: 0, credit: totalBarang, account: 'Piutang Barang' });
+      }
+    }
 
     return {
       cashLoans: newCashLoans,
@@ -570,12 +781,26 @@ export const useStore = create(
       journal: [...state.journal, ...journalEntries]
     };
   }),
+
+  migrateKasToKasBank: () => set((state) => {
+    let changed = false;
+    const newJournal = state.journal.map(j => {
+      if (j.account === 'Kas') {
+        changed = true;
+        return { ...j, account: 'Kas Bank' };
+      }
+      return j;
+    });
+    return changed ? { journal: newJournal } : {};
+  }),
+
     }),
     {
       name: 'koperasi-store-v6',           // localStorage key — bump versi untuk reset data lama
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Simpan semua data kecuali session login (keamanan)
+        accounts:               state.accounts,
         members:                state.members,
         products:               state.products,
         consignmentProducts:    state.consignmentProducts,
@@ -589,6 +814,25 @@ export const useStore = create(
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
+
+        // Patch akun jika belum ada
+        if (!state.accounts || state.accounts.length === 0) {
+          state.accounts = INITIAL_ACCOUNTS;
+        } else {
+          // Migrasi akun lama yang memakai klasifikasi usang
+          const categoryMap = {
+            'Aktiva': 'Aset Lancar',
+            'Kewajiban': 'Kewajiban Jangka Pendek',
+            'HPP': 'Harga Pokok Penjualan',
+            'Beban': 'Beban Operasional'
+          };
+          state.accounts = state.accounts.map(acc => {
+            if (categoryMap[acc.category]) {
+              return { ...acc, category: categoryMap[acc.category] };
+            }
+            return acc;
+          });
+        }
 
         // Patch joinDate untuk anggota yang belum punya
         const today = new Date();

@@ -16,6 +16,7 @@ const ConsignmentSales = () => {
   const [searchTerm, setSearchTerm]         = useState('');
   const [selectedMember, setSelectedMember] = useState('');
   const [paymentMethod, setPaymentMethod]   = useState('Cash');
+  const [txDate, setTxDate]                 = useState(new Date().toISOString().split('T')[0]);
   const [takeDate, setTakeDate]             = useState('');
   const [installments, setInstallments]     = useState(1);
   const [startDate, setStartDate]           = useState('');
@@ -76,12 +77,12 @@ const ConsignmentSales = () => {
     if (paymentMethod === 'Kredit' && !startDate) return alert('Isi tanggal mulai cicilan!');
     const member = selectedMember ? members.find(m => m.id === selectedMember) : null;
     const txId = `KNS-${Date.now()}`;
-    checkoutConsignment(cart, totalAmount, totalCommission, totalSupplierPayable, selectedMember || null, paymentMethod, installments, startDate || null, notes);
+    checkoutConsignment(cart, totalAmount, totalCommission, totalSupplierPayable, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
     setLastTransaction({
       items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
       total: totalAmount, type: 'consignment',
       memberName: member?.name || null,
-      date: new Date().toISOString(),
+      date: txDate || new Date().toISOString(),
       transactionId: txId,
       commission: totalCommission,
       supplierPayable: totalSupplierPayable,
@@ -160,6 +161,11 @@ const ConsignmentSales = () => {
             <button type="button" className={`payment-btn ${paymentMethod === 'Kredit' ? 'active-kredit' : ''}`}
               onClick={() => setPaymentMethod('Kredit')}><CreditCard size={15} /> Kredit / Cicilan</button>
           </div>
+        </div>
+
+        <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+          <label className="member-selector-label"><Calendar size={14} /> Tanggal Transaksi</label>
+          <input type="date" className="form-control" value={txDate} onChange={(e) => setTxDate(e.target.value)} required />
         </div>
 
         <div className="form-group" style={{ marginBottom: '0.75rem' }}>

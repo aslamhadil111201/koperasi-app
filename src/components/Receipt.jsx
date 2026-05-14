@@ -2,7 +2,7 @@ import React from 'react';
 import { Printer } from 'lucide-react';
 
 const Receipt = ({
-  items = [], total = 0, type = 'retail',
+  items = [], total = 0, subtotal = 0, markupAmount = 0, type = 'retail',
   memberName, date, transactionId,
   commission, supplierPayable,
   paymentMethod = 'Cash', takeDate,
@@ -37,6 +37,11 @@ const Receipt = ({
     const consignHTML = type === 'consignment' && commission != null ? `
       <div class="row"><span>Komisi Koperasi</span><span>Rp ${(commission||0).toLocaleString('id-ID')}</span></div>
       <div class="row"><span>Hutang ke Suplier</span><span>Rp ${(supplierPayable||0).toLocaleString('id-ID')}</span></div>
+      <hr>` : '';
+
+    const markupHTML = markupAmount > 0 ? `
+      <div class="row"><span>Subtotal</span><span>Rp ${(subtotal||0).toLocaleString('id-ID')}</span></div>
+      <div class="row"><span>Markup Kredit (10%)</span><span>Rp ${markupAmount.toLocaleString('id-ID')}</span></div>
       <hr>` : '';
 
     const scheduleHTML = paymentMethod === 'Kredit' && schedule.length > 0 ? `
@@ -94,6 +99,7 @@ const Receipt = ({
   ${itemsHTML}
   <hr>
   ${consignHTML}
+  ${markupHTML}
 
   <div class="total-row">
     <span>TOTAL BAYAR</span>
@@ -200,10 +206,23 @@ const Receipt = ({
         {type === 'consignment' && commission != null && (
           <>
             <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2 }}>
-              <span>Komisi Koperasi</span><span>Rp {(commission||0).toLocaleString('id-ID')}</span>
+              <span>Komisi Koperasi</span><span>Rp ${(commission||0).toLocaleString('id-ID')}</span>
             </div>
             <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2 }}>
-              <span>Hutang ke Suplier</span><span>Rp {(supplierPayable||0).toLocaleString('id-ID')}</span>
+              <span>Hutang ke Suplier</span><span>Rp ${(supplierPayable||0).toLocaleString('id-ID')}</span>
+            </div>
+            <hr style={{ border:'none', borderTop:'1px dashed #999', margin:'6px 0' }} />
+          </>
+        )}
+
+        {/* Markup */}
+        {markupAmount > 0 && (
+          <>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2 }}>
+              <span>Subtotal</span><span>Rp ${(subtotal||0).toLocaleString('id-ID')}</span>
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2 }}>
+              <span>Markup Kredit (10%)</span><span>Rp {markupAmount.toLocaleString('id-ID')}</span>
             </div>
             <hr style={{ border:'none', borderTop:'1px dashed #999', margin:'6px 0' }} />
           </>

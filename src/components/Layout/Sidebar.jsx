@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Wrench,
   PiggyBank, Banknote, CreditCard, BookOpen, TrendingUp,
   LogOut, Users, Database, PieChart, Scale, PackagePlus,
-  BookMarked, Waves, ChevronLeft, ChevronRight, X, ListChecks
+  BookMarked, Waves, ChevronLeft, ChevronRight, X, ListChecks, Wallet
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Sidebar.css';
@@ -41,8 +41,10 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       { type: 'divider', title: 'MASTER DATA' },
       { title: 'Data Anggota',    path: '/master/members',       icon: <Users size={20} /> },
       { title: 'Data Inventaris', path: '/master/inventory',     icon: <Database size={20} /> },
-      { title: 'Terima Barang',   path: '/master/receive',       icon: <PackagePlus size={20} /> },
+      { title: 'Daftar Akun',     path: '/master/accounts',      icon: <BookMarked size={20} /> },
+      { title: 'Pembelian',       path: '/master/receive',       icon: <PackagePlus size={20} /> },
       { type: 'divider', title: 'LAPORAN KEUANGAN' },
+      { title: 'Kas Kecil',       path: '/finance/petty-cash',   icon: <Wallet size={20} /> },
       { title: 'Jurnal Umum',     path: '/reports/ledger',       icon: <BookOpen size={20} /> },
       { title: 'Buku Besar',      path: '/reports/buku-besar',   icon: <BookMarked size={20} /> },
       { title: 'Arus Kas',        path: '/reports/arus-kas',     icon: <Waves size={20} /> },

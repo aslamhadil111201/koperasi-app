@@ -29,7 +29,7 @@ const ArusKas = () => {
 
   // Hanya entri akun Kas
   const kasEntries = useMemo(() =>
-    journal.filter(j => j.account === 'Kas'),
+    journal.filter(j => j.account === 'Kas Bank'),
     [journal]
   );
 
@@ -65,6 +65,16 @@ const ArusKas = () => {
   const totalMasuk  = filtered.reduce((s, e) => s + e.debit,  0);
   const totalKeluar = filtered.reduce((s, e) => s + e.credit, 0);
   const netKas      = totalMasuk - totalKeluar;
+
+  // Hitung Saldo Awal Kas jika ada filter bulan
+  const saldoAwalKas = useMemo(() => {
+    if (!selectedMonth) return 0;
+    return kasEntries
+      .filter(j => j.date < `${selectedMonth}-01`)
+      .reduce((s, e) => s + (e.debit || 0) - (e.credit || 0), 0);
+  }, [kasEntries, selectedMonth]);
+
+  const saldoAkhirKas = saldoAwalKas + netKas;
 
   // Data grafik bulanan
   const monthlyData = useMemo(() => {
@@ -161,7 +171,7 @@ const ArusKas = () => {
   .header h1 { font-size: 18px; font-weight: 800; color: #FF4D00; }
   .header p  { font-size: 10px; color: #6b7280; margin-top: 2px; }
   h2 { font-size: 13px; font-weight: 700; margin: 16px 0 8px; color: #FF4D00; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
-  .summary { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+  .summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
   .card { border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 12px; }
   .card .label { font-size: 10px; color: #6b7280; margin-bottom: 3px; }
   .card .value { font-size: 15px; font-weight: 800; }
@@ -183,6 +193,10 @@ const ArusKas = () => {
   </div>
 
   <div class="summary">
+    <div class="card" style="background:#f9fafb">
+      <div class="label">Saldo Kas Awal</div>
+      <div class="value" style="color:#111">Rp ${saldoAwalKas.toLocaleString('id-ID')}</div>
+    </div>
     <div class="card">
       <div class="label">Total Kas Masuk</div>
       <div class="value" style="color:#10b981">Rp ${totalMasuk.toLocaleString('id-ID')}</div>
@@ -191,9 +205,9 @@ const ArusKas = () => {
       <div class="label">Total Kas Keluar</div>
       <div class="value" style="color:#ef4444">Rp ${totalKeluar.toLocaleString('id-ID')}</div>
     </div>
-    <div class="card" style="border-color:#FF4D00">
-      <div class="label">${netKas>=0?'Surplus Kas':'Defisit Kas'}</div>
-      <div class="value" style="color:${netKas>=0?'#FF4D00':'#ef4444'}">Rp ${Math.abs(netKas).toLocaleString('id-ID')}</div>
+    <div class="card" style="border-color:#FF4D00; background:#fff3ee">
+      <div class="label">Saldo Kas Akhir</div>
+      <div class="value" style="color:#FF4D00">Rp ${saldoAkhirKas.toLocaleString('id-ID')}</div>
     </div>
   </div>
 
@@ -278,7 +292,14 @@ const ArusKas = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
+        <div className="glass-panel p-4" style={{ background: 'rgba(0,0,0,0.02)' }}>
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign size={18} style={{ color: 'var(--color-text-main)' }} />
+            <span className="text-muted text-sm">Saldo Kas Awal</span>
+          </div>
+          <h3 style={{ color: 'var(--color-text-main)', fontSize: '1.3rem' }}>{fmt(saldoAwalKas)}</h3>
+        </div>
         <div className="glass-panel p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={18} style={{ color: 'var(--color-success)' }} />
@@ -293,15 +314,15 @@ const ArusKas = () => {
           </div>
           <h3 style={{ color: 'var(--color-danger)', fontSize: '1.3rem' }}>{fmt(totalKeluar)}</h3>
         </div>
-        <div className="glass-panel p-4" style={{ border: `2px solid ${netKas >= 0 ? 'var(--color-primary)' : 'var(--color-danger)'}` }}>
+        <div className="glass-panel p-4" style={{ border: `2px solid var(--color-primary)`, background: 'rgba(255,77,0,0.03)' }}>
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign size={18} style={{ color: netKas >= 0 ? 'var(--color-primary)' : 'var(--color-danger)' }} />
-            <span className="text-sm font-bold" style={{ color: netKas >= 0 ? 'var(--color-primary)' : 'var(--color-danger)' }}>
-              {netKas >= 0 ? 'Surplus Kas' : 'Defisit Kas'}
+            <Waves size={18} style={{ color: 'var(--color-primary)' }} />
+            <span className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>
+              Saldo Kas Akhir
             </span>
           </div>
-          <h3 style={{ color: netKas >= 0 ? 'var(--color-primary)' : 'var(--color-danger)', fontSize: '1.3rem' }}>
-            {fmt(Math.abs(netKas))}
+          <h3 style={{ color: 'var(--color-primary)', fontSize: '1.3rem' }}>
+            {fmt(saldoAkhirKas)}
           </h3>
         </div>
       </div>
