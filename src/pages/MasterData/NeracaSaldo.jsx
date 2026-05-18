@@ -35,11 +35,32 @@ const NeracaSaldo = () => {
     return existingSaldo[accName] || '';
   };
 
-  const handleInputChange = (accName, value) => {
-    // Izinkan kosong, minus, dan angka
+  // Format angka dengan titik ribuan untuk display
+  const formatDisplay = (value) => {
+    if (value === '' || value === '-') return value;
+    const num = Number(String(value).replace(/\./g, ''));
+    if (isNaN(num)) return value;
+    const isNeg = num < 0;
+    const abs = Math.abs(num).toLocaleString('id-ID');
+    return isNeg ? `-${abs}` : abs;
+  };
+
+  // Parse angka dari format display (hapus titik)
+  const parseInput = (value) => {
+    return value.replace(/\./g, '');
+  };
+
+  const handleInputChange = (accName, rawValue) => {
+    const value = parseInput(rawValue);
     if (value === '' || value === '-' || !isNaN(Number(value))) {
       setSaldoInputs(prev => ({ ...prev, [accName]: value }));
     }
+  };
+
+  const getDisplayValue = (accName) => {
+    const raw = getInputValue(accName);
+    if (raw === '' || raw === 0) return '';
+    return formatDisplay(raw);
   };
 
   // Hitung total debit dan kredit
@@ -149,7 +170,7 @@ const NeracaSaldo = () => {
                         <input
                           type="number"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
-                          value={getInputValue(acc.name)}
+                          value={getDisplayValue(acc.name)}
                           onChange={e => handleInputChange(acc.name, e.target.value)}
                           placeholder="0"
                         />
@@ -162,7 +183,7 @@ const NeracaSaldo = () => {
                         <input
                           type="number"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
-                          value={getInputValue(acc.name)}
+                          value={getDisplayValue(acc.name)}
                           onChange={e => handleInputChange(acc.name, e.target.value)}
                           placeholder="0"
                         />
