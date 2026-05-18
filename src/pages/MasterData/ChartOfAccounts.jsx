@@ -194,7 +194,7 @@ const ChartOfAccounts = () => {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">Kode Akun</label>
-                  <input type="text" className="form-control" value={form.id} onChange={e => setForm({...form, id: e.target.value})} required disabled={modalMode === 'edit' && selectedAcc?.isDefault} />
+                  <input type="text" className="form-control" value={form.id} onChange={e => setForm({...form, id: e.target.value})} required />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nama Akun</label>
@@ -202,11 +202,11 @@ const ChartOfAccounts = () => {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Kategori</label>
-                  <select className="form-control" value={form.category} onChange={e => setForm({...form, category: e.target.value})} disabled={modalMode === 'edit' && selectedAcc?.isDefault}>
+                  <select className="form-control" value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                   {(modalMode === 'edit' && selectedAcc?.isDefault) && (
-                    <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.4rem' }}>*Akun sistem tidak dapat diubah kategori dan kodenya.</p>
+                    <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.4rem' }}>*Akun sistem: nama bisa diubah, kategori bisa dipindah.</p>
                   )}
                 </div>
                 {formError && <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>{formError}</div>}
