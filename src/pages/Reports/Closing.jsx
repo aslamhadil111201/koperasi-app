@@ -198,10 +198,15 @@ const Closing = () => {
 
         {/* Kanan: Preview */}
         <div className="glass-panel" style={{ padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText size={20} color="var(--color-secondary)" />
-            Pratinjau Jurnal Penutup
-          </h3>
+          <div className="flex items-center gap-3 mb-6">
+            <div style={{ background: 'rgba(6,182,212,0.1)', color: 'var(--color-secondary)', padding: 12, borderRadius: 12 }}>
+              <FileText size={24} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Pratinjau Jurnal Penutup</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Ringkasan saldo yang akan ditutup.</p>
+            </div>
+          </div>
 
           {!preview ? (
             <p className="text-muted text-center py-6 text-sm">Pilih periode untuk melihat pratinjau.</p>
