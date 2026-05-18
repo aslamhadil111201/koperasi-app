@@ -38,28 +38,27 @@ const NeracaSaldo = () => {
   // Format angka dengan titik ribuan untuk display
   const formatDisplay = (value) => {
     if (value === '' || value === '-') return value;
-    const num = Number(String(value).replace(/\./g, ''));
-    if (isNaN(num)) return value;
-    const isNeg = num < 0;
-    const abs = Math.abs(num).toLocaleString('id-ID');
-    return isNeg ? `-${abs}` : abs;
-  };
-
-  // Parse angka dari format display (hapus titik)
-  const parseInput = (value) => {
-    return value.replace(/\./g, '');
+    const str = String(value);
+    const isNeg = str.startsWith('-');
+    const digits = str.replace(/[^0-9]/g, '');
+    if (!digits) return isNeg ? '-' : '';
+    const formatted = Number(digits).toLocaleString('id-ID');
+    return isNeg ? `-${formatted}` : formatted;
   };
 
   const handleInputChange = (accName, rawValue) => {
-    const value = parseInput(rawValue);
-    if (value === '' || value === '-' || !isNaN(Number(value))) {
-      setSaldoInputs(prev => ({ ...prev, [accName]: value }));
-    }
+    // Hapus semua karakter kecuali angka dan minus
+    const cleaned = rawValue.replace(/[^0-9\-]/g, '');
+    // Pastikan minus hanya di depan
+    const isNeg = cleaned.startsWith('-');
+    const digits = cleaned.replace(/[^0-9]/g, '');
+    const value = isNeg ? `-${digits}` : digits;
+    setSaldoInputs(prev => ({ ...prev, [accName]: value }));
   };
 
   const getDisplayValue = (accName) => {
     const raw = getInputValue(accName);
-    if (raw === '' || raw === 0) return '';
+    if (raw === '' || raw === 0 || raw === '0') return '';
     return formatDisplay(raw);
   };
 
