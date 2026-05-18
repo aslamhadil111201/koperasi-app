@@ -434,6 +434,42 @@
 [data-theme="dark"] .login-feature-title { color: #F1F5F9; }
 [data-theme="dark"] .login-feature-desc { color: #94A3B8; }
 
+/* Dark Mode - Modal */
+[data-theme="dark"] .login-modal {
+  background: #1a1d27;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+[data-theme="dark"] .login-modal-header {
+  border-color: #2D3148;
+}
+[data-theme="dark"] .login-modal-header h3 {
+  color: #F1F5F9;
+}
+[data-theme="dark"] .login-modal-close {
+  background: #22263A;
+  color: #94A3B8;
+}
+[data-theme="dark"] .login-modal-close:hover {
+  background: #3b1a1a;
+  color: #ef4444;
+}
+[data-theme="dark"] .login-modal-body {
+  color: #CBD5E1;
+}
+[data-theme="dark"] .login-modal-body p {
+  color: #CBD5E1;
+}
+[data-theme="dark"] .login-modal-footer {
+  border-color: #2D3148;
+}
+[data-theme="dark"] .login-contact-card {
+  background: #22263A;
+  border-color: #2D3148;
+}
+[data-theme="dark"] .login-contact-row {
+  color: #CBD5E1;
+}
+
 /* ── Responsive ──────────────────────────────── */
 @media (max-width: 900px) {
   .login-page { flex-direction: column; }
