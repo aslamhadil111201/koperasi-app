@@ -14,16 +14,16 @@ const NeracaSaldo = () => {
   const [saldoInputs, setSaldoInputs] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Kelompokkan akun: Aktiva (Debit) vs Kewajiban & Modal (Kredit)
-  const aktivaCategories = ['Aset Lancar', 'Aset Tetap'];
-  const kewajibanModalCategories = ['Kewajiban Jangka Pendek', 'Kewajiban Jangka Panjang', 'Ekuitas'];
+  // Kelompokkan akun: Aktiva + Beban (Debit) vs Kewajiban & Modal + Pendapatan (Kredit)
+  const debitCategories = ['Aset Lancar', 'Aset Tetap', 'Harga Pokok Penjualan', 'Beban Operasional', 'Beban Lain-lain'];
+  const kreditCategories = ['Kewajiban Jangka Pendek', 'Kewajiban Jangka Panjang', 'Ekuitas', 'Pendapatan', 'Pendapatan Lain-lain'];
 
   const aktivaAccounts = useMemo(() => 
-    accounts.filter(a => aktivaCategories.includes(a.category)).sort((a,b) => a.id.localeCompare(b.id)),
+    accounts.filter(a => debitCategories.includes(a.category)).sort((a,b) => a.id.localeCompare(b.id)),
   [accounts]);
 
   const kewajibanAccounts = useMemo(() => 
-    accounts.filter(a => kewajibanModalCategories.includes(a.category)).sort((a,b) => a.id.localeCompare(b.id)),
+    accounts.filter(a => kreditCategories.includes(a.category)).sort((a,b) => a.id.localeCompare(b.id)),
   [accounts]);
 
   // Ambil saldo awal yang sudah ada dari jurnal JU-INIT
@@ -127,7 +127,7 @@ const NeracaSaldo = () => {
         {/* Kolom Kiri: Aktiva (Debit) */}
         <div className="glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ background: 'var(--color-primary)', color: '#fff', padding: '0.75rem 1.25rem', fontWeight: 700, fontSize: '0.9rem' }}>
-            Aktiva (Debit)
+            Aktiva & Beban (Debit)
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
@@ -177,7 +177,7 @@ const NeracaSaldo = () => {
         {/* Kolom Kanan: Kewajiban & Modal (Kredit) */}
         <div className="glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ background: 'var(--color-success)', color: '#fff', padding: '0.75rem 1.25rem', fontWeight: 700, fontSize: '0.9rem' }}>
-            Kewajiban & Modal (Kredit)
+            Kewajiban, Modal & Pendapatan (Kredit)
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
