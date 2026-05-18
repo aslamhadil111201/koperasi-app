@@ -156,15 +156,28 @@ export const useStore = create(
     const newEntries = [];
     if (amount !== 0) {
       const category = state.accounts.find(a => a.name === accountName)?.category || '';
-      const isDebit = category.startsWith('Aset') || category.startsWith('Beban') || category === 'Harga Pokok Penjualan';
+      const isDebitNormal = category.startsWith('Aset') || category.startsWith('Beban') || category === 'Harga Pokok Penjualan';
       const absAmount = Math.abs(amount);
+      const isNegative = amount < 0;
+      
+      // Jika negatif, posisi terbalik dari normal
+      let debit = 0;
+      let credit = 0;
+      if (isDebitNormal) {
+        debit = isNegative ? 0 : absAmount;
+        credit = isNegative ? absAmount : 0;
+      } else {
+        debit = isNegative ? absAmount : 0;
+        credit = isNegative ? 0 : absAmount;
+      }
+      
       newEntries.push({
         id: 'JU-INIT',
         date: saldoDate,
         description: `Saldo Awal ${accountName}`,
         ref: 'INIT',
-        debit: isDebit ? absAmount : 0,
-        credit: isDebit ? 0 : absAmount,
+        debit,
+        credit,
         account: accountName
       });
     }

@@ -25,10 +25,18 @@ const NeracaSaldo = () => {
   const existingSaldo = useMemo(() => {
     const map = {};
     journal.filter(j => j.id === 'JU-INIT' && j.account !== 'Saldo Penyeimbang').forEach(j => {
-      map[j.account] = j.debit > 0 ? j.debit : j.credit;
+      const acc = accounts.find(a => a.name === j.account);
+      const isDebitNormal = acc ? isDebitCategory(acc.category) : true;
+      if (isDebitNormal) {
+        // Akun debit normal: debit = positif, credit = negatif
+        map[j.account] = j.debit > 0 ? j.debit : -j.credit;
+      } else {
+        // Akun kredit normal: credit = positif, debit = negatif
+        map[j.account] = j.credit > 0 ? j.credit : -j.debit;
+      }
     });
     return map;
-  }, [journal]);
+  }, [journal, accounts]);
 
   const getInputValue = (accName) => {
     if (saldoInputs[accName] !== undefined) return saldoInputs[accName];
