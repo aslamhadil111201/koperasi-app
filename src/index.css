@@ -75,7 +75,18 @@
 }
 
 [data-theme="dark"] .form-control:focus,
-[data-theme="dark"] .search-input:focus {
+[data-theme="dark"] .search-input:focus,
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  color: var(--color-text-main) !important;
+  background: var(--color-surface) !important;
+  -webkit-text-fill-color: var(--color-text-main) !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
   color: var(--color-text-main);
   background: var(--color-surface);
 }
@@ -83,8 +94,8 @@
 [data-theme="dark"] input:-webkit-autofill,
 [data-theme="dark"] input:-webkit-autofill:hover,
 [data-theme="dark"] input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--color-text-main);
-  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface) inset;
+  -webkit-text-fill-color: var(--color-text-main) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface) inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
