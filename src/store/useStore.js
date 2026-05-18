@@ -147,7 +147,8 @@ export const useStore = create(
   deleteCashLoan: (id) => set((state) => ({
     cashLoans: state.cashLoans.filter(l => l.id !== id),
   })),
-  setSaldoAwal: (accountName, amount) => set((state) => {
+  setSaldoAwal: (accountName, amount, date) => set((state) => {
+    const saldoDate = date || '2026-01-01';
     // 1. Hapus entri JU-INIT untuk akun ini yang sebelumnya (jika ada)
     const oldJournal = state.journal.filter(j => !(j.id === 'JU-INIT' && j.account === accountName));
     
@@ -157,7 +158,7 @@ export const useStore = create(
       const isDebit = ['Aktiva', 'HPP', 'Beban'].includes(state.accounts.find(a => a.name === accountName)?.category || 'Aktiva');
       newEntries.push({
         id: 'JU-INIT',
-        date: '2026-01-01',
+        date: saldoDate,
         description: `Saldo Awal ${accountName}`,
         ref: 'INIT',
         debit: isDebit ? amount : 0,
@@ -173,13 +174,11 @@ export const useStore = create(
     const selisih = totDeb - totCre;
 
     // 4. Tambahkan Saldo Penyeimbang agar jurnal seimbang
-    // Jika selisih > 0 (Debit lebih besar), Penyeimbang harus di Kredit (selisih)
-    // Jika selisih < 0 (Kredit lebih besar), Penyeimbang harus di Debit (abs(selisih))
     const finalJournal = [...oldJournal, ...newEntries].filter(j => j.id !== 'JU-INIT' || j.account !== 'Saldo Penyeimbang');
     if (selisih !== 0) {
       finalJournal.push({
         id: 'JU-INIT',
-        date: '2026-01-01',
+        date: saldoDate,
         description: 'Saldo Penyeimbang Historis',
         ref: 'INIT',
         debit: selisih < 0 ? Math.abs(selisih) : 0,

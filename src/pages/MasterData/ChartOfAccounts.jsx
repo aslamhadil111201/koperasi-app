@@ -38,7 +38,7 @@ const ChartOfAccounts = () => {
 
   // ─── Saldo Awal Modal States ─────────────────────────────────────────────
   const [showSaldoModal, setShowSaldoModal] = useState(false);
-  const [saldoForm, setSaldoForm] = useState({ accountName: '', amount: '' });
+  const [saldoForm, setSaldoForm] = useState({ accountName: '', amount: '', date: '' });
 
   const generateAccountId = (category) => {
     const PSAK_PREFIX = {
@@ -170,13 +170,15 @@ const ChartOfAccounts = () => {
   };
 
   const handleOpenSaldo = (acc) => {
-    setSaldoForm({ accountName: acc.name, amount: getSaldoAwal(acc.name) || '' });
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    setSaldoForm({ accountName: acc.name, amount: getSaldoAwal(acc.name) || '', date: todayStr });
     setShowSaldoModal(true);
   };
 
   const handleSaveSaldo = (e) => {
     e.preventDefault();
-    setSaldoAwal(saldoForm.accountName, Number(saldoForm.amount) || 0);
+    setSaldoAwal(saldoForm.accountName, Number(saldoForm.amount) || 0, saldoForm.date);
     setShowSaldoModal(false);
   };
 
@@ -306,6 +308,10 @@ const ChartOfAccounts = () => {
                   <label className="form-label">Akun</label>
                   <input type="text" className="form-control" value={saldoForm.accountName} disabled />
                 </div>
+              <div className="form-group">
+                <label className="form-label">Tanggal</label>
+                <input type="date" className="form-control" value={saldoForm.date} onChange={e => setSaldoForm({...saldoForm, date: e.target.value})} required />
+              </div>
               <div className="form-group">
                 <label className="form-label">Nominal Saldo Awal (Rp)</label>
                 <input type="number" className="form-control" value={saldoForm.amount} onChange={e => setSaldoForm({...saldoForm, amount: e.target.value})} min="0" autoFocus />
