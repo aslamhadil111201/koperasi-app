@@ -66,12 +66,19 @@ const Closing = () => {
 
     Object.keys(balances).forEach(accName => {
       const b = balances[accName];
-      const net = b.type === 'debit' ? (b.debit - b.credit) : (b.credit - b.debit);
+      const net = b.debit - b.credit; // positif = saldo debit, negatif = saldo kredit
       if (net === 0) return;
 
-      if (b.category.includes('Pendapatan')) totalPendapatan += net;
-      else if (b.category === 'Harga Pokok Penjualan') totalHPP += net;
-      else if (b.category.includes('Beban')) totalBeban += net;
+      if (b.category.includes('Pendapatan')) {
+        // Pendapatan normalnya kredit (net negatif = ada pendapatan)
+        totalPendapatan += Math.abs(net);
+      } else if (b.category === 'Harga Pokok Penjualan') {
+        // HPP normalnya debit (net positif = ada HPP)
+        totalHPP += Math.abs(net);
+      } else if (b.category.includes('Beban')) {
+        // Beban normalnya debit (net positif = ada beban)
+        totalBeban += Math.abs(net);
+      }
     });
 
     const netProfit = totalPendapatan - totalHPP - totalBeban;
@@ -207,34 +214,39 @@ const Closing = () => {
             </div>
           ) : (
             <div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
                 Batas tanggal tutup: <strong style={{ color: 'var(--color-text-main)' }}>{preview.periodDate}</strong>
               </p>
               
               <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                <div className="flex justify-between p-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Total Pendapatan</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-success)' }}>{fmt(preview.totalPendapatan)}</span>
-                </div>
-                <div className="flex justify-between p-3" style={{ borderBottom: '1px solid var(--color-border)', background: 'rgba(0,0,0,0.01)' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Total HPP</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-danger)' }}>{fmt(preview.totalHPP)}</span>
-                </div>
-                <div className="flex justify-between p-3" style={{ borderBottom: '1px solid var(--color-border)', background: 'rgba(0,0,0,0.01)' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Total Beban</span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-danger)' }}>{fmt(preview.totalBeban)}</span>
-                </div>
-                
-                <div className="flex justify-between p-4" style={{ background: 'rgba(6,182,212,0.05)' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>Total Laba/Rugi (SHU) dipindah</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: preview.netProfit >= 0 ? 'var(--color-primary)' : 'var(--color-danger)' }}>
-                    {fmt(preview.netProfit)}
-                  </span>
-                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.85rem', fontWeight: 500 }}>Total Pendapatan</td>
+                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-success)', textAlign: 'right' }}>{fmt(preview.totalPendapatan)}</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'rgba(0,0,0,0.015)' }}>
+                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.85rem', fontWeight: 500 }}>Total HPP</td>
+                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-danger)', textAlign: 'right' }}>({fmt(preview.totalHPP)})</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.85rem', fontWeight: 500 }}>Total Beban Operasional</td>
+                      <td style={{ padding: '0.875rem 1rem', fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-danger)', textAlign: 'right' }}>({fmt(preview.totalBeban)})</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ background: preview.netProfit >= 0 ? 'rgba(6,182,212,0.06)' : 'rgba(239,68,68,0.06)' }}>
+                      <td style={{ padding: '1rem', fontSize: '0.9rem', fontWeight: 700 }}>Laba/Rugi Bersih → SHU</td>
+                      <td style={{ padding: '1rem', fontSize: '0.95rem', fontWeight: 700, textAlign: 'right', color: preview.netProfit >= 0 ? 'var(--color-primary)' : 'var(--color-danger)' }}>
+                        {preview.netProfit >= 0 ? fmt(preview.netProfit) : `(${fmt(Math.abs(preview.netProfit))})`}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
 
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '1.5rem', lineHeight: 1.5 }}>
-                *Sistem akan men-generate jurnal yang mengenolkan seluruh akun spesifik yang menyusun total di atas.
+              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '1.25rem', lineHeight: 1.5 }}>
+                *Sistem akan men-generate jurnal penutup yang mengenolkan seluruh akun Pendapatan, HPP, dan Beban. Selisihnya dipindahkan ke akun <strong>SHU Tahun Berjalan</strong>.
               </p>
             </div>
           )}
