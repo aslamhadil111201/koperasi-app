@@ -197,15 +197,12 @@ const Closing = () => {
         </div>
 
         {/* Kanan: Preview */}
-        <div className="glass-panel" style={{ padding: '2rem' }}>
-          <div className="flex items-center gap-3 mb-6">
-            <div style={{ background: 'rgba(6,182,212,0.1)', color: 'var(--color-secondary)', padding: 12, borderRadius: 12 }}>
-              <FileText size={24} />
+        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div style={{ background: 'rgba(6,182,212,0.1)', color: 'var(--color-secondary)', padding: 10, borderRadius: 10 }}>
+              <FileText size={20} />
             </div>
-            <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Pratinjau Jurnal Penutup</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Ringkasan saldo yang akan ditutup.</p>
-            </div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Pratinjau Jurnal Penutup</h3>
           </div>
 
           {!preview ? (
@@ -219,7 +216,7 @@ const Closing = () => {
             </div>
           ) : (
             <div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
+              <p style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', marginBottom: '0.75rem' }}>
                 Batas tanggal tutup: <strong style={{ color: 'var(--color-text-main)' }}>{preview.periodDate}</strong>
               </p>
               
@@ -250,8 +247,8 @@ const Closing = () => {
                 </table>
               </div>
 
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '1.25rem', lineHeight: 1.5 }}>
-                *Sistem akan men-generate jurnal penutup yang mengenolkan seluruh akun Pendapatan, HPP, dan Beban. Selisihnya dipindahkan ke akun <strong>SHU Tahun Berjalan</strong>.
+              <p style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', marginTop: '0.75rem', lineHeight: 1.4 }}>
+                *Selisih dipindahkan ke akun <strong>SHU Tahun Berjalan</strong>.
               </p>
             </div>
           )}
