@@ -77,7 +77,8 @@ const BukuBesar = () => {
   // Hitung saldo berjalan per akun
   const getEntriesWithBalance = (akunData) => {
     let balance = akunData?.saldoAwal || 0;
-    const entries = (akunData?.entries || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+    const rawEntries = Array.isArray(akunData?.entries) ? akunData.entries : [];
+    const entries = rawEntries.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     
     const result = [];
     
@@ -117,7 +118,7 @@ const BukuBesar = () => {
     const akunLabel = selectedAccount || 'Semua Akun';
 
     const accountsHTML = accountsToShow.map(akun => {
-      const entries = getEntriesWithBalance(groupedByAccount[akun] || []);
+      const entries = getEntriesWithBalance(groupedByAccount[akun] || { saldoAwal: 0, entries: [] });
       const totalDebit  = entries.reduce((s,e) => s + e.debit,  0);
       const totalCredit = entries.reduce((s,e) => s + e.credit, 0);
       const saldoAkhir  = totalDebit - totalCredit;
@@ -256,7 +257,7 @@ const BukuBesar = () => {
         </div>
       ) : (
         accountsToShow.map(akun => {
-          const entries = getEntriesWithBalance(groupedByAccount[akun] || []);
+          const entries = getEntriesWithBalance(groupedByAccount[akun] || { saldoAwal: 0, entries: [] });
           const totalDebit  = entries.reduce((s, e) => s + e.debit,  0);
           const totalCredit = entries.reduce((s, e) => s + e.credit, 0);
           const saldoAkhir  = totalDebit - totalCredit;
