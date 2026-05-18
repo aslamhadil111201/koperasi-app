@@ -379,7 +379,7 @@ const Dashboard = () => {
                 <p>Belum ada transaksi kas<br />dalam 7 hari terakhir.</p>
               </div>
             ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={200}>
               <AreaChart
                 data={cashFlowData}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
