@@ -36,12 +36,12 @@ const StatCard = ({ title, amount, trend, trendValue, icon: Icon, colorClass }) 
 );
 
 const Dashboard = () => {
-  const journal = useStore((state) => state.journal);
-  const members = useStore((state) => state.members);
-  const cashLoans = useStore((state) => state.cashLoans);
-  const creditGoods = useStore((state) => state.creditGoods);
-  const products = useStore((state) => state.products);
-  const consignmentProducts = useStore((state) => state.consignmentProducts);
+  const journal = useStore((state) => state.journal) || [];
+  const members = useStore((state) => state.members) || [];
+  const cashLoans = useStore((state) => state.cashLoans) || [];
+  const creditGoods = useStore((state) => state.creditGoods) || [];
+  const products = useStore((state) => state.products) || [];
+  const consignmentProducts = useStore((state) => state.consignmentProducts) || [];
 
   // ── Tanggal referensi ──────────────────────────────────────────────────────
   const today = new Date();
