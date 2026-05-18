@@ -4,6 +4,8 @@ import { Scale, Save, ExternalLink, Calendar, AlertTriangle } from 'lucide-react
 import { useStore } from '../../store/useStore';
 import './MasterData.css';
 
+const isDebitCategory = (cat) => cat.startsWith('Aset') || cat.startsWith('Beban') || cat === 'Harga Pokok Penjualan';
+
 const NeracaSaldo = () => {
   const navigate = useNavigate();
   const accounts = useStore((s) => s.accounts) || [];
@@ -14,50 +16,44 @@ const NeracaSaldo = () => {
   const [saldoInputs, setSaldoInputs] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Kelompokkan akun: Aktiva + Beban (Debit) vs Kewajiban & Modal + Pendapatan (Kredit)
-  const debitCategories = ['Aset Lancar', 'Aset Tetap', 'Harga Pokok Penjualan', 'Beban Operasional', 'Beban Lain-lain'];
-  const kreditCategories = ['Kewajiban Jangka Pendek', 'Kewajiban Jangka Panjang', 'Ekuitas', 'Pendapatan', 'Pendapatan Lain-lain'];
-
-  const aktivaAccounts = useMemo(() => 
-    accounts.filter(a => debitCategories.includes(a.category)).sort((a,b) => a.id.localeCompare(b.id)),
-  [accounts]);
-
-  const kewajibanAccounts = useMemo(() => 
-    accounts.filter(a => kreditCategories.includes(a.category)).sort((a,b) => a.id.localeCompare(b.id)),
+  // Semua akun diurutkan berdasarkan nomor akun
+  const allAccounts = useMemo(() => 
+    [...accounts].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })),
   [accounts]);
 
   // Ambil saldo awal yang sudah ada dari jurnal JU-INIT
   const existingSaldo = useMemo(() => {
     const map = {};
     journal.filter(j => j.id === 'JU-INIT' && j.account !== 'Saldo Penyeimbang').forEach(j => {
-      map[j.account] = j.debit > 0 ? j.debit : -j.credit;
+      map[j.account] = j.debit > 0 ? j.debit : j.credit;
     });
     return map;
   }, [journal]);
 
   const getInputValue = (accName) => {
     if (saldoInputs[accName] !== undefined) return saldoInputs[accName];
-    return existingSaldo[accName] ? Math.abs(existingSaldo[accName]) : '';
+    return existingSaldo[accName] || '';
   };
 
   const handleInputChange = (accName, value) => {
     setSaldoInputs(prev => ({ ...prev, [accName]: value }));
   };
 
-  // Hitung total
-  const totalDebit = useMemo(() => {
-    return aktivaAccounts.reduce((sum, acc) => {
+  // Hitung total debit dan kredit
+  const { totalDebit, totalKredit } = useMemo(() => {
+    let debit = 0;
+    let kredit = 0;
+    allAccounts.forEach(acc => {
       const val = Number(getInputValue(acc.name)) || 0;
-      return sum + val;
-    }, 0);
-  }, [aktivaAccounts, saldoInputs, existingSaldo]);
-
-  const totalKredit = useMemo(() => {
-    return kewajibanAccounts.reduce((sum, acc) => {
-      const val = Number(getInputValue(acc.name)) || 0;
-      return sum + val;
-    }, 0);
-  }, [kewajibanAccounts, saldoInputs, existingSaldo]);
+      if (val === 0) return;
+      if (isDebitCategory(acc.category)) {
+        debit += val;
+      } else {
+        kredit += val;
+      }
+    });
+    return { totalDebit: debit, totalKredit: kredit };
+  }, [allAccounts, saldoInputs, existingSaldo]);
 
   const isBalance = totalDebit === totalKredit;
   const selisih = Math.abs(totalDebit - totalKredit);
@@ -69,10 +65,9 @@ const NeracaSaldo = () => {
       if (!window.confirm(`Total Debit dan Kredit belum seimbang (selisih ${fmt(selisih)}). Sistem akan otomatis menambahkan Saldo Penyeimbang. Lanjutkan?`)) return;
     }
 
-    // Simpan saldo awal untuk setiap akun yang diisi
-    [...aktivaAccounts, ...kewajibanAccounts].forEach(acc => {
+    allAccounts.forEach(acc => {
       const val = Number(getInputValue(acc.name)) || 0;
-      const existingVal = existingSaldo[acc.name] ? Math.abs(existingSaldo[acc.name]) : 0;
+      const existingVal = existingSaldo[acc.name] || 0;
       if (val !== existingVal) {
         setSaldoAwal(acc.name, val, tanggal);
       }
@@ -122,88 +117,55 @@ const NeracaSaldo = () => {
         </p>
       </div>
 
-      {/* Two Column Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
-        {/* Kolom Kiri: Aktiva (Debit) */}
-        <div className="glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ background: 'var(--color-primary)', color: '#fff', padding: '0.75rem 1.25rem', fontWeight: 700, fontSize: '0.9rem' }}>
-            Aktiva & Beban (Debit)
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-              <thead>
-                <tr style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--color-border)' }}>
-                  <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase' }}>Perkiraan</th>
-                  <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', width: 160 }}>Jumlah (Rp)</th>
-                  <th style={{ width: 30 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {aktivaAccounts.map((acc, i) => (
-                  <tr key={acc.id} style={{ borderBottom: '1px solid var(--color-border)', background: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)' }}>
-                    <td style={{ padding: '0.5rem 0.75rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'var(--color-text-muted)', marginRight: '0.5rem' }}>{acc.id}</span>
-                      <span style={{ fontWeight: 500 }}>{acc.name}</span>
-                    </td>
-                    <td style={{ padding: '0.5rem 0.75rem' }}>
-                      <input
-                        type="number"
-                        min="0"
-                        style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
-                        value={getInputValue(acc.name)}
-                        onChange={e => handleInputChange(acc.name, e.target.value)}
-                        placeholder="0"
-                      />
-                    </td>
-                    <td style={{ padding: '0.5rem 0.25rem' }}>
-                      <button onClick={() => handleGoToBukuBesar(acc.name)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary)', padding: 2 }} title="Lihat Buku Besar">
-                        <ExternalLink size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr style={{ background: 'rgba(255,77,0,0.05)', fontWeight: 700, borderTop: '2px solid var(--color-primary)' }}>
-                  <td style={{ padding: '0.75rem', textAlign: 'right' }}>Total (Debit):</td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--color-primary)', fontSize: '0.9rem' }}>{fmt(totalDebit)}</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+      {/* Tabel Neraca Saldo */}
+      <div className="glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '0.875rem 1.25rem', background: 'rgba(255,77,0,0.04)', borderBottom: '1px solid var(--color-border)', textAlign: 'center' }}>
+          <h3 style={{ fontWeight: 700, fontSize: '1rem', margin: 0 }}>KPKCG — NERACA SALDO</h3>
+          <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '0.25rem 0 0' }}>{tanggal}</p>
         </div>
-
-        {/* Kolom Kanan: Kewajiban & Modal (Kredit) */}
-        <div className="glass-panel" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ background: 'var(--color-success)', color: '#fff', padding: '0.75rem 1.25rem', fontWeight: 700, fontSize: '0.9rem' }}>
-            Kewajiban, Modal & Pendapatan (Kredit)
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-              <thead>
-                <tr style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--color-border)' }}>
-                  <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase' }}>Perkiraan</th>
-                  <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', width: 160 }}>Jumlah (Rp)</th>
-                  <th style={{ width: 30 }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {kewajibanAccounts.map((acc, i) => (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+            <thead>
+              <tr style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '2px solid var(--color-border)' }}>
+                <th style={{ padding: '0.7rem 1rem', textAlign: 'center', fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', width: 80 }}>No. Akun</th>
+                <th style={{ padding: '0.7rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase' }}>Nama Akun</th>
+                <th style={{ padding: '0.7rem 1rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', width: 180 }}>Debet (Rp)</th>
+                <th style={{ padding: '0.7rem 1rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', width: 180 }}>Kredit (Rp)</th>
+                <th style={{ width: 36 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {allAccounts.map((acc, i) => {
+                const isDebit = isDebitCategory(acc.category);
+                return (
                   <tr key={acc.id} style={{ borderBottom: '1px solid var(--color-border)', background: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)' }}>
+                    <td style={{ padding: '0.5rem 1rem', textAlign: 'center', fontFamily: 'monospace', fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>{acc.id}</td>
+                    <td style={{ padding: '0.5rem 1rem', fontWeight: 500 }}>{acc.name}</td>
                     <td style={{ padding: '0.5rem 0.75rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'var(--color-text-muted)', marginRight: '0.5rem' }}>{acc.id}</span>
-                      <span style={{ fontWeight: 500 }}>{acc.name}</span>
+                      {isDebit ? (
+                        <input
+                          type="number"
+                          style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
+                          value={getInputValue(acc.name)}
+                          onChange={e => handleInputChange(acc.name, e.target.value)}
+                          placeholder="0"
+                        />
+                      ) : (
+                        <span style={{ display: 'block', textAlign: 'right', color: 'var(--color-text-muted)' }}>—</span>
+                      )}
                     </td>
                     <td style={{ padding: '0.5rem 0.75rem' }}>
-                      <input
-                        type="number"
-                        min="0"
-                        style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
-                        value={getInputValue(acc.name)}
-                        onChange={e => handleInputChange(acc.name, e.target.value)}
-                        placeholder="0"
-                      />
+                      {!isDebit ? (
+                        <input
+                          type="number"
+                          style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
+                          value={getInputValue(acc.name)}
+                          onChange={e => handleInputChange(acc.name, e.target.value)}
+                          placeholder="0"
+                        />
+                      ) : (
+                        <span style={{ display: 'block', textAlign: 'right', color: 'var(--color-text-muted)' }}>—</span>
+                      )}
                     </td>
                     <td style={{ padding: '0.5rem 0.25rem' }}>
                       <button onClick={() => handleGoToBukuBesar(acc.name)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary)', padding: 2 }} title="Lihat Buku Besar">
@@ -211,22 +173,23 @@ const NeracaSaldo = () => {
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr style={{ background: 'rgba(16,185,129,0.05)', fontWeight: 700, borderTop: '2px solid var(--color-success)' }}>
-                  <td style={{ padding: '0.75rem', textAlign: 'right' }}>Total (Kredit):</td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--color-success)', fontSize: '0.9rem' }}>{fmt(totalKredit)}</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ background: 'rgba(0,0,0,0.04)', fontWeight: 700, borderTop: '2px solid var(--color-border)' }}>
+                <td colSpan={2} style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.85rem' }}>Jumlah:</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--color-primary)', fontSize: '0.9rem' }}>{fmt(totalDebit)}</td>
+                <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--color-success)', fontSize: '0.9rem' }}>{fmt(totalKredit)}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
 
       {/* Balance Status */}
-      <div className="glass-panel" style={{ padding: '1rem 1.5rem', marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="glass-panel" style={{ padding: '1rem 1.5rem', marginTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Status: </span>
           {isBalance ? (
