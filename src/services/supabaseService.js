@@ -167,7 +167,7 @@ export const saveSaldoAwalDB = async (accountName, journalEntries) => {
   try {
     // 1. Hapus JU-INIT untuk akun ini saja
     await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', accountName);
-    // 2. Insert entri JU-INIT baru untuk akun ini saja (tanpa penyeimbang)
+    // 2. Insert entri JU-INIT baru untuk akun ini saja
     const newEntry = journalEntries.find(j => j.id === 'JU-INIT' && j.account === accountName);
     if (newEntry) {
       const row = {
@@ -177,18 +177,40 @@ export const saveSaldoAwalDB = async (accountName, journalEntries) => {
       const { error } = await supabase.from('journal').insert([row]);
       if (error) throw error;
     }
-    // 3. Update Saldo Penyeimbang: hapus lama, insert baru
-    await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', 'Saldo Penyeimbang');
-    const penyeimbang = journalEntries.find(j => j.id === 'JU-INIT' && j.account === 'Saldo Penyeimbang');
-    if (penyeimbang) {
-      const row = {
-        journal_id: penyeimbang.id, date: penyeimbang.date, description: penyeimbang.description,
-        ref: penyeimbang.ref, debit: penyeimbang.debit || 0, credit: penyeimbang.credit || 0, account: penyeimbang.account,
-      };
-      await supabase.from('journal').insert([row]);
-    }
   } catch (error) {
     console.error('Failed to save saldo awal to Supabase:', error);
+  }
+};
+
+// Bersihkan duplikat Saldo Penyeimbang dan insert yang benar
+export const cleanupSaldoPenyeimbangDB = async () => {
+  if (!isSupabaseReady()) return;
+  try {
+    // Hapus SEMUA Saldo Penyeimbang lama
+    await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', 'Saldo Penyeimbang');
+    
+    // Hitung ulang dari semua JU-INIT yang ada
+    const { data } = await supabase.from('journal').select('*').eq('journal_id', 'JU-INIT');
+    if (!data || data.length === 0) return;
+    
+    const totDeb = data.reduce((s, j) => s + (j.debit || 0), 0);
+    const totCre = data.reduce((s, j) => s + (j.credit || 0), 0);
+    const selisih = totDeb - totCre;
+    
+    if (selisih !== 0) {
+      const date = data[0]?.date || '2026-01-01';
+      await supabase.from('journal').insert([{
+        journal_id: 'JU-INIT',
+        date,
+        description: 'Saldo Penyeimbang Historis',
+        ref: 'INIT',
+        debit: selisih < 0 ? Math.abs(selisih) : 0,
+        credit: selisih > 0 ? selisih : 0,
+        account: 'Saldo Penyeimbang'
+      }]);
+    }
+  } catch (error) {
+    console.error('Failed to cleanup Saldo Penyeimbang:', error);
   }
 };
 

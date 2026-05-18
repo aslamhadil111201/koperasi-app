@@ -93,11 +93,18 @@ const NeracaSaldo = () => {
       if (!window.confirm(`Total Debit dan Kredit belum seimbang (selisih ${fmt(selisih)}). Sistem akan otomatis menambahkan Saldo Penyeimbang. Lanjutkan?`)) return;
     }
 
-    // Simpan semua akun yang punya nilai (termasuk update tanggal)
+    // Simpan semua akun yang punya nilai
     allAccounts.forEach(acc => {
       const val = Number(getInputValue(acc.name)) || 0;
       setSaldoAwal(acc.name, val, tanggal);
     });
+
+    // Bersihkan duplikat Saldo Penyeimbang di DB setelah semua tersimpan
+    setTimeout(() => {
+      import('../../services/supabaseService').then(({ cleanupSaldoPenyeimbangDB }) => {
+        if (cleanupSaldoPenyeimbangDB) cleanupSaldoPenyeimbangDB();
+      }).catch(() => {});
+    }, 2000);
 
     setSuccessMsg('Neraca Saldo Awal berhasil disimpan!');
     setTimeout(() => setSuccessMsg(''), 3000);
