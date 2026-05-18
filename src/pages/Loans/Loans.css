@@ -71,7 +71,7 @@
   box-shadow: 0 3px 10px rgba(255,77,0,0.25);
 }
 
-.filter-chip.chip-all.active     { background: var(--color-text-main); border-color: var(--color-text-main); }
+.filter-chip.chip-all.active     { background: var(--color-text-main); border-color: var(--color-text-main); color: var(--color-background); }
 .filter-chip.chip-active.active  { background: var(--color-success);   border-color: var(--color-success); }
 .filter-chip.chip-pending.active { background: var(--color-warning);   border-color: var(--color-warning); }
 .filter-chip.chip-done.active    { background: var(--color-secondary); border-color: var(--color-secondary); }
