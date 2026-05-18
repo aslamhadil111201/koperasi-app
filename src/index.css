@@ -71,6 +71,21 @@
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .search-input {
   color: var(--color-text-main);
+  background: var(--color-surface);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .search-input:focus {
+  color: var(--color-text-main);
+  background: var(--color-surface);
+}
+
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover,
+[data-theme="dark"] input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text-main);
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-surface) inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 [data-theme="dark"] select option {
