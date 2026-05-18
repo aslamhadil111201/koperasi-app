@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BookMarked, Calendar, Printer, ChevronDown, ChevronUp } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Reports.css';
@@ -22,9 +23,18 @@ const BukuBesar = () => {
     return [...list].sort();
   }, [journal, accounts]);
 
+  const [searchParams] = useSearchParams();
   const [selectedAccount, setSelectedAccount] = useState('');
   const [selectedMonth,   setSelectedMonth]   = useState('');
   const [expandedAccounts, setExpandedAccounts] = useState({});
+
+  // Baca query parameter ?account= dari URL
+  useEffect(() => {
+    const accountParam = searchParams.get('account');
+    if (accountParam) {
+      setSelectedAccount(accountParam);
+    }
+  }, [searchParams]);
 
   const monthOptions = useMemo(() => {
     const months = [...new Set(journal.map(j => j.date?.slice(0, 7)))].filter(Boolean).sort().reverse();

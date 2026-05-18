@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { BookMarked, Plus, Edit2, Trash2, DollarSign, X, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BookMarked, Plus, Edit2, Trash2, DollarSign, X, Check, ExternalLink } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './MasterData.css'; // Asumsi CSS sama dengan Inventory/Members
 
@@ -19,6 +20,7 @@ const CATEGORIES = [
 const isDebitCategory = (cat) => cat.startsWith('Aset') || cat.startsWith('Beban') || cat === 'Harga Pokok Penjualan';
 
 const ChartOfAccounts = () => {
+  const navigate = useNavigate();
   const accounts = useStore((s) => s.accounts) || [];
   const addAccount = useStore((s) => s.addAccount);
   const updateAccount = useStore((s) => s.updateAccount);
@@ -99,6 +101,24 @@ const ChartOfAccounts = () => {
   };
 
   const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
+
+  // Mendapatkan tanggal transaksi terakhir per akun
+  const getLastTransactionDate = (accountName) => {
+    const entries = journal.filter(j => j.account === accountName && j.id !== 'JU-INIT');
+    if (entries.length === 0) return null;
+    const sorted = entries.sort((a, b) => b.date.localeCompare(a.date));
+    return sorted[0].date;
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const handleGoToBukuBesar = (accountName) => {
+    navigate(`/reports/buku-besar?account=${encodeURIComponent(accountName)}`);
+  };
 
   // ─── Handlers ────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
@@ -187,6 +207,7 @@ const ChartOfAccounts = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {groupedAccounts[cat].sort((a,b) => a.id.localeCompare(b.id)).map(acc => {
                   const sAwal = getSaldoAwal(acc.name);
+                  const lastDate = getLastTransactionDate(acc.name);
                   return (
                     <div key={acc.id} style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
                       <div className="flex justify-between items-start mb-1">
@@ -195,6 +216,9 @@ const ChartOfAccounts = () => {
                           <span style={{ fontWeight: 600, color: 'var(--color-text-main)' }}>{acc.name}</span>
                         </div>
                         <div className="flex gap-2">
+                          <button onClick={() => handleGoToBukuBesar(acc.name)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary)' }} title="Lihat Buku Besar">
+                            <ExternalLink size={15} />
+                          </button>
                           <button onClick={() => handleOpenSaldo(acc)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-success)' }} title="Set Saldo Awal">
                             <DollarSign size={15} />
                           </button>
@@ -208,13 +232,18 @@ const ChartOfAccounts = () => {
                           )}
                         </div>
                       </div>
-                      {sAwal > 0 && (
-                        <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 600 }}>
-                          Saldo Awal: {fmt(sAwal)}
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {sAwal > 0 && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                            Saldo Awal: {fmt(sAwal)}
+                          </span>
+                        )}
+                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                          Transaksi terakhir: {formatDate(lastDate)}
+                        </span>
+                      </div>
                       {acc.isDefault && (
-                        <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem', background: 'var(--color-border)', borderRadius: 99, color: 'var(--color-text-muted)' }}>Sistem</span>
+                        <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem', background: 'var(--color-border)', borderRadius: 99, color: 'var(--color-text-muted)', marginTop: '0.25rem', display: 'inline-block' }}>Sistem</span>
                       )}
                     </div>
                   );
