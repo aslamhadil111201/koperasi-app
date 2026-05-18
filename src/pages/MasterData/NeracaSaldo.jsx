@@ -89,12 +89,10 @@ const NeracaSaldo = () => {
       if (!window.confirm(`Total Debit dan Kredit belum seimbang (selisih ${fmt(selisih)}). Sistem akan otomatis menambahkan Saldo Penyeimbang. Lanjutkan?`)) return;
     }
 
+    // Simpan semua akun yang punya nilai (termasuk update tanggal)
     allAccounts.forEach(acc => {
       const val = Number(getInputValue(acc.name)) || 0;
-      const existingVal = existingSaldo[acc.name] || 0;
-      if (val !== existingVal) {
-        setSaldoAwal(acc.name, val, tanggal);
-      }
+      setSaldoAwal(acc.name, val, tanggal);
     });
 
     setSuccessMsg('Neraca Saldo Awal berhasil disimpan!');
