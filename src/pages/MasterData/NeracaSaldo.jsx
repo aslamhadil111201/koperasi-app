@@ -35,6 +35,8 @@ const NeracaSaldo = () => {
     return existingSaldo[accName] || '';
   };
 
+  const [focusedField, setFocusedField] = useState(null);
+
   const handleInputChange = (accName, rawValue) => {
     // Hanya izinkan angka dan minus di awal
     const cleaned = rawValue.replace(/[^0-9\-]/g, '');
@@ -45,12 +47,16 @@ const NeracaSaldo = () => {
   };
 
   const getDisplayValue = (accName) => {
-    if (saldoInputs[accName] !== undefined) {
-      return saldoInputs[accName];
-    }
-    const existing = existingSaldo[accName];
-    if (!existing) return '';
-    return String(existing);
+    const raw = saldoInputs[accName] !== undefined ? saldoInputs[accName] : (existingSaldo[accName] ? String(existingSaldo[accName]) : '');
+    if (raw === '' || raw === '-') return raw;
+    // Saat fokus, tampilkan angka polos
+    if (focusedField === accName) return raw;
+    // Saat tidak fokus, format dengan titik ribuan
+    const isNeg = String(raw).startsWith('-');
+    const digits = String(raw).replace(/[^0-9]/g, '');
+    if (!digits) return '';
+    const formatted = Number(digits).toLocaleString('id-ID');
+    return isNeg ? `-${formatted}` : formatted;
   };
 
   // Hitung total debit dan kredit
@@ -159,7 +165,7 @@ const NeracaSaldo = () => {
                           type="number"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
                           value={getDisplayValue(acc.name)}
-                          onChange={e => handleInputChange(acc.name, e.target.value)}
+                          onFocus={() => setFocusedField(acc.name)} onBlur={() => setFocusedField(null)} onChange={e => handleInputChange(acc.name, e.target.value)}
                           placeholder="0"
                         />
                       ) : (
@@ -172,7 +178,7 @@ const NeracaSaldo = () => {
                           type="number"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
                           value={getDisplayValue(acc.name)}
-                          onChange={e => handleInputChange(acc.name, e.target.value)}
+                          onFocus={() => setFocusedField(acc.name)} onBlur={() => setFocusedField(null)} onChange={e => handleInputChange(acc.name, e.target.value)}
                           placeholder="0"
                         />
                       ) : (
