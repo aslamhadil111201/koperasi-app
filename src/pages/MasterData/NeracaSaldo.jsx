@@ -36,7 +36,10 @@ const NeracaSaldo = () => {
   };
 
   const handleInputChange = (accName, value) => {
-    setSaldoInputs(prev => ({ ...prev, [accName]: value }));
+    // Izinkan kosong, minus, dan angka
+    if (value === '' || value === '-' || !isNaN(Number(value))) {
+      setSaldoInputs(prev => ({ ...prev, [accName]: value }));
+    }
   };
 
   // Hitung total debit dan kredit
