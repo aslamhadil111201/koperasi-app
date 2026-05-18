@@ -6,7 +6,7 @@ import './Reports.css';
 const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
 
 const BukuBesar = () => {
-  const journal = useStore((s) => s.journal);
+  const journal = useStore((s) => s.journal) || [];
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -15,6 +15,7 @@ const BukuBesar = () => {
 
   // Semua akun unik dari jurnal dan master data
   const allAccounts = useMemo(() => {
+    if (!journal || !accounts) return [];
     const list = new Set([
       ...accounts.map(a => a.name),
       ...journal.map(j => j.account)
