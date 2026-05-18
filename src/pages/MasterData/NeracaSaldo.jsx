@@ -162,7 +162,7 @@ const NeracaSaldo = () => {
                     <td style={{ padding: '0.5rem 0.75rem' }}>
                       {isDebit ? (
                         <input
-                          type="number"
+                          type="text"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
                           value={getDisplayValue(acc.name)}
                           onFocus={() => setFocusedField(acc.name)} onBlur={() => setFocusedField(null)} onChange={e => handleInputChange(acc.name, e.target.value)}
@@ -175,7 +175,7 @@ const NeracaSaldo = () => {
                     <td style={{ padding: '0.5rem 0.75rem' }}>
                       {!isDebit ? (
                         <input
-                          type="number"
+                          type="text"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
                           value={getDisplayValue(acc.name)}
                           onFocus={() => setFocusedField(acc.name)} onBlur={() => setFocusedField(null)} onChange={e => handleInputChange(acc.name, e.target.value)}
