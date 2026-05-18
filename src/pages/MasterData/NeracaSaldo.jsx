@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Scale, Save, ExternalLink, Calendar, AlertTriangle } from 'lucide-react';
 import { useStore } from '../../store/useStore';
@@ -12,7 +12,18 @@ const NeracaSaldo = () => {
   const journal = useStore((s) => s.journal) || [];
   const setSaldoAwal = useStore((s) => s.setSaldoAwal);
 
-  const [tanggal, setTanggal] = useState('2026-01-01');
+  // Ambil tanggal dari JU-INIT yang sudah ada di jurnal
+  const savedDate = useMemo(() => {
+    const initEntry = journal.find(j => j.id === 'JU-INIT' && j.account !== 'Saldo Penyeimbang');
+    return initEntry?.date || '2026-01-01';
+  }, [journal]);
+
+  const [tanggal, setTanggal] = useState(savedDate);
+
+  // Update tanggal saat data journal ter-load
+  useEffect(() => {
+    setTanggal(savedDate);
+  }, [savedDate]);
   const [saldoInputs, setSaldoInputs] = useState({});
   const [successMsg, setSuccessMsg] = useState('');
 
