@@ -36,15 +36,8 @@ const NeracaSaldo = () => {
   };
 
   const handleInputChange = (accName, rawValue) => {
-    // Simpan apa adanya yang user ketik (tanpa format)
-    setSaldoInputs(prev => ({ ...prev, [accName]: rawValue }));
-  };
-
-  const handleBlur = (accName) => {
-    // Saat keluar input, bersihkan dan format
-    const raw = saldoInputs[accName];
-    if (raw === undefined || raw === '') return;
-    const cleaned = String(raw).replace(/[^0-9\-]/g, '');
+    // Hanya izinkan angka dan minus di awal
+    const cleaned = rawValue.replace(/[^0-9\-]/g, '');
     const isNeg = cleaned.startsWith('-');
     const digits = cleaned.replace(/[^0-9]/g, '');
     const value = isNeg ? `-${digits}` : digits;
@@ -52,24 +45,12 @@ const NeracaSaldo = () => {
   };
 
   const getDisplayValue = (accName) => {
-    // Saat sedang diketik, tampilkan apa adanya
     if (saldoInputs[accName] !== undefined) {
-      const raw = saldoInputs[accName];
-      if (raw === '' || raw === '-') return raw;
-      // Kalau sudah berupa angka bersih, format dengan titik
-      const cleaned = String(raw).replace(/[^0-9\-]/g, '');
-      if (cleaned === raw || raw === cleaned) {
-        const isNeg = cleaned.startsWith('-');
-        const digits = cleaned.replace(/[^0-9]/g, '');
-        if (!digits) return isNeg ? '-' : '';
-        const formatted = Number(digits).toLocaleString('id-ID');
-        return isNeg ? `-${formatted}` : formatted;
-      }
-      return raw;
+      return saldoInputs[accName];
     }
     const existing = existingSaldo[accName];
     if (!existing) return '';
-    return Number(Math.abs(existing)).toLocaleString('id-ID');
+    return String(existing);
   };
 
   // Hitung total debit dan kredit
@@ -178,7 +159,7 @@ const NeracaSaldo = () => {
                           type="number"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
                           value={getDisplayValue(acc.name)}
-                          onChange={e => handleInputChange(acc.name, e.target.value)} onBlur={() => handleBlur(acc.name)}
+                          onChange={e => handleInputChange(acc.name, e.target.value)}
                           placeholder="0"
                         />
                       ) : (
@@ -191,7 +172,7 @@ const NeracaSaldo = () => {
                           type="number"
                           style={{ width: '100%', padding: '0.35rem 0.5rem', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: '0.82rem', textAlign: 'right', background: 'var(--color-surface)', color: 'var(--color-text-main)' }}
                           value={getDisplayValue(acc.name)}
-                          onChange={e => handleInputChange(acc.name, e.target.value)} onBlur={() => handleBlur(acc.name)}
+                          onChange={e => handleInputChange(acc.name, e.target.value)}
                           placeholder="0"
                         />
                       ) : (
