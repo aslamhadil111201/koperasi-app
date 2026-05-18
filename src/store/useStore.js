@@ -152,17 +152,19 @@ export const useStore = create(
     // 1. Hapus entri JU-INIT untuk akun ini yang sebelumnya (jika ada)
     const oldJournal = state.journal.filter(j => !(j.id === 'JU-INIT' && j.account === accountName));
     
-    // 2. Tambahkan entri baru jika amount > 0
+    // 2. Tambahkan entri baru jika amount != 0
     const newEntries = [];
-    if (amount > 0) {
-      const isDebit = ['Aktiva', 'HPP', 'Beban'].includes(state.accounts.find(a => a.name === accountName)?.category || 'Aktiva');
+    if (amount !== 0) {
+      const category = state.accounts.find(a => a.name === accountName)?.category || '';
+      const isDebit = category.startsWith('Aset') || category.startsWith('Beban') || category === 'Harga Pokok Penjualan';
+      const absAmount = Math.abs(amount);
       newEntries.push({
         id: 'JU-INIT',
         date: saldoDate,
         description: `Saldo Awal ${accountName}`,
         ref: 'INIT',
-        debit: isDebit ? amount : 0,
-        credit: isDebit ? 0 : amount,
+        debit: isDebit ? absAmount : 0,
+        credit: isDebit ? 0 : absAmount,
         account: accountName
       });
     }
