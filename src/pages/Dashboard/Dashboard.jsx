@@ -375,14 +375,14 @@ const Dashboard = () => {
       <div className="grid grid-cols-3 gap-6" style={{ alignItems: 'stretch', minHeight: '340px' }}>
         <div className="glass-panel col-span-1" style={{ display: 'flex', flexDirection: 'column' }}>
           <h3 className="mb-4">Grafik Arus Kas (7 Hari Terakhir)</h3>
-          <div style={{ flex: 1, minHeight: '260px', width: '100%' }}>
+          <div style={{ flex: 1, minHeight: '260px', width: '100%', height: 300 }}>
             {!chartReady || cashFlowData.every(d => d.pemasukan === 0 && d.pengeluaran === 0) ? (
               <div className="dashboard-empty-state">
                 <TrendingUp size={40} />
                 <p>{!chartReady ? 'Memuat grafik...' : 'Belum ada transaksi kas'}<br />{chartReady && 'dalam 7 hari terakhir.'}</p>
               </div>
             ) : (
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={200}>
+            <ResponsiveContainer width="100%" height={260}>
               <AreaChart
                 data={cashFlowData}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
