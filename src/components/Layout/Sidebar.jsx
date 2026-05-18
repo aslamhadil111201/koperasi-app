@@ -42,6 +42,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       { title: 'Data Anggota',    path: '/master/members',       icon: <Users size={20} /> },
       { title: 'Data Inventaris', path: '/master/inventory',     icon: <Database size={20} /> },
       { title: 'Daftar Akun',     path: '/master/accounts',      icon: <BookMarked size={20} /> },
+      { title: 'Neraca Saldo',    path: '/master/neraca-saldo',  icon: <Scale size={20} /> },
       { title: 'Pembelian',       path: '/master/receive',       icon: <PackagePlus size={20} /> },
       { type: 'divider', title: 'LAPORAN KEUANGAN' },
       { title: 'Kas Kecil',       path: '/finance/petty-cash',   icon: <Wallet size={20} /> },

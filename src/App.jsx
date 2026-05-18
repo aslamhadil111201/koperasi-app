@@ -21,6 +21,7 @@ import Members from './pages/MasterData/Members';
 import Inventory from './pages/MasterData/Inventory';
 import ReceiveNew from './pages/MasterData/ReceiveNew';
 import ChartOfAccounts from './pages/MasterData/ChartOfAccounts';
+import NeracaSaldo from './pages/MasterData/NeracaSaldo';
 import SHU from './pages/Reports/SHU';
 import Neraca from './pages/Reports/Neraca';
 import BukuBesar from './pages/Reports/BukuBesar';
@@ -137,6 +138,7 @@ function App() {
         <Route path="/master/inventory" element={<ProtectedRoute requiredRole="admin"><AppLayout><Inventory /></AppLayout></ProtectedRoute>} />
         <Route path="/master/receive" element={<ProtectedRoute requiredRole="admin"><AppLayout><ReceiveNew /></AppLayout></ProtectedRoute>} />
         <Route path="/master/accounts" element={<ProtectedRoute requiredRole="admin"><AppLayout><ChartOfAccounts /></AppLayout></ProtectedRoute>} />
+        <Route path="/master/neraca-saldo" element={<ProtectedRoute requiredRole="admin"><AppLayout><NeracaSaldo /></AppLayout></ProtectedRoute>} />
         
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

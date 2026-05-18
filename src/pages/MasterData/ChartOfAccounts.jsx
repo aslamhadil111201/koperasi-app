@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookMarked, Plus, Edit2, Trash2, DollarSign, X, Check, ExternalLink } from 'lucide-react';
+import { BookMarked, Plus, Edit2, Trash2, X, Check, ExternalLink } from 'lucide-react';
 import { useStore } from '../../store/useStore';
-import './MasterData.css'; // Asumsi CSS sama dengan Inventory/Members
+import './MasterData.css';
 
 const CATEGORIES = [
   'Aset Lancar',
@@ -25,63 +25,38 @@ const ChartOfAccounts = () => {
   const addAccount = useStore((s) => s.addAccount);
   const updateAccount = useStore((s) => s.updateAccount);
   const deleteAccount = useStore((s) => s.deleteAccount);
-  const setSaldoAwal = useStore((s) => s.setSaldoAwal);
   const journal = useStore((s) => s.journal) || [];
 
-  // ─── Modal States ────────────────────────────────────────────────────────
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit'
+  const [modalMode, setModalMode] = useState('add');
   const [selectedAcc, setSelectedAcc] = useState(null);
-  
   const [form, setForm] = useState({ id: '', name: '', category: 'Aset Lancar' });
   const [formError, setFormError] = useState('');
 
-  // ─── Saldo Awal Modal States ─────────────────────────────────────────────
-  const [showSaldoModal, setShowSaldoModal] = useState(false);
-  const [saldoForm, setSaldoForm] = useState({ accountName: '', amount: '', date: '' });
-
   const generateAccountId = (category) => {
     const PSAK_PREFIX = {
-      'Aset Lancar': '11',
-      'Aset Tetap': '12',
-      'Kewajiban Jangka Pendek': '21',
-      'Kewajiban Jangka Panjang': '22',
-      'Ekuitas': '31',
-      'Pendapatan': '41',
-      'Pendapatan Lain-lain': '42',
-      'Harga Pokok Penjualan': '51',
-      'Beban Operasional': '61',
-      'Beban Lain-lain': '62'
+      'Aset Lancar': '11', 'Aset Tetap': '12',
+      'Kewajiban Jangka Pendek': '21', 'Kewajiban Jangka Panjang': '22',
+      'Ekuitas': '31', 'Pendapatan': '41', 'Pendapatan Lain-lain': '42',
+      'Harga Pokok Penjualan': '51', 'Beban Operasional': '61', 'Beban Lain-lain': '62'
     };
-
     const accs = accounts.filter(a => a.category === category);
     if (accs.length > 0) {
       const numIds = accs.map(a => parseInt(a.id)).filter(n => !isNaN(n));
-      if (numIds.length > 0) {
-        return String(Math.max(...numIds) + 1);
-      }
+      if (numIds.length > 0) return String(Math.max(...numIds) + 1);
     }
-    
     return PSAK_PREFIX[category] + '01';
   };
 
   useEffect(() => {
     if (modalMode === 'add') {
       setForm(prev => {
-        const expectedId = generateAccountId(prev.category);
-        if (prev.id !== expectedId && prev.id === generateAccountId(prev.category === 'Aset Lancar' ? prev.category : 'Aset Lancar')) {
-           return { ...prev, id: expectedId };
-        }
-        // Agar jika hanya mengubah kategori form, id juga ikut update (apabila user belum ketik id sendiri yang terlalu jauh beda)
-        if (prev.id.length <= 4) {
-           return { ...prev, id: expectedId };
-        }
+        if (prev.id.length <= 4) return { ...prev, id: generateAccountId(prev.category) };
         return prev;
       });
     }
   }, [form.category, modalMode]);
 
-  // ─── Group Data ──────────────────────────────────────────────────────────
   const groupedAccounts = useMemo(() => {
     const map = {};
     CATEGORIES.forEach(c => map[c] = []);
@@ -92,17 +67,6 @@ const ChartOfAccounts = () => {
     return map;
   }, [accounts]);
 
-  // Cari saldo awal berjalan dari jurnal JU-INIT
-  const getSaldoAwal = (accountName) => {
-    const initEntries = journal.filter(j => j.id === 'JU-INIT' && j.account === accountName);
-    const totDeb = initEntries.reduce((s, e) => s + (e.debit || 0), 0);
-    const totCre = initEntries.reduce((s, e) => s + (e.credit || 0), 0);
-    return Math.abs(totDeb - totCre);
-  };
-
-  const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
-
-  // Mendapatkan tanggal transaksi terakhir per akun
   const getLastTransactionDate = (accountName) => {
     const entries = journal.filter(j => j.account === accountName && j.id !== 'JU-INIT');
     if (entries.length === 0) return null;
@@ -120,7 +84,6 @@ const ChartOfAccounts = () => {
     navigate(`/reports/buku-besar?account=${encodeURIComponent(accountName)}`);
   };
 
-  // ─── Handlers ────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
     const defaultCat = 'Aset Lancar';
     setForm({ id: generateAccountId(defaultCat), name: '', category: defaultCat });
@@ -138,48 +101,22 @@ const ChartOfAccounts = () => {
   };
 
   const handleDelete = (id, name) => {
-    if (window.confirm(`Yakin ingin menghapus akun ${name}?`)) {
-      deleteAccount(id);
-    }
+    if (window.confirm(`Yakin ingin menghapus akun ${name}?`)) deleteAccount(id);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.id || !form.name) return setFormError('Kode dan Nama Akun wajib diisi.');
-    
     if (modalMode === 'add') {
       if (accounts.find(a => a.id === form.id)) return setFormError('Kode Akun sudah digunakan.');
       if (accounts.find(a => a.name.toLowerCase() === form.name.toLowerCase())) return setFormError('Nama Akun sudah digunakan.');
-      addAccount({
-        id: form.id,
-        name: form.name,
-        category: form.category,
-        type: isDebitCategory(form.category) ? 'debit' : 'credit'
-      });
+      addAccount({ id: form.id, name: form.name, category: form.category, type: isDebitCategory(form.category) ? 'debit' : 'credit' });
     } else {
       if (accounts.find(a => a.id === form.id && a.id !== selectedAcc.id)) return setFormError('Kode Akun sudah digunakan.');
       if (accounts.find(a => a.name.toLowerCase() === form.name.toLowerCase() && a.id !== selectedAcc.id)) return setFormError('Nama Akun sudah digunakan.');
-      updateAccount(selectedAcc.id, {
-        id: form.id,
-        name: form.name,
-        category: form.category,
-        type: isDebitCategory(form.category) ? 'debit' : 'credit'
-      });
+      updateAccount(selectedAcc.id, { id: form.id, name: form.name, category: form.category, type: isDebitCategory(form.category) ? 'debit' : 'credit' });
     }
     setShowModal(false);
-  };
-
-  const handleOpenSaldo = (acc) => {
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-    setSaldoForm({ accountName: acc.name, amount: getSaldoAwal(acc.name) || '', date: todayStr });
-    setShowSaldoModal(true);
-  };
-
-  const handleSaveSaldo = (e) => {
-    e.preventDefault();
-    setSaldoAwal(saldoForm.accountName, Number(saldoForm.amount) || 0, saldoForm.date);
-    setShowSaldoModal(false);
   };
 
   return (
@@ -190,7 +127,7 @@ const ChartOfAccounts = () => {
             <BookMarked size={24} style={{ color: 'var(--color-primary)' }} />
             Daftar Akun (COA)
           </h2>
-          <p className="text-muted">Kelola akun pembukuan dan atur saldo awal historis.</p>
+          <p className="text-muted">Kelola akun pembukuan koperasi.</p>
         </div>
         <button className="btn btn-primary flex items-center gap-2" onClick={handleOpenAdd}>
           <Plus size={18} /> Tambah Akun
@@ -208,7 +145,6 @@ const ChartOfAccounts = () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {groupedAccounts[cat].sort((a,b) => a.id.localeCompare(b.id)).map(acc => {
-                  const sAwal = getSaldoAwal(acc.name);
                   const lastDate = getLastTransactionDate(acc.name);
                   return (
                     <div key={acc.id} style={{ padding: '0.75rem', background: 'rgba(0,0,0,0.02)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
@@ -221,9 +157,6 @@ const ChartOfAccounts = () => {
                           <button onClick={() => handleGoToBukuBesar(acc.name)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary)' }} title="Lihat Buku Besar">
                             <ExternalLink size={15} />
                           </button>
-                          <button onClick={() => handleOpenSaldo(acc)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-success)' }} title="Set Saldo Awal">
-                            <DollarSign size={15} />
-                          </button>
                           <button onClick={() => handleOpenEdit(acc)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary)' }} title="Edit Akun">
                             <Edit2 size={15} />
                           </button>
@@ -234,18 +167,11 @@ const ChartOfAccounts = () => {
                           )}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                        {sAwal > 0 && (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 600 }}>
-                            Saldo Awal: {fmt(sAwal)}
-                          </span>
-                        )}
-                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
-                          Transaksi terakhir: {formatDate(lastDate)}
-                        </span>
-                      </div>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                        Transaksi terakhir: {formatDate(lastDate)}
+                      </span>
                       {acc.isDefault && (
-                        <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem', background: 'var(--color-border)', borderRadius: 99, color: 'var(--color-text-muted)', marginTop: '0.25rem', display: 'inline-block' }}>Sistem</span>
+                        <span style={{ fontSize: '0.65rem', padding: '0.15rem 0.4rem', background: 'var(--color-border)', borderRadius: 99, color: 'var(--color-text-muted)', marginLeft: '0.5rem' }}>Sistem</span>
                       )}
                     </div>
                   );
@@ -270,20 +196,20 @@ const ChartOfAccounts = () => {
                   <label className="form-label">Kode Akun</label>
                   <input type="text" className="form-control" value={form.id} onChange={e => setForm({...form, id: e.target.value})} required disabled={modalMode === 'edit' && selectedAcc?.isDefault} />
                 </div>
-              <div className="form-group">
-                <label className="form-label">Nama Akun</label>
-                <input type="text" className="form-control" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Kategori</label>
-                <select className="form-control" value={form.category} onChange={e => setForm({...form, category: e.target.value})} disabled={modalMode === 'edit' && selectedAcc?.isDefault}>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                {(modalMode === 'edit' && selectedAcc?.isDefault) && (
-                  <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.4rem' }}>*Akun sistem tidak dapat diubah kategori dan kodenya.</p>
-                )}
-              </div>
-              {formError && <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>{formError}</div>}
+                <div className="form-group">
+                  <label className="form-label">Nama Akun</label>
+                  <input type="text" className="form-control" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Kategori</label>
+                  <select className="form-control" value={form.category} onChange={e => setForm({...form, category: e.target.value})} disabled={modalMode === 'edit' && selectedAcc?.isDefault}>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  {(modalMode === 'edit' && selectedAcc?.isDefault) && (
+                    <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.4rem' }}>*Akun sistem tidak dapat diubah kategori dan kodenya.</p>
+                  )}
+                </div>
+                {formError && <div style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>{formError}</div>}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Batal</button>
@@ -293,42 +219,6 @@ const ChartOfAccounts = () => {
           </div>
         </div>
       )}
-
-      {/* ── Modal Saldo Awal ── */}
-      {showSaldoModal && (
-        <div className="modal-overlay" onClick={() => setShowSaldoModal(false)}>
-          <div className="modal-content" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Set Saldo Awal</h3>
-              <button className="modal-close-btn" onClick={() => setShowSaldoModal(false)}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleSaveSaldo}>
-              <div className="modal-body">
-                <div className="form-group">
-                  <label className="form-label">Akun</label>
-                  <input type="text" className="form-control" value={saldoForm.accountName} disabled />
-                </div>
-              <div className="form-group">
-                <label className="form-label">Tanggal</label>
-                <input type="date" className="form-control" value={saldoForm.date} onChange={e => setSaldoForm({...saldoForm, date: e.target.value})} required />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Nominal Saldo Awal (Rp)</label>
-                <input type="number" className="form-control" value={saldoForm.amount} onChange={e => setSaldoForm({...saldoForm, amount: e.target.value})} min="0" autoFocus />
-                <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                  *Saldo penyeimbang otomatis akan dialokasikan ke akun "Saldo Penyeimbang" untuk menjaga keseimbangan Neraca.
-                </p>
-              </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowSaldoModal(false)}>Batal</button>
-                <button type="submit" className="btn btn-primary flex items-center gap-2"><Check size={16} /> Simpan Saldo</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };
