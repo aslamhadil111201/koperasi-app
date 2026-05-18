@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   ArrowUpRight, 
@@ -42,6 +42,9 @@ const Dashboard = () => {
   const creditGoods = useStore((state) => state.creditGoods) || [];
   const products = useStore((state) => state.products) || [];
   const consignmentProducts = useStore((state) => state.consignmentProducts) || [];
+
+  const [chartReady, setChartReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setChartReady(true), 100); return () => clearTimeout(t); }, []);
 
   // ── Tanggal referensi ──────────────────────────────────────────────────────
   const today = new Date();
@@ -373,10 +376,10 @@ const Dashboard = () => {
         <div className="glass-panel col-span-1" style={{ display: 'flex', flexDirection: 'column' }}>
           <h3 className="mb-4">Grafik Arus Kas (7 Hari Terakhir)</h3>
           <div style={{ flex: 1, minHeight: '260px', width: '100%' }}>
-            {cashFlowData.every(d => d.pemasukan === 0 && d.pengeluaran === 0) ? (
+            {!chartReady || cashFlowData.every(d => d.pemasukan === 0 && d.pengeluaran === 0) ? (
               <div className="dashboard-empty-state">
                 <TrendingUp size={40} />
-                <p>Belum ada transaksi kas<br />dalam 7 hari terakhir.</p>
+                <p>{!chartReady ? 'Memuat grafik...' : 'Belum ada transaksi kas'}<br />{chartReady && 'dalam 7 hari terakhir.'}</p>
               </div>
             ) : (
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={200}>
