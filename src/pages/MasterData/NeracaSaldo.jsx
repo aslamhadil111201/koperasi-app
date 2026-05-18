@@ -41,9 +41,6 @@ const NeracaSaldo = () => {
   };
 
   const handleInputChange = (accName, value) => {
-    // Tidak boleh negatif
-    const num = Number(value);
-    if (value !== '' && num < 0) return;
     setSaldoInputs(prev => ({ ...prev, [accName]: value }));
   };
 
