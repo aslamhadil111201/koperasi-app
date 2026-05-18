@@ -207,7 +207,7 @@ const Login = () => {
               <div className="login-modal-icon" style={{ background: 'rgba(255,77,0,0.1)', color: '#FF4D00' }}>
                 <Lock size={24} />
               </div>
-              <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
+              <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--color-text-main)', marginBottom: '1rem' }}>
                 Password tidak dapat direset sendiri. Hubungi administrator sistem untuk mendapatkan password baru.
               </p>
               <div className="login-contact-card">
@@ -224,7 +224,7 @@ const Login = () => {
                   <span>{ADMIN_CONTACT.email}</span>
                 </div>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#9ca3af', textAlign: 'center', marginTop: '0.75rem' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'center', marginTop: '0.75rem' }}>
                 {ADMIN_CONTACT.note}
               </p>
               <a href={ADMIN_CONTACT.wa} target="_blank" rel="noreferrer"
@@ -255,7 +255,7 @@ const Login = () => {
               <div className="login-modal-icon" style={{ background: 'rgba(6,182,212,0.1)', color: '#06b6d4' }}>
                 <Headphones size={24} />
               </div>
-              <p style={{ textAlign: 'center', fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
+              <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--color-text-main)', marginBottom: '1rem' }}>
                 Untuk bantuan teknis atau masalah akses sistem, hubungi administrator KPKCG.
               </p>
               <div className="login-contact-card">
@@ -272,7 +272,7 @@ const Login = () => {
                   <span>{ADMIN_CONTACT.email}</span>
                 </div>
               </div>
-              <div style={{ marginTop: '0.75rem', background: '#f9fafb', borderRadius: 8, padding: '0.75rem 1rem', fontSize: '0.8rem', color: '#6b7280' }}>
+              <div style={{ marginTop: '0.75rem', background: 'var(--color-surface)', borderRadius: 8, padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
                 <strong>Jam Operasional:</strong><br />
                 Senin – Jumat: 08.00 – 17.00 WIB<br />
                 Sabtu: 08.00 – 13.00 WIB
