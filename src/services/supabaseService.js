@@ -161,6 +161,29 @@ export const insertJournalEntries = async (entries) => {
   if (error) throw error;
 };
 
+// ── Saldo Awal (JU-INIT) ─────────────────────────────────────────────────────
+export const saveSaldoAwalDB = async (accountName, journalEntries) => {
+  if (!isSupabaseReady()) return;
+  try {
+    // 1. Hapus semua JU-INIT untuk akun ini
+    await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', accountName);
+    // 2. Hapus juga Saldo Penyeimbang lama
+    await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', 'Saldo Penyeimbang');
+    // 3. Insert semua entri JU-INIT baru (termasuk penyeimbang)
+    const initEntries = journalEntries.filter(j => j.id === 'JU-INIT');
+    if (initEntries.length > 0) {
+      const rows = initEntries.map(e => ({
+        journal_id: e.id, date: e.date, description: e.description,
+        ref: e.ref, debit: e.debit || 0, credit: e.credit || 0, account: e.account,
+      }));
+      const { error } = await supabase.from('journal').insert(rows);
+      if (error) throw error;
+    }
+  } catch (error) {
+    console.error('Failed to save saldo awal to Supabase:', error);
+  }
+};
+
 export const migrateKasToKasBankDB = async () => {
   if (!isSupabaseReady()) return;
   const { error } = await supabase.from('journal').update({ account: 'Kas Bank' }).eq('account', 'Kas');

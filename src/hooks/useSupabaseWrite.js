@@ -15,6 +15,7 @@ import {
   insertCreditGood, updateCreditGoodDB,
   insertMemberSalesTx,
   deleteTransactionDB, deleteCreditGoodsDB, deleteCashLoanDB,
+  saveSaldoAwalDB,
 } from '../services/supabaseService';
 
 export const useSupabaseWrite = () => {
@@ -61,6 +62,7 @@ export const useSupabaseWrite = () => {
     const origDeleteTransaction = store.deleteTransaction;
     const origDeleteCreditGoods = store.deleteCreditGoods;
     const origDeleteCashLoan = store.deleteCashLoan;
+    const origSetSaldoAwal = store.setSaldoAwal;
 
     // Override dengan versi yang juga write ke Supabase
     const patchedActions = {
@@ -374,6 +376,12 @@ export const useSupabaseWrite = () => {
         if (origDeleteCashLoan) origDeleteCashLoan(id);
         deleteCashLoanDB(id).catch(console.error);
       },
+      setSaldoAwal: (...args) => {
+        origSetSaldoAwal(...args);
+        const stateAfter = useStore.getState();
+        const accountName = args[0];
+        saveSaldoAwalDB(accountName, stateAfter.journal).catch(console.error);
+      },
     };
 
     // Tandai agar tidak di-patch berulang kali saat hot reload
@@ -412,6 +420,7 @@ export const useSupabaseWrite = () => {
       deleteTransaction: patchedActions.deleteTransaction,
       deleteCreditGoods: patchedActions.deleteCreditGoods,
       deleteCashLoan: patchedActions.deleteCashLoan,
+      setSaldoAwal: patchedActions.setSaldoAwal,
     });
   }, []);
 };
