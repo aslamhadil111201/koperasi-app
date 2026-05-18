@@ -165,22 +165,28 @@ export const insertJournalEntries = async (entries) => {
 export const saveSaldoAwalDB = async (accountName, journalEntries) => {
   if (!isSupabaseReady()) return;
   try {
-    // 1. Hapus JU-INIT untuk akun ini
+    // 1. Hapus JU-INIT untuk akun ini saja
     await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', accountName);
-    // 2. Hapus Saldo Penyeimbang lama
-    await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', 'Saldo Penyeimbang');
-    // 3. Insert entri JU-INIT baru untuk akun ini + penyeimbang
-    const newEntries = journalEntries.filter(j => j.id === 'JU-INIT' && (j.account === accountName || j.account === 'Saldo Penyeimbang'));
-    if (newEntries.length > 0) {
-      const rows = newEntries.map(e => ({
-        journal_id: e.id, date: e.date, description: e.description,
-        ref: e.ref, debit: e.debit || 0, credit: e.credit || 0, account: e.account,
-      }));
-      const { error } = await supabase.from('journal').insert(rows);
+    // 2. Insert entri JU-INIT baru untuk akun ini saja (tanpa penyeimbang)
+    const newEntry = journalEntries.find(j => j.id === 'JU-INIT' && j.account === accountName);
+    if (newEntry) {
+      const row = {
+        journal_id: newEntry.id, date: newEntry.date, description: newEntry.description,
+        ref: newEntry.ref, debit: newEntry.debit || 0, credit: newEntry.credit || 0, account: newEntry.account,
+      };
+      const { error } = await supabase.from('journal').insert([row]);
       if (error) throw error;
     }
-    // 4. Re-insert semua JU-INIT lainnya yang bukan akun ini dan bukan penyeimbang (mereka sudah ada di DB)
-    // Tidak perlu — mereka tidak dihapus
+    // 3. Update Saldo Penyeimbang: hapus lama, insert baru
+    await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', 'Saldo Penyeimbang');
+    const penyeimbang = journalEntries.find(j => j.id === 'JU-INIT' && j.account === 'Saldo Penyeimbang');
+    if (penyeimbang) {
+      const row = {
+        journal_id: penyeimbang.id, date: penyeimbang.date, description: penyeimbang.description,
+        ref: penyeimbang.ref, debit: penyeimbang.debit || 0, credit: penyeimbang.credit || 0, account: penyeimbang.account,
+      };
+      await supabase.from('journal').insert([row]);
+    }
   } catch (error) {
     console.error('Failed to save saldo awal to Supabase:', error);
   }
