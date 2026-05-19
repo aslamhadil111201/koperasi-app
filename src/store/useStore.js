@@ -495,7 +495,8 @@ export const useStore = create(
   }),
 
   addProduct: (product) => set((state) => {
-    const newId = state.products.length + 1;
+    const maxId = state.products.reduce((max, p) => Math.max(max, p.id || 0), 0);
+    const newId = maxId + 1;
     return { products: [...state.products, { ...product, id: newId, minStock: product.minStock || 10 }] };
   }),
 
@@ -508,7 +509,8 @@ export const useStore = create(
   })),
 
   addConsignment: (consignment) => set((state) => {
-    const newId = 100 + state.consignmentProducts.length + 1;
+    const maxId = state.consignmentProducts.reduce((max, p) => Math.max(max, p.id || 0), 0);
+    const newId = maxId + 1;
     return { consignmentProducts: [...state.consignmentProducts, { ...consignment, id: newId, minStock: consignment.minStock || 10 }] };
   }),
 
@@ -521,7 +523,8 @@ export const useStore = create(
   })),
 
   addService: (service) => set((state) => {
-    const newId = 200 + state.services.length + 1;
+    const maxId = state.services.reduce((max, s) => Math.max(max, s.id || 0), 0);
+    const newId = maxId + 1;
     return { services: [...state.services, { ...service, id: newId }] };
   }),
 

@@ -93,8 +93,7 @@ export const fetchProducts = async () => {
 };
 
 export const insertProduct = async (product) => {
-  const { data, error } = await supabase.from('products').insert({
-    id: product.id,
+  const payload = {
     name: product.name,
     price: product.price,
     hpp: product.hpp || 0,
@@ -102,7 +101,9 @@ export const insertProduct = async (product) => {
     min_stock: product.minStock || 10,
     category: product.category || '',
     image: product.image || null,
-  }).select().single();
+  };
+  // Jangan kirim id, biarkan Supabase auto-generate
+  const { data, error } = await supabase.from('products').insert(payload).select().single();
   if (error) throw error;
   return data;
 };
