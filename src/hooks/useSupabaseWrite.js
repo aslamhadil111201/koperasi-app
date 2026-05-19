@@ -68,6 +68,7 @@ export const useSupabaseWrite = () => {
     const origDeleteCreditGoods = store.deleteCreditGoods;
     const origDeleteCashLoan = store.deleteCashLoan;
     const origSetSaldoAwal = store.setSaldoAwal;
+    const origClosePeriod = store.closePeriod;
 
     // Override dengan versi yang juga write ke Supabase
     const patchedActions = {
@@ -413,6 +414,15 @@ export const useSupabaseWrite = () => {
         const accountName = args[0];
         saveSaldoAwalDB(accountName, stateAfter.journal).catch(console.error);
       },
+      closePeriod: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origClosePeriod(...args);
+        const stateAfter = useStore.getState();
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
     };
 
     // Tandai agar tidak di-patch berulang kali saat hot reload
@@ -456,6 +466,7 @@ export const useSupabaseWrite = () => {
       deleteCreditGoods: patchedActions.deleteCreditGoods,
       deleteCashLoan: patchedActions.deleteCashLoan,
       setSaldoAwal: patchedActions.setSaldoAwal,
+      closePeriod: patchedActions.closePeriod,
     });
   }, []);
 };
