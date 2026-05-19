@@ -214,6 +214,7 @@ export const useStore = create(
   }),
 
   // Bulk setters untuk Supabase sync
+  setAccounts:               (accounts) => set({ accounts }),
   setMembers:                (members)  => set({ members }),
   setProducts:               (products) => set({ products }),
   setConsignmentProducts:    (items)    => set({ consignmentProducts: items }),

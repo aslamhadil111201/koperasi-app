@@ -55,6 +55,36 @@ export const deleteMemberDB = async (memberId) => {
   if (error) throw error;
 };
 
+// ── Accounts (COA) ────────────────────────────────────────────────────────────
+export const fetchAccounts = async () => {
+  const { data, error } = await supabase.from('accounts').select('*').order('account_id');
+  if (error) throw error;
+  return data.map(a => ({
+    id: a.account_id, name: a.name, category: a.category,
+    type: a.type, isDefault: a.is_default,
+  }));
+};
+
+export const insertAccountDB = async (account) => {
+  const { error } = await supabase.from('accounts').insert({
+    account_id: account.id, name: account.name, category: account.category,
+    type: account.type, is_default: account.isDefault || false,
+  });
+  if (error) throw error;
+};
+
+export const updateAccountDB = async (accountId, updates) => {
+  const { error } = await supabase.from('accounts').update({
+    name: updates.name, category: updates.category, type: updates.type,
+  }).eq('account_id', accountId);
+  if (error) throw error;
+};
+
+export const deleteAccountDB = async (accountId) => {
+  const { error } = await supabase.from('accounts').delete().eq('account_id', accountId);
+  if (error) throw error;
+};
+
 // ── Products ──────────────────────────────────────────────────────────────────
 export const fetchProducts = async () => {
   const { data, error } = await supabase.from('products').select('*').order('id');

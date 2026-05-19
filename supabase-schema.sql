@@ -159,6 +159,20 @@ insert into storage.buckets (id, name, public)
 values ('kpkcg-images', 'kpkcg-images', true)
 on conflict (id) do nothing;
 
+-- ── Accounts (COA) ────────────────────────────────────────────────────────────
+create table if not exists accounts (
+  id           serial primary key,
+  account_id   text unique not null,
+  name         text not null,
+  category     text not null,
+  type         text not null default 'debit',
+  is_default   boolean default false,
+  created_at   timestamptz default now()
+);
+
+alter table accounts enable row level security;
+create policy "Allow all for authenticated" on accounts for all using (true);
+
 -- Allow public read
 create policy "Public read kpkcg-images"
   on storage.objects for select

@@ -16,6 +16,7 @@ import {
   insertMemberSalesTx,
   deleteTransactionDB, deleteCreditGoodsDB, deleteCashLoanDB,
   saveSaldoAwalDB,
+  insertAccountDB, updateAccountDB, deleteAccountDB,
 } from '../services/supabaseService';
 
 export const useSupabaseWrite = () => {
@@ -31,6 +32,9 @@ export const useSupabaseWrite = () => {
     const origAddMember    = store.addMember;
     const origUpdateMember = store.updateMember;
     const origDeleteMember = store.deleteMember;
+    const origAddAccount   = store.addAccount;
+    const origUpdateAccount = store.updateAccount;
+    const origDeleteAccount = store.deleteAccount;
     const origAddProduct   = store.addProduct;
     const origUpdateProduct = store.updateProduct;
     const origDeleteProduct = store.deleteProduct;
@@ -91,6 +95,20 @@ export const useSupabaseWrite = () => {
           console.error(e);
           alert('Gagal menghapus dari database (Supabase): ' + e.message);
         });
+      },
+      addAccount: (account) => {
+        origAddAccount(account);
+        const state = useStore.getState();
+        const newAccount = state.accounts[state.accounts.length - 1];
+        if (newAccount) insertAccountDB(newAccount).catch(console.error);
+      },
+      updateAccount: (id, data) => {
+        origUpdateAccount(id, data);
+        updateAccountDB(id, data).catch(console.error);
+      },
+      deleteAccount: (id) => {
+        origDeleteAccount(id);
+        deleteAccountDB(id).catch(console.error);
       },
       addProduct: (product) => {
         origAddProduct(product);
@@ -404,6 +422,9 @@ export const useSupabaseWrite = () => {
       addMember: patchedActions.addMember,
       updateMember: patchedActions.updateMember,
       deleteMember: patchedActions.deleteMember,
+      addAccount: patchedActions.addAccount,
+      updateAccount: patchedActions.updateAccount,
+      deleteAccount: patchedActions.deleteAccount,
       addProduct: patchedActions.addProduct,
       updateProduct: patchedActions.updateProduct,
       deleteProduct: patchedActions.deleteProduct,
