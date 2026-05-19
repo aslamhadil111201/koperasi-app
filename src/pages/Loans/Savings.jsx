@@ -35,8 +35,8 @@ const Savings = () => {
   // Riwayat setoran simpanan anggota dari jurnal
   const getMemberHistory = (memberId) =>
     journal
-      .filter(j => j.ref === memberId && j.account === 'Kas Bank' && j.debit > 0 &&
-                   j.description.toLowerCase().includes('simpanan'))
+      .filter(j => j.ref === memberId && j.debit > 0 &&
+                   (j.description.toLowerCase().includes('simpanan') || j.description.toLowerCase().includes('setoran')))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const openDetail = (member) => {
@@ -273,7 +273,7 @@ const Savings = () => {
                   Riwayat Setoran
                 </h4>
 
-                {history.length > 0 ? (
+                {(history.length > 0 || total > 0) ? (
                   <div className="savings-history-list">
                     {history.map((tx, i) => (
                       <div key={`${tx.id}-${i}`} className="savings-history-item">
@@ -293,6 +293,25 @@ const Savings = () => {
                         </span>
                       </div>
                     ))}
+                    {/* Saldo awal jika ada simpanan tapi belum ada riwayat jurnal */}
+                    {total > 0 && (
+                      <div className="savings-history-item" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div className="savings-history-icon" style={{ background: 'rgba(100,100,100,0.1)' }}>
+                            <Calendar size={15} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Saldo Awal Keanggotaan</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Calendar size={11} /> {selectedMember.joinDate || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                          Rp {total.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
