@@ -60,6 +60,9 @@ create table if not exists services (
   provider    text,
   is_fee_only boolean default false,
   image       text,
+  biaya_jasa  bigint default 0,
+  admin_bank  bigint default 0,
+  payment_type text default 'cash',
   created_at  timestamptz default now()
 );
 

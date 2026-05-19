@@ -154,7 +154,12 @@ export const deleteConsignmentDB = async (id) => {
 export const fetchServices = async () => {
   const { data, error } = await supabase.from('services').select('*').order('id');
   if (error) throw error;
-  return data.map(s => ({ ...s, isFeeOnly: s.is_fee_only }));
+  return data.map(s => ({
+    ...s, isFeeOnly: s.is_fee_only,
+    biayaJasa: s.biaya_jasa || 0,
+    adminBank: s.admin_bank || 0,
+    paymentType: s.payment_type || 'cash',
+  }));
 };
 
 export const insertService = async (service) => {
@@ -162,6 +167,9 @@ export const insertService = async (service) => {
     name: service.name, price: service.price, hpp: service.hpp || 0,
     type: service.type, provider: service.provider,
     is_fee_only: service.isFeeOnly || false, image: service.image,
+    biaya_jasa: service.biayaJasa || 0,
+    admin_bank: service.adminBank || 0,
+    payment_type: service.paymentType || 'cash',
   }).select().single();
   if (error) throw error;
   return data;
@@ -171,6 +179,9 @@ export const updateServiceDB = async (id, updates) => {
   const { error } = await supabase.from('services').update({
     name: updates.name, price: updates.price, hpp: updates.hpp || 0,
     type: updates.type, provider: updates.provider, image: updates.image,
+    biaya_jasa: updates.biayaJasa || 0,
+    admin_bank: updates.adminBank || 0,
+    payment_type: updates.paymentType || 'cash',
   }).eq('id', id);
   if (error) throw error;
 };
