@@ -68,10 +68,15 @@ export const useSupabaseWrite = () => {
     // Override dengan versi yang juga write ke Supabase
     const patchedActions = {
       addMember: (member) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
         origAddMember(member);
         const state = useStore.getState();
         const newMember = state.members[state.members.length - 1];
         if (newMember) insertMember(newMember).catch(console.error);
+        // Insert journal entries for initial savings
+        const newJournals = state.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
       },
       updateMember: (id, data) => {
         origUpdateMember(id, data);

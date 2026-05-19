@@ -379,8 +379,24 @@ export const useStore = create(
     const newId = `KPKCG-${String(maxNum + 1).padStart(3, '0')}`;
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const date = member.joinDate || todayStr;
+
+    // Hitung total simpanan awal
+    const totalSimpanan = Number(member.pokok || 0) + Number(member.wajib || 0) + Number(member.sukarela || 0);
+
+    // Buat jurnal entry jika ada simpanan awal > 0
+    const journalEntries = [];
+    if (totalSimpanan > 0) {
+      const newJournalId = `JU-${String(Math.floor(state.journal.length / 2) + 1).padStart(3, '0')}`;
+      journalEntries.push(
+        { id: newJournalId, date, description: `Simpanan Awal Anggota Baru (${member.name || newId})`, ref: newId, debit: totalSimpanan, credit: 0, account: 'Kas Bank' },
+        { id: newJournalId, date, description: `Simpanan Awal Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: totalSimpanan, account: 'Simpanan Anggota' }
+      );
+    }
+
     return {
-      members: [...state.members, { ...member, id: newId, joinDate: member.joinDate || todayStr }]
+      members: [...state.members, { ...member, id: newId, joinDate: date }],
+      journal: [...state.journal, ...journalEntries]
     };
   }),
 
