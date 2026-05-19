@@ -388,6 +388,10 @@ export const useStore = create(
     members: state.members.map(m => m.id === id ? { ...m, ...data } : m)
   })),
 
+  deleteMember: (id) => set((state) => ({
+    members: state.members.filter(m => m.id !== id)
+  })),
+
   // Patch joinDate untuk anggota lama yang belum punya
   patchMembersJoinDate: () => set((state) => {
     const today = new Date();

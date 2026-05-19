@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import { Search, Users, UserPlus, X, UserCheck, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Users, UserPlus, X, UserCheck, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './MasterData.css';
 
 const Members = () => {
   const members      = useStore((state) => state.members);
   const addMember    = useStore((state) => state.addMember);
   const updateMember = useStore((state) => state.updateMember);
+  const deleteMember = useStore((state) => state.deleteMember);
   const currentUser  = useStore((state) => state.currentUser);
   const location     = useLocation();
 
@@ -166,12 +167,24 @@ const Members = () => {
                   <td className="cell-amount">Rp {member.sukarela.toLocaleString('id-ID')}</td>
                   {canEdit && (
                     <td>
-                      <button
-                        className="table-action-btn"
-                        onClick={() => openEditModal(member)}
-                      >
-                        <Pencil size={13} /> Edit
-                      </button>
+                      <div className="table-action-group">
+                        <button
+                          className="table-action-btn"
+                          onClick={() => openEditModal(member)}
+                        >
+                          <Pencil size={13} /> Edit
+                        </button>
+                        <button
+                          className="table-action-btn table-action-delete"
+                          onClick={() => {
+                            if (window.confirm(`Hapus anggota "${member.name}" (${member.id})? Data tidak bisa dikembalikan.`)) {
+                              deleteMember(member.id);
+                            }
+                          }}
+                        >
+                          <Trash2 size={13} /> Hapus
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>
