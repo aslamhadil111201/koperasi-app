@@ -230,38 +230,6 @@ const Savings = () => {
               <div className="modal-body">
                 {/* Ringkasan saldo */}
                 <div className="savings-detail-summary">
-                  <div className="savings-detail-item">
-                    <span className="savings-detail-label">ID Anggota</span>
-                    <span className="savings-detail-value">{selectedMember.id}</span>
-                  </div>
-                  <div className="savings-detail-item">
-                    <span className="savings-detail-label">Status</span>
-                    <span className="savings-detail-value">
-                      <span className={`badge ${selectedMember.type === 'Penuh' ? 'badge-success' : 'badge-warning'}`}>
-                        {selectedMember.type}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="savings-detail-item">
-                    <span className="savings-detail-label">Tanggal Masuk</span>
-                    <span className="savings-detail-value">
-                      {selectedMember.joinDate
-                        ? new Date(selectedMember.joinDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
-                        : '—'}
-                    </span>
-                  </div>
-                  <div className="savings-detail-item" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                    <span className="savings-detail-label">Simpanan Pokok</span>
-                    <span className="savings-detail-value">Rp {selectedMember.pokok.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="savings-detail-item">
-                    <span className="savings-detail-label">Simpanan Wajib</span>
-                    <span className="savings-detail-value">Rp {selectedMember.wajib.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="savings-detail-item">
-                    <span className="savings-detail-label">Simpanan Sukarela</span>
-                    <span className="savings-detail-value">Rp {selectedMember.sukarela.toLocaleString('id-ID')}</span>
-                  </div>
                   <div className="savings-detail-item savings-detail-total">
                     <span className="savings-detail-label">Total Simpanan</span>
                     <span className="savings-detail-value text-primary">Rp {total.toLocaleString('id-ID')}</span>
