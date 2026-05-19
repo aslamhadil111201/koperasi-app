@@ -641,7 +641,7 @@ export const useStore = create(
     return { consignmentProducts: newConsignment, journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx };
   }),
 
-  checkoutService: (cart, totalAmount, markupAmount = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
+  checkoutService: (cart, totalAmount, biayaJasa = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
@@ -652,13 +652,13 @@ export const useStore = create(
       ? `Penjualan Jasa/PPOB [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Jasa/PPOB [${itemDetails}]`;
 
-    const grandTotal = totalAmount + markupAmount;
+    const grandTotal = totalAmount + biayaJasa;
 
     const journalEntries = [
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: grandTotal, credit: 0, account: akunDebit },
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: totalAmount, account: 'Pendapatan Jasa' },
-      ...(markupAmount > 0 ? [
-        { id: newJournalId, date, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: markupAmount, account: 'Pendapatan Bunga Cicilan' }
+      ...(biayaJasa > 0 ? [
+        { id: newJournalId, date, description: `Biaya Jasa (${paymentMethod})`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: biayaJasa, account: 'Pendapatan Jasa' }
       ] : []),
       ...(totalHPP > 0 ? [
         { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
