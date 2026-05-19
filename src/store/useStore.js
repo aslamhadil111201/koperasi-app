@@ -381,16 +381,32 @@ export const useStore = create(
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     const date = member.joinDate || todayStr;
 
-    // Hitung total simpanan awal
-    const totalSimpanan = Number(member.pokok || 0) + Number(member.wajib || 0) + Number(member.sukarela || 0);
-
-    // Buat jurnal entry jika ada simpanan awal > 0
+    // Buat jurnal entry terpisah untuk simpanan pokok dan wajib
     const journalEntries = [];
-    if (totalSimpanan > 0) {
-      const newJournalId = `JU-${String(Math.floor(state.journal.length / 2) + 1).padStart(3, '0')}`;
+    const pokok = Number(member.pokok || 0);
+    const wajib = Number(member.wajib || 0);
+    const sukarela = Number(member.sukarela || 0);
+    let journalIdx = Math.floor(state.journal.length / 2) + 1;
+
+    if (pokok > 0) {
+      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
       journalEntries.push(
-        { id: newJournalId, date, description: `Simpanan Awal Anggota Baru (${member.name || newId})`, ref: newId, debit: totalSimpanan, credit: 0, account: 'Kas Bank' },
-        { id: newJournalId, date, description: `Simpanan Awal Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: totalSimpanan, account: 'Simpanan Anggota' }
+        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: pokok, credit: 0, account: 'Kas Bank' },
+        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: pokok, account: 'Simpanan Anggota' }
+      );
+    }
+    if (wajib > 0) {
+      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      journalEntries.push(
+        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: wajib, credit: 0, account: 'Kas Bank' },
+        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: wajib, account: 'Simpanan Anggota' }
+      );
+    }
+    if (sukarela > 0) {
+      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      journalEntries.push(
+        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: sukarela, credit: 0, account: 'Kas Bank' },
+        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: sukarela, account: 'Simpanan Anggota' }
       );
     }
 
