@@ -44,8 +44,8 @@ const ServiceSales = () => {
   const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const markupAmount = paymentMethod === 'Kredit' ? Math.floor(totalAmount * 0.10) : 0;
-  const grandTotal = totalAmount + markupAmount;
+  const biayaJasa = cart.length > 0 ? (paymentMethod === 'Kredit' ? 10000 : 5000) : 0;
+  const grandTotal = totalAmount + biayaJasa;
 
   const schedule = useMemo(() =>
     paymentMethod === 'Kredit' ? buildSchedule(grandTotal, installments, startDate) : [],
@@ -58,10 +58,10 @@ const ServiceSales = () => {
     if (paymentMethod === 'Kredit' && !startDate) return alert('Isi tanggal mulai cicilan!');
     const member = selectedMember ? members.find(m => m.id === selectedMember) : null;
     const txId = `JSA-${Date.now()}`;
-    checkoutService(cart, totalAmount, markupAmount, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
+    checkoutService(cart, totalAmount, biayaJasa, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
     setLastTransaction({
       items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, hpp: i.hpp })),
-      total: grandTotal, subtotal: totalAmount, markupAmount, type: 'service',
+      total: grandTotal, subtotal: totalAmount, markupAmount: biayaJasa, type: 'service',
       memberName: member?.name || null,
       date: txDate || new Date().toISOString(),
       transactionId: txId,
@@ -240,10 +240,10 @@ const ServiceSales = () => {
             </div>
           )}
           <div className="summary-row"><span>Subtotal</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span></div>
-          {paymentMethod === 'Kredit' && markupAmount > 0 && (
+          {biayaJasa > 0 && (
             <div className="summary-row" style={{ color: 'var(--color-warning)' }}>
-              <span>Markup Kredit (10%)</span>
-              <span>Rp {markupAmount.toLocaleString('id-ID')}</span>
+              <span>Biaya Jasa ({paymentMethod === 'Kredit' ? 'Kredit' : 'Cash'})</span>
+              <span>Rp {biayaJasa.toLocaleString('id-ID')}</span>
             </div>
           )}
           {paymentMethod === 'Kredit' && installments > 1 && (
