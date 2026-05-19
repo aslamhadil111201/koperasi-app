@@ -445,9 +445,6 @@ const SHU = () => {
             <div className="stat-value">{members.length}</div>
             <div className="stat-label">
               Anggota
-              <span style={{ display:'block', fontSize:'0.72rem', color:'var(--color-text-muted)', marginTop:'0.1rem' }}>
-                {members.filter(m => m.type==='Penuh').length} Penuh · {members.filter(m => m.type==='Calon').length} Calon
-              </span>
             </div>
           </div>
         </div>
@@ -471,7 +468,6 @@ const SHU = () => {
               <tr>
                 <th>ID</th>
                 <th>Nama</th>
-                <th>Status</th>
                 <th>Pokok+Wajib</th>
                 <th>Sukarela</th>
                 <th>Kredit Bayar</th>
@@ -488,9 +484,6 @@ const SHU = () => {
                 <tr key={m.id}>
                   <td><span className="cell-id">{m.id}</span></td>
                   <td><span className="cell-name">{m.name}</span></td>
-                  <td>
-                    <span className={m.type==='Penuh' ? 'member-type-full' : 'member-type-calon'}>{m.type}</span>
-                  </td>
                   <td className="cell-amount">{fmt(m.pw)}</td>
                   <td className="cell-amount">{fmt(m.suk)}</td>
                   <td className="cell-amount">{fmt(m.kredit)}</td>

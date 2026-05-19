@@ -23,8 +23,7 @@ const Savings = () => {
   const filteredMembers = members.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         m.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchType   = filterType === 'Semua' || m.type === filterType;
-    return matchSearch && matchType;
+    return matchSearch;
   });
 
   // Reset ke halaman 1 saat search/filter berubah
@@ -58,7 +57,7 @@ const Savings = () => {
     e.preventDefault();
     // Anggota yang dikecualikan dari simpanan wajib massal
     const excludedIds = ['KPKCG-043', 'KPKCG-028']; // Asep Mukhlas, Saifan
-    const activeMembers = members.filter(m => (m.type === 'Penuh' || m.type === 'Calon') && !excludedIds.includes(m.id));
+    const activeMembers = members.filter(m => !excludedIds.includes(m.id));
     const memberIds = activeMembers.map(m => m.id);
     
     if (memberIds.length === 0) return alert('Tidak ada anggota aktif untuk diproses.');
@@ -84,15 +83,12 @@ const Savings = () => {
 
       {/* Filter Chips */}
       <div className="filter-chips">
-        {['Semua', 'Penuh', 'Calon'].map(t => (
-          <button
-            key={t}
-            className={`filter-chip chip-${t === 'Semua' ? 'all' : t === 'Penuh' ? 'active' : 'pending'} ${filterType === t ? 'active' : ''}`}
-            onClick={() => setFilterType(t)}
-          >
-            {t === 'Semua' ? 'Semua Anggota' : t === 'Penuh' ? '✓ Anggota Penuh' : '⏳ Calon Anggota'}
-          </button>
-        ))}
+        <button
+          className={`filter-chip chip-all ${filterType === 'Semua' ? 'active' : ''}`}
+          onClick={() => setFilterType('Semua')}
+        >
+          Semua Anggota
+        </button>
         <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginLeft: '0.25rem' }}>
           {filteredMembers.length} anggota
         </span>
@@ -394,7 +390,7 @@ const Savings = () => {
                 
                 <div style={{ background: 'rgba(255, 77, 0, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 77, 0, 0.1)', marginBottom: '1rem' }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text)' }}>
-                    Sistem akan memotong otomatis dan menambahkan <strong>Rp 100.000</strong> ke Simpanan Wajib untuk <strong>seluruh anggota aktif</strong> ({members.filter(m => (m.type === 'Penuh' || m.type === 'Calon') && !['KPKCG-043', 'KPKCG-028'].includes(m.id)).length} orang).
+                    Sistem akan memotong otomatis dan menambahkan <strong>Rp 100.000</strong> ke Simpanan Wajib untuk <strong>seluruh anggota aktif</strong> ({members.filter(m => !['KPKCG-043', 'KPKCG-028'].includes(m.id)).length} orang).
                   </p>
                   <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--color-warning)' }}>
                     Dikecualikan: Asep Mukhlas (KPKCG-043), Saifan (KPKCG-028)
