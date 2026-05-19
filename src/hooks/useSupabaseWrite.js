@@ -115,7 +115,10 @@ export const useSupabaseWrite = () => {
         origAddProduct(product);
         const state = useStore.getState();
         const newProduct = state.products[state.products.length - 1];
-        if (newProduct) insertProduct(newProduct).catch(console.error);
+        if (newProduct) insertProduct(newProduct).catch(e => {
+          console.error('INSERT PRODUCT ERROR:', e);
+          alert('Gagal simpan produk ke database: ' + e.message);
+        });
       },
       updateProduct: (id, data) => {
         origUpdateProduct(id, data);
@@ -129,7 +132,10 @@ export const useSupabaseWrite = () => {
         origAddConsignment(item);
         const state = useStore.getState();
         const newItem = state.consignmentProducts[state.consignmentProducts.length - 1];
-        if (newItem) insertConsignment(newItem).catch(console.error);
+        if (newItem) insertConsignment(newItem).catch(e => {
+          console.error('INSERT CONSIGNMENT ERROR:', e);
+          alert('Gagal simpan konsinyasi ke database: ' + e.message);
+        });
       },
       updateConsignment: (id, data) => {
         origUpdateConsignment(id, data);
@@ -143,7 +149,10 @@ export const useSupabaseWrite = () => {
         origAddService(service);
         const state = useStore.getState();
         const newService = state.services[state.services.length - 1];
-        if (newService) insertService(newService).catch(console.error);
+        if (newService) insertService(newService).catch(e => {
+          console.error('INSERT SERVICE ERROR:', e);
+          alert('Gagal simpan layanan ke database: ' + e.message);
+        });
       },
       updateService: (id, data) => {
         origUpdateService(id, data);
