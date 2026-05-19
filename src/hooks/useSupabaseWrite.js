@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { isSupabaseReady } from '../lib/supabase';
 import {
-  insertMember, updateMemberDB,
+  insertMember, updateMemberDB, deleteMemberDB,
   insertProduct, updateProductDB, deleteProductDB,
   insertConsignment, updateConsignmentDB, deleteConsignmentDB,
   insertService, updateServiceDB, deleteServiceDB,
@@ -30,6 +30,7 @@ export const useSupabaseWrite = () => {
     // Patch store actions untuk juga write ke Supabase
     const origAddMember    = store.addMember;
     const origUpdateMember = store.updateMember;
+    const origDeleteMember = store.deleteMember;
     const origAddProduct   = store.addProduct;
     const origUpdateProduct = store.updateProduct;
     const origDeleteProduct = store.deleteProduct;
@@ -77,6 +78,13 @@ export const useSupabaseWrite = () => {
         updateMemberDB(id, data).catch(e => {
           console.error(e);
           alert('Gagal menyimpan ke database (Supabase): ' + e.message);
+        });
+      },
+      deleteMember: (id) => {
+        origDeleteMember(id);
+        deleteMemberDB(id).catch(e => {
+          console.error(e);
+          alert('Gagal menghapus dari database (Supabase): ' + e.message);
         });
       },
       addProduct: (product) => {
@@ -390,6 +398,7 @@ export const useSupabaseWrite = () => {
     useStore.setState({
       addMember: patchedActions.addMember,
       updateMember: patchedActions.updateMember,
+      deleteMember: patchedActions.deleteMember,
       addProduct: patchedActions.addProduct,
       updateProduct: patchedActions.updateProduct,
       deleteProduct: patchedActions.deleteProduct,

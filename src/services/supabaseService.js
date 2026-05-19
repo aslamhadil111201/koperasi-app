@@ -47,6 +47,14 @@ export const updateMemberDB = async (memberId, updates) => {
   if (error) throw error;
 };
 
+export const deleteMemberDB = async (memberId) => {
+  const oldId = memberId.replace('KPKCG-', 'ANG-');
+  const { error } = await supabase.from('members')
+    .delete()
+    .or(`member_id.eq.${memberId},member_id.eq.${oldId}`);
+  if (error) throw error;
+};
+
 // ── Products ──────────────────────────────────────────────────────────────────
 export const fetchProducts = async () => {
   const { data, error } = await supabase.from('products').select('*').order('id');
