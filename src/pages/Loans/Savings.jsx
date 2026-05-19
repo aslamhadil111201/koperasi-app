@@ -294,21 +294,57 @@ const Savings = () => {
                       </div>
                     ))}
                     {/* Saldo awal jika ada simpanan tapi belum ada riwayat jurnal */}
-                    {total > 0 && (
+                    {selectedMember.pokok > 0 && (
                       <div className="savings-history-item" style={{ opacity: 0.7 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <div className="savings-history-icon" style={{ background: 'rgba(100,100,100,0.1)' }}>
                             <Calendar size={15} />
                           </div>
                           <div>
-                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Saldo Awal Keanggotaan</p>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Simpanan Pokok</p>
                             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                               <Calendar size={11} /> {selectedMember.joinDate || '—'}
                             </p>
                           </div>
                         </div>
                         <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
-                          Rp {total.toLocaleString('id-ID')}
+                          Rp {selectedMember.pokok.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    )}
+                    {selectedMember.wajib > 0 && (
+                      <div className="savings-history-item" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div className="savings-history-icon" style={{ background: 'rgba(100,100,100,0.1)' }}>
+                            <Calendar size={15} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Simpanan Wajib</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Calendar size={11} /> {selectedMember.joinDate || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                          Rp {selectedMember.wajib.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    )}
+                    {selectedMember.sukarela > 0 && (
+                      <div className="savings-history-item" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div className="savings-history-icon" style={{ background: 'rgba(100,100,100,0.1)' }}>
+                            <Calendar size={15} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Simpanan Sukarela</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Calendar size={11} /> {selectedMember.joinDate || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                          Rp {selectedMember.sukarela.toLocaleString('id-ID')}
                         </span>
                       </div>
                     )}
