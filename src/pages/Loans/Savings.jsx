@@ -56,11 +56,13 @@ const Savings = () => {
 
   const handleBulkDeposit = (e) => {
     e.preventDefault();
-    const activeMembers = members.filter(m => m.type === 'Penuh' || m.type === 'Calon');
+    // Anggota yang dikecualikan dari simpanan wajib massal
+    const excludedIds = ['KPKCG-043', 'KPKCG-028']; // Asep Mukhlas, Saifan
+    const activeMembers = members.filter(m => (m.type === 'Penuh' || m.type === 'Calon') && !excludedIds.includes(m.id));
     const memberIds = activeMembers.map(m => m.id);
     
     if (memberIds.length === 0) return alert('Tidak ada anggota aktif untuk diproses.');
-    if (!window.confirm(`Proses Simpanan Wajib Rp 100.000 untuk ${memberIds.length} anggota?\nKas Koperasi akan bertambah Rp ${(memberIds.length * 100000).toLocaleString('id-ID')}.`)) return;
+    if (!window.confirm(`Proses Simpanan Wajib Rp 100.000 untuk ${memberIds.length} anggota?\n(Dikecualikan: Asep Mukhlas & Saifan)\nKas Koperasi akan bertambah Rp ${(memberIds.length * 100000).toLocaleString('id-ID')}.`)) return;
 
     useStore.getState().depositSavingsBulk(memberIds, 100000, bulkDate);
     setShowBulk(false);
@@ -392,7 +394,10 @@ const Savings = () => {
                 
                 <div style={{ background: 'rgba(255, 77, 0, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 77, 0, 0.1)', marginBottom: '1rem' }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text)' }}>
-                    Sistem akan memotong otomatis dan menambahkan <strong>Rp 100.000</strong> ke Simpanan Wajib untuk <strong>seluruh anggota aktif</strong> ({members.length} orang).
+                    Sistem akan memotong otomatis dan menambahkan <strong>Rp 100.000</strong> ke Simpanan Wajib untuk <strong>seluruh anggota aktif</strong> ({members.filter(m => (m.type === 'Penuh' || m.type === 'Calon') && !['KPKCG-043', 'KPKCG-028'].includes(m.id)).length} orang).
+                  </p>
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--color-warning)' }}>
+                    Dikecualikan: Asep Mukhlas (KPKCG-043), Saifan (KPKCG-028)
                   </p>
                   <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                     Tindakan ini akan menghasilkan jurnal Kas masuk secara massal.
