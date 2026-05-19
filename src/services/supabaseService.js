@@ -93,9 +93,16 @@ export const fetchProducts = async () => {
 };
 
 export const insertProduct = async (product) => {
-  const payload = { ...product, min_stock: product.minStock || 10 };
-  delete payload.minStock;
-  const { data, error } = await supabase.from('products').insert(payload).select().single();
+  const { data, error } = await supabase.from('products').insert({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    hpp: product.hpp || 0,
+    stock: product.stock || 0,
+    min_stock: product.minStock || 10,
+    category: product.category || '',
+    image: product.image || null,
+  }).select().single();
   if (error) throw error;
   return data;
 };
@@ -165,13 +172,16 @@ export const fetchServices = async () => {
 export const insertService = async (service) => {
   const { data, error } = await supabase.from('services').insert({
     name: service.name, price: service.price, hpp: service.hpp || 0,
-    type: service.type, provider: service.provider,
-    is_fee_only: service.isFeeOnly || false, image: service.image,
+    type: service.type || service.category || '', provider: service.provider,
+    is_fee_only: service.isFeeOnly || false, image: service.image || null,
     biaya_jasa: service.biayaJasa || 0,
     admin_bank: service.adminBank || 0,
     payment_type: service.paymentType || 'cash',
   }).select().single();
-  if (error) throw error;
+  if (error) {
+    console.error('insertService error:', error);
+    throw error;
+  }
   return data;
 };
 

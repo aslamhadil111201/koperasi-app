@@ -33,6 +33,7 @@ create table if not exists products (
   price      bigint default 0,
   hpp        bigint default 0,
   stock      int default 0,
+  min_stock  int default 10,
   category   text,
   image      text,
   created_at timestamptz default now()
@@ -44,6 +45,7 @@ create table if not exists consignment_products (
   name           text not null,
   price          bigint default 0,
   stock          int default 0,
+  min_stock      int default 10,
   supplier       text,
   supplier_price bigint default 0,
   image          text,
