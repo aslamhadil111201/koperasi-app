@@ -640,6 +640,16 @@ const Inventory = () => {
                       </div>
                     </div>
                     <div className="form-group">
+                      <label className="form-label">HPP / Modal Layanan (Rp)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="0"
+                        value={itemForm.hpp}
+                        onChange={(e) => setItemForm({ ...itemForm, hpp: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div className="form-group">
                       <label className="form-label">Jenis Pembayaran</label>
                       <select
                         className="form-control"
@@ -649,16 +659,6 @@ const Inventory = () => {
                         <option value="cash">Cash</option>
                         <option value="credit">Credit</option>
                       </select>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">HPP / Modal Layanan (Rp)</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        placeholder="0"
-                        value={itemForm.hpp}
-                        onChange={(e) => setItemForm({ ...itemForm, hpp: Number(e.target.value) })}
-                      />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="form-group">
