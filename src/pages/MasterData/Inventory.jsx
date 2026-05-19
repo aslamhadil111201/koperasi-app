@@ -416,7 +416,6 @@ const Inventory = () => {
                   <th>Kategori</th>
                   <th>Provider</th>
                   <th>HPP</th>
-                  <th>Biaya Jasa</th>
                   <th>Admin Bank</th>
                   <th>Total Harga</th>
                   <th>Aksi</th>
@@ -442,9 +441,6 @@ const Inventory = () => {
                     <td>{item.provider}</td>
                     <td className="cell-amount" style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
                       Rp {(item.hpp || 0).toLocaleString('id-ID')}
-                    </td>
-                    <td className="cell-amount" style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
-                      Rp {(item.biayaJasa || 0).toLocaleString('id-ID')}
                     </td>
                     <td className="cell-amount" style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
                       Rp {(item.adminBank || 0).toLocaleString('id-ID')}
@@ -663,16 +659,6 @@ const Inventory = () => {
                       </select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="form-group">
-                        <label className="form-label">Biaya Jasa (Rp)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="0"
-                          value={itemForm.biayaJasa}
-                          onChange={(e) => setItemForm({ ...itemForm, biayaJasa: Number(e.target.value) })}
-                        />
-                      </div>
                       <div className="form-group">
                         <label className="form-label">Admin Bank (Rp)</label>
                         <input
