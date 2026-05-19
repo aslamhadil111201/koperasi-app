@@ -119,7 +119,8 @@ const Inventory = () => {
           commission: itemForm.price - itemForm.supplierPrice, image: itemForm.image
         });
       } else if (activeTab === 'services') {
-        updateService(editingItem.id, { name: itemForm.name, category: itemForm.category, provider: itemForm.provider, price: itemForm.price, hpp: itemForm.hpp, type: itemForm.type, image: itemForm.image, biayaJasa: itemForm.biayaJasa, adminBank: itemForm.adminBank, paymentType: itemForm.paymentType });
+        const totalPrice = Number(itemForm.hpp || 0) + Number(itemForm.biayaJasa || 0) + Number(itemForm.adminBank || 0);
+        updateService(editingItem.id, { name: itemForm.name, category: itemForm.category, provider: itemForm.provider, price: totalPrice, hpp: itemForm.hpp, type: itemForm.type, image: itemForm.image, biayaJasa: itemForm.biayaJasa, adminBank: itemForm.adminBank, paymentType: itemForm.paymentType });
       }
     } else {
       // ADD mode
@@ -132,7 +133,8 @@ const Inventory = () => {
           commission: itemForm.price - itemForm.supplierPrice, image: itemForm.image
         });
       } else if (activeTab === 'services') {
-        addService({ name: itemForm.name, category: itemForm.category || 'Lainnya', provider: itemForm.provider, price: itemForm.price, hpp: itemForm.hpp, type: itemForm.type || 'PPOB', image: itemForm.image, biayaJasa: itemForm.biayaJasa, adminBank: itemForm.adminBank, paymentType: itemForm.paymentType });
+        const totalPrice = Number(itemForm.hpp || 0) + Number(itemForm.biayaJasa || 0) + Number(itemForm.adminBank || 0);
+        addService({ name: itemForm.name, category: itemForm.category || 'Lainnya', provider: itemForm.provider, price: totalPrice, hpp: itemForm.hpp, type: itemForm.type || 'PPOB', image: itemForm.image, biayaJasa: itemForm.biayaJasa, adminBank: itemForm.adminBank, paymentType: itemForm.paymentType });
       }
     }
     setShowModal(false);
