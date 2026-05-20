@@ -310,7 +310,7 @@ const GeneralLedger = () => {
                   <tr key={`${item.id}-${index}`}>
                     <td style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
                       {item.date}
-                      {currentUser?.username === 'aslamhadilmatin' && item.timestamp && (
+                      {['aslamhadilmatin', 'uci', 'surtini', 'indah'].includes(currentUser?.username) && item.timestamp && (
                         <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '2px' }}>
                           {new Date(item.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
                         </div>
@@ -319,7 +319,7 @@ const GeneralLedger = () => {
                     <td style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {item.id}
-                        {currentUser?.username === 'aslamhadilmatin' && item.id !== 'JU-INIT' && (
+                        {['aslamhadilmatin', 'uci', 'surtini', 'indah'].includes(currentUser?.username) && item.id !== 'JU-INIT' && (
                           <button
                             onClick={() => {
                               if (window.confirm(`Hapus seluruh jurnal dan riwayat untuk transaksi ${item.id}?\n\nCATATAN: Stok barang tidak otomatis kembali, harap sesuaikan di menu Inventory.`)) {
