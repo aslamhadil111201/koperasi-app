@@ -6,17 +6,23 @@ export default function PettyCash() {
   const { journal, replenishPettyCash, addPettyCashExpense, addTransaction } = useStore();
   const accounts = useStore((s) => s.accounts) || [];
   
-  // Resolve nama akun Kas Kecil dari master data (kode 102) + semua variasi nama
-  const kasKecilName = accounts.find(a => a.id === '102')?.name || 'Kas Kecil';
+  // Resolve nama akun Kas Kecil dari master data (kode 102 atau nama mengandung kas kecil/petty cash)
+  const kasKecilName = useMemo(() => {
+    const byId = accounts.find(a => a.id === '102');
+    if (byId) return byId.name;
+    const byName = accounts.find(a => {
+      const lower = a.name.toLowerCase();
+      return lower.includes('kas kecil') || lower.includes('petty cash') || lower.includes('petty');
+    });
+    return byName ? byName.name : 'Kas Kecil';
+  }, [accounts]);
   
-  // Match function: cek apakah akun ini adalah Kas Kecil (by ID atau nama)
+  // Match function: cek apakah akun ini adalah Kas Kecil
   const isKasKecilAccount = (accountName) => {
     if (!accountName) return false;
     const lower = accountName.toLowerCase();
-    // Match by exact name dari master data
     if (lower === kasKecilName.toLowerCase()) return true;
-    // Match variasi umum
-    if (lower === 'kas kecil' || lower === 'petty cash') return true;
+    if (lower.includes('kas kecil') || lower.includes('petty cash') || lower.includes('petty')) return true;
     return false;
   };
   
