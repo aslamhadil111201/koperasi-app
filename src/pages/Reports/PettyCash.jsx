@@ -106,7 +106,7 @@ export default function PettyCash() {
     if (amountNum <= 0) return alert('Nominal harus lebih dari 0');
     if (!incomeDesc.trim()) return alert('Keterangan tidak boleh kosong');
 
-    const newId = `JU-${String(journal.length / 2 + 1).padStart(3, '0')}`;
+    const newId = `JU-${Date.now().toString(36).toUpperCase()}`;
     addTransaction([
       { id: newId, date: incomeDate, description: incomeDesc, ref: 'BKM', debit: amountNum, credit: 0, account: 'Kas Kecil' },
       { id: newId, date: incomeDate, description: incomeDesc, ref: 'BKM', debit: 0, credit: amountNum, account: incomeAccount },

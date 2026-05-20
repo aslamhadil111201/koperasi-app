@@ -42,7 +42,7 @@ const SearchableSelect = ({ options, value, onChange, placeholder, required }) =
 
   const filteredOptions = options.filter(opt => 
     opt.label.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    opt.value.toLowerCase().includes(searchTerm.toLowerCase())
+    String(opt.value).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelect = (optionValue) => {

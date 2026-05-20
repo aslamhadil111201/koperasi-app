@@ -62,7 +62,7 @@ const GeneralLedger = () => {
     const totalCredit = validEntries.reduce((s, e) => s + (Number(e.credit) || 0), 0);
     if (totalDebit !== totalCredit) return alert(`Jurnal tidak seimbang! Debit: ${totalDebit.toLocaleString('id-ID')}, Kredit: ${totalCredit.toLocaleString('id-ID')}`);
 
-    const newId = `JU-${String(journal.length / 2 + 1).padStart(4, '0')}`;
+    const newId = `JU-${Date.now().toString(36).toUpperCase()}`;
     const journalEntries = validEntries.map(e => ({
       id: newId,
       date,

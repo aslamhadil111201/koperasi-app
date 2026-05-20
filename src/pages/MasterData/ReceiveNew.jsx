@@ -64,7 +64,7 @@ const ReceiveNew = () => {
     } else if (activeTab === 'services-buy') {
       // Terima Kuota: catat pembelian jasa/kuota dengan jurnal
       const totalCost = qty * hpp;
-      const newId = `JU-${String(journal.length / 2 + 1).padStart(4, '0')}`;
+      const newId = `JU-${Date.now().toString(36).toUpperCase()}`;
       const desc = `Pembelian ${modalItem.name}${form.supplier ? ` (Supplier: ${form.supplier})` : ''}`;
       addTransaction([
         { id: newId, date: form.date, description: desc, ref: 'BKK', debit: totalCost, credit: 0, account: 'Persediaan Barang' },
