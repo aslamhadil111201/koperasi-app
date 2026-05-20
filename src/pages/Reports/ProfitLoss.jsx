@@ -11,8 +11,17 @@ const ProfitLoss = () => {
   const addExpense = useStore((state) => state.addExpense);
   const addIncome  = useStore((state) => state.addIncome);
 
-  const EXPENSE_ACCOUNTS = useMemo(() => accounts.filter(a => a.category.includes('Beban')).map(a => a.name), [accounts]);
-  const INCOME_ACCOUNTS = useMemo(() => accounts.filter(a => a.category.includes('Pendapatan')).map(a => a.name), [accounts]);
+  const EXPENSE_ACCOUNTS = useMemo(() => {
+    const fromMaster = accounts.filter(a => a.category.includes('Beban')).map(a => a.name);
+    const fromJournal = [...new Set(journal.map(j => j.account))].filter(a => a.startsWith('Beban'));
+    return [...new Set([...fromMaster, ...fromJournal])].sort();
+  }, [accounts, journal]);
+  
+  const INCOME_ACCOUNTS = useMemo(() => {
+    const fromMaster = accounts.filter(a => a.category.includes('Pendapatan')).map(a => a.name);
+    const fromJournal = [...new Set(journal.map(j => j.account))].filter(a => a.startsWith('Pendapatan'));
+    return [...new Set([...fromMaster, ...fromJournal])].sort();
+  }, [accounts, journal]);
 
   // ── Period Filter ─────────────────────────────────────────────────────────
   const monthOptions = useMemo(() => {
