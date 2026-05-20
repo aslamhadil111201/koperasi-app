@@ -340,7 +340,7 @@ const RetailSales = () => {
             </div>
           )}
           <div className="summary-row"><span>Subtotal</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span></div>
-          {paymentMethod === 'Kredit' && markupAmount > 0 && (
+          {paymentMethod === 'Kredit' && (
             <div className="summary-row" style={{ color: 'var(--color-warning)' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 Markup Kredit (
