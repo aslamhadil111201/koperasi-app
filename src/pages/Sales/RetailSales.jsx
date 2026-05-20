@@ -24,6 +24,7 @@ const RetailSales = () => {
   const [newCustomer, setNewCustomer]       = useState({ name: '', address: '', npwp: '', phone: '' });
 
   const [paymentMethod, setPaymentMethod]   = useState('Cash');
+  const [markupPercent, setMarkupPercent]   = useState(10);
   const [txDate, setTxDate]                 = useState(new Date().toISOString().split('T')[0]);
   const [takeDate, setTakeDate]             = useState('');
   const [installments, setInstallments]     = useState(1);
@@ -84,7 +85,7 @@ const RetailSales = () => {
   const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const markupAmount = paymentMethod === 'Kredit' ? Math.floor(totalAmount * 0.10) : 0;
+  const markupAmount = paymentMethod === 'Kredit' ? Math.floor(totalAmount * (markupPercent / 100)) : 0;
   const grandTotal = totalAmount + markupAmount;
 
   // Jadwal cicilan preview
@@ -341,7 +342,11 @@ const RetailSales = () => {
           <div className="summary-row"><span>Subtotal</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span></div>
           {paymentMethod === 'Kredit' && markupAmount > 0 && (
             <div className="summary-row" style={{ color: 'var(--color-warning)' }}>
-              <span>Markup Kredit (10%)</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                Markup Kredit (
+                <input type="number" min="0" max="100" value={markupPercent} onChange={e => setMarkupPercent(Number(e.target.value) || 0)} style={{ width: 40, textAlign: 'center', border: '1px solid var(--color-border)', borderRadius: 4, padding: '0 2px', fontSize: '0.82rem', background: 'var(--color-surface)', color: 'var(--color-warning)' }} />
+                %)
+              </span>
               <span>Rp {markupAmount.toLocaleString('id-ID')}</span>
             </div>
           )}
