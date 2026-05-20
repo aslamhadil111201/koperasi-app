@@ -934,8 +934,9 @@ export const useStore = create(
   }),
 
   // Payroll Deduction (Potong Gaji per Member)
-  processPayrollDeduction: (memberId, payments, txDate) => set((state) => {
+  processPayrollDeduction: (memberId, payments, txDate, paymentMethod) => set((state) => {
     const date = txDate || new Date().toISOString().split('T')[0];
+    const kasAccount = paymentMethod === 'KAS_KECIL' ? getAccountName(state, ACC.KAS_KECIL) : getAccountName(state, ACC.KAS_BANK);
     const newJournalId = genJournalId();
     const journalEntries = [];
     const newCashLoans = [...state.cashLoans];
@@ -996,7 +997,7 @@ export const useStore = create(
     });
 
     if (totalCash > 0) {
-      journalEntries.push({ id: newJournalId, date, description: `Pelunasan Potong Gaji`, ref: memberId, debit: totalCash, credit: 0, account: getAccountName(state, ACC.KAS_BANK) });
+      journalEntries.push({ id: newJournalId, date, description: `Pelunasan Potong Gaji`, ref: memberId, debit: totalCash, credit: 0, account: kasAccount });
       if (totalDagang > 0) {
         journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kasbon Ritel/Jasa`, ref: memberId, debit: 0, credit: totalDagang, account: getAccountName(state, ACC.PIUTANG_DAGANG) });
       }

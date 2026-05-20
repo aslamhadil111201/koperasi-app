@@ -11,6 +11,7 @@ export default function Receivables() {
   const [showModal, setShowModal] = useState(false);
   const [payments, setPayments] = useState([]);
   const [txDate, setTxDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentMethod, setPaymentMethod] = useState('KAS_BANK');
 
   // 1. Calculate raw Piutang Dagang (from Journal)
   const rawPiutangDagangMap = useMemo(() => {
@@ -130,7 +131,7 @@ export default function Receivables() {
 
     processPayrollDeduction(selectedMember.id, toPay.map(p => ({
       type: p.type, id: p.id, amount: p.amount
-    })), txDate);
+    })), txDate, paymentMethod);
     
     setShowModal(false);
     setSelectedMember(null);
@@ -234,6 +235,13 @@ export default function Receivables() {
               <div className="form-group" style={{ marginBottom: '1rem' }}>
                 <label className="form-label">Tanggal Transaksi</label>
                 <input type="date" className="form-control" value={txDate} onChange={(e) => setTxDate(e.target.value)} required />
+              </div>
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Metode Pembayaran</label>
+                <select className="form-control" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                  <option value="KAS_BANK">Kas Bank BRI</option>
+                  <option value="KAS_KECIL">Kas Kecil</option>
+                </select>
               </div>
 
               {payments.map((p, idx) => (
