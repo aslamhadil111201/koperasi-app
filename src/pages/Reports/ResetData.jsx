@@ -84,13 +84,16 @@ const ResetData = () => {
       setCreditGoods([]);
       setMemberSalesTransactions([]);
 
+      // Clear localStorage
+      localStorage.removeItem('koperasi-store');
+
       // Kosongkan Supabase
       if (isSupabaseReady()) {
         await supabase.from('journal').delete().neq('journal_id', '___never___');
         await supabase.from('members').delete().neq('member_id', '___never___');
-        await supabase.from('products').delete().neq('product_id', '___never___');
-        await supabase.from('consignment_products').delete().neq('product_id', '___never___');
-        await supabase.from('services').delete().neq('service_id', '___never___');
+        await supabase.from('products').delete().neq('id', -99999);
+        await supabase.from('consignment_products').delete().neq('id', -99999);
+        await supabase.from('services').delete().neq('id', -99999);
         await supabase.from('cash_loans').delete().neq('loan_id', '___never___');
         await supabase.from('credit_goods').delete().neq('credit_id', '___never___');
         await supabase.from('member_sales_transactions').delete().neq('tx_id', '___never___');
