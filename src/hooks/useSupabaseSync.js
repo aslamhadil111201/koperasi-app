@@ -46,11 +46,23 @@ export const useSupabaseSync = () => {
         try { accounts = await fetchAccounts(); } catch (e) { console.warn('Accounts table not found, using defaults'); }
 
         if (accounts.length > 0) setAccounts(accounts);
+        
+        // Normalize nama akun di jurnal agar match dengan Daftar Akun (case-insensitive)
+        const accList = accounts.length > 0 ? accounts : useStore.getState().accounts || [];
+        const normalizedJournal = journal.map(j => {
+          if (!j.account) return j;
+          const matchedAcc = accList.find(a => a.name.toLowerCase() === j.account.toLowerCase());
+          if (matchedAcc && matchedAcc.name !== j.account) {
+            return { ...j, account: matchedAcc.name };
+          }
+          return j;
+        });
+
         setMembers(members);
         setProducts(products);
         setConsignmentProducts(consignments);
         setServices(services);
-        setJournal(journal);
+        setJournal(normalizedJournal);
         setCashLoans(cashLoans);
         setCreditGoods(creditGoods);
         setMemberSalesTx(memberTx);
