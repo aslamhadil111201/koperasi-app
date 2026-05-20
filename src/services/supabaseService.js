@@ -74,10 +74,17 @@ export const insertAccountDB = async (account) => {
 };
 
 export const updateAccountDB = async (accountId, updates) => {
-  const { error } = await supabase.from('accounts').update({
-    name: updates.name, category: updates.category, type: updates.type,
-  }).eq('account_id', accountId);
-  if (error) throw error;
+  if (!isSupabaseReady()) return;
+  const payload = { name: updates.name, category: updates.category, type: updates.type };
+  if (updates.id && updates.id !== accountId) payload.account_id = updates.id;
+  const { error } = await supabase.from('accounts').update(payload).eq('account_id', accountId);
+  if (error) {
+    // Kalau tidak ketemu, coba insert sebagai akun baru
+    console.warn('Update account failed, trying insert:', error.message);
+    await supabase.from('accounts').insert({
+      account_id: updates.id || accountId, name: updates.name, category: updates.category, type: updates.type, is_default: false
+    }).catch(e => console.error('Insert fallback failed:', e));
+  }
 };
 
 export const deleteAccountDB = async (accountId) => {
