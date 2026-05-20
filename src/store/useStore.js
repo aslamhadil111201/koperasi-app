@@ -1084,6 +1084,18 @@ export const useStore = create(
           state.members = state.members.map(m => m.joinDate ? m : { ...m, joinDate: todayStr });
         }
 
+        // Normalize nama akun di jurnal agar match Daftar Akun (case-insensitive)
+        if (state.journal && state.accounts) {
+          state.journal = state.journal.map(j => {
+            if (!j.account) return j;
+            const matched = state.accounts.find(a => a.name.toLowerCase() === j.account.toLowerCase());
+            if (matched && matched.name !== j.account) {
+              return { ...j, account: matched.name };
+            }
+            return j;
+          });
+        }
+
         const sudahAda = state.journal.some(j => j.id === 'JU-INIT');
         if (!sudahAda && NILAI_PERSEDIAAN_AWAL > 0) {
           const accList = state.accounts || INITIAL_ACCOUNTS;
