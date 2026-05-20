@@ -12,8 +12,12 @@ const genJournalId = () => {
 // Helper: resolve nama akun dari master data berdasarkan kode akun (ID)
 // Ini memastikan nama akun di jurnal selalu sinkron dengan Daftar Akun
 const getAccountName = (state, accountId) => {
-  const acc = state.accounts.find(a => a.id === accountId);
-  return acc ? acc.name : accountId;
+  const accounts = state.accounts || INITIAL_ACCOUNTS;
+  const acc = accounts.find(a => a.id === accountId);
+  if (acc) return acc.name;
+  // Fallback: cari dari INITIAL_ACCOUNTS
+  const initAcc = INITIAL_ACCOUNTS.find(a => a.id === accountId);
+  return initAcc ? initAcc.name : accountId;
 };
 
 // Mapping kode akun default (digunakan di seluruh transaksi)
