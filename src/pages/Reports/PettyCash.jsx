@@ -6,8 +6,19 @@ export default function PettyCash() {
   const { journal, replenishPettyCash, addPettyCashExpense, addTransaction } = useStore();
   const accounts = useStore((s) => s.accounts) || [];
   
-  // Resolve nama akun Kas Kecil dari master data (kode 102)
+  // Resolve nama akun Kas Kecil dari master data (kode 102) + semua variasi nama
   const kasKecilName = accounts.find(a => a.id === '102')?.name || 'Kas Kecil';
+  
+  // Match function: cek apakah akun ini adalah Kas Kecil (by ID atau nama)
+  const isKasKecilAccount = (accountName) => {
+    if (!accountName) return false;
+    const lower = accountName.toLowerCase();
+    // Match by exact name dari master data
+    if (lower === kasKecilName.toLowerCase()) return true;
+    // Match variasi umum
+    if (lower === 'kas kecil' || lower === 'petty cash') return true;
+    return false;
+  };
   
   const [showReplenishModal, setShowReplenishModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -33,9 +44,8 @@ export default function PettyCash() {
   // 1. Hitung Saldo Kas Kecil (case-insensitive match)
   const pettyCashBalance = useMemo(() => {
     let balance = 0;
-    const name = kasKecilName.toLowerCase();
     journal.forEach(entry => {
-      if (entry.account?.toLowerCase() === name) {
+      if (isKasKecilAccount(entry.account)) {
         balance += (entry.debit || 0) - (entry.credit || 0);
       }
     });
@@ -56,13 +66,13 @@ export default function PettyCash() {
 
     Object.keys(grouped).forEach(jid => {
       const entries = grouped[jid];
-      const hasPettyCash = entries.find(e => e.account?.toLowerCase() === kasKecilName.toLowerCase());
+      const hasPettyCash = entries.find(e => isKasKecilAccount(e.account));
       if (hasPettyCash) {
         // Tentukan apakah Kas Kecil di debit (Masuk) atau kredit (Keluar)
         const isMasuk = hasPettyCash.debit > 0;
         const amount = isMasuk ? hasPettyCash.debit : hasPettyCash.credit;
         // Cari akun pasangannya
-        const lawan = entries.find(e => e.account?.toLowerCase() !== kasKecilName.toLowerCase());
+        const lawan = entries.find(e => !isKasKecilAccount(e.account));
         
         history.push({
           id: jid,
