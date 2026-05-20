@@ -714,6 +714,14 @@ export const useStore = create(
     const product = state.products.find(p => p.id === productId);
     const totalCost = qty * hpp;
     
+    // HPP Rata-rata Tertimbang (Weighted Average Cost)
+    const oldStock = product?.stock || 0;
+    const oldHpp = product?.hpp || 0;
+    const oldTotalValue = oldStock * oldHpp;
+    const newTotalValue = oldTotalValue + totalCost;
+    const newTotalStock = oldStock + qty;
+    const avgHpp = newTotalStock > 0 ? Math.round(newTotalValue / newTotalStock) : hpp;
+
     let desc = `Pembelian ${product?.name}`;
     if (supplier) desc += ` (Supplier: ${supplier})`;
     if (notes) desc += ` - ${notes}`;
@@ -722,7 +730,7 @@ export const useStore = create(
                           paymentMethod === 'Kas Kecil' ? 'Kas Kecil' : 'Kas Bank';
 
     return {
-      products: state.products.map(p => p.id === productId ? { ...p, stock: p.stock + qty, hpp } : p),
+      products: state.products.map(p => p.id === productId ? { ...p, stock: newTotalStock, hpp: avgHpp } : p),
       journal: [...state.journal,
         { id: newId, date, description: desc, ref: 'BKK-RST', debit: totalCost, credit: 0, account: 'Persediaan Barang' },
         { id: newId, date, description: desc, ref: 'BKK-RST', debit: 0, credit: totalCost, account: kreditAccount },
