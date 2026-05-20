@@ -4,7 +4,7 @@ import { isSupabaseReady } from '../lib/supabase';
 import {
   fetchMembers, fetchProducts, fetchConsignments, fetchServices,
   fetchJournal, fetchCashLoans, fetchCreditGoods, fetchMemberSalesTx,
-  fetchAccounts,
+  fetchAccounts, insertAccountDB,
 } from '../services/supabaseService';
 
 /**
@@ -43,7 +43,21 @@ export const useSupabaseSync = () => {
 
         // Fetch accounts - jika ada di DB, gunakan; jika kosong, biarkan default dari store
         let accounts = [];
-        try { accounts = await fetchAccounts(); } catch (e) { console.warn('Accounts table not found, using defaults'); }
+        try { 
+          accounts = await fetchAccounts(); 
+          // Jika DB kosong, insert default accounts
+          if (accounts.length === 0) {
+            const defaultAccounts = useStore.getState().accounts || [];
+            if (defaultAccounts.length > 0) {
+              for (const acc of defaultAccounts) {
+                try { await insertAccountDB(acc); } catch(e) {}
+              }
+              accounts = defaultAccounts;
+            }
+          }
+        } catch (e) { 
+          console.warn('Accounts table not found, using defaults'); 
+        }
 
         if (accounts.length > 0) setAccounts(accounts);
         
