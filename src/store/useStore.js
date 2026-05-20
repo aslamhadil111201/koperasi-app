@@ -10,34 +10,38 @@ const genJournalId = () => {
 };
 
 // Helper: resolve nama akun dari master data berdasarkan kode akun (ID)
-// Ini memastikan nama akun di jurnal selalu sinkron dengan Daftar Akun
 const getAccountName = (state, accountId) => {
   const accounts = state.accounts || INITIAL_ACCOUNTS;
   const acc = accounts.find(a => a.id === accountId);
   if (acc) return acc.name;
   // Fallback: cari dari INITIAL_ACCOUNTS
   const initAcc = INITIAL_ACCOUNTS.find(a => a.id === accountId);
-  return initAcc ? initAcc.name : accountId;
+  if (initAcc) return initAcc.name;
+  // Last fallback: return ID as-is (will show code if not found)
+  return accountId;
 };
 
 // Mapping kode akun default (digunakan di seluruh transaksi)
 const ACC = {
   KAS_BANK: '101',
   KAS_KECIL: '102',
-  PIUTANG_ANGGOTA: '103',
-  PIUTANG_DAGANG: '104',
-  PIUTANG_BARANG: '105',
-  PERSEDIAAN: '106',
-  HUTANG_KONSINYASI: '201',
-  HUTANG_DAGANG: '202',
+  PERSEDIAAN: '103',
+  PERSEDIAAN_KONSINYASI: '104',
+  PIUTANG_DAGANG: '105',
+  PIUTANG_JASA: '106',
+  PIUTANG_KONSINYASI: '107',
+  PIUTANG_ANGGOTA: '103', // fallback, akan di-resolve by name
+  PIUTANG_BARANG: '105',  // fallback ke piutang dagang
+  HUTANG_DAGANG: '201',
+  HUTANG_KONSINYASI: '2101',
   MODAL_POKOK: '301',
   MODAL_WAJIB: '302',
   MODAL_SUKARELA: '303',
-  PENDAPATAN_RITEL: '401',
+  PENDAPATAN_RITEL: '4101',
   PENDAPATAN_JASA: '402',
   PENDAPATAN_KOMISI: '403',
-  PENDAPATAN_BUNGA: '404',
-  HPP: '501',
+  PENDAPATAN_BUNGA: '4201',
+  HPP: '5105',
 };
 
 // â”€â”€â”€ Master Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -79,41 +83,45 @@ const INITIAL_SERVICES = [
 
 const INITIAL_ACCOUNTS = [
   // Aset Lancar
-  { id: '101', name: 'Kas Bank', category: 'Aset Lancar', type: 'debit', isDefault: true },
-  { id: '102', name: 'Kas Kecil', category: 'Aset Lancar', type: 'debit', isDefault: true },
-  { id: '103', name: 'Piutang Anggota', category: 'Aset Lancar', type: 'debit', isDefault: true },
-  { id: '104', name: 'Piutang Dagang', category: 'Aset Lancar', type: 'debit', isDefault: true },
-  { id: '105', name: 'Piutang Barang', category: 'Aset Lancar', type: 'debit', isDefault: true },
-  { id: '106', name: 'Persediaan Barang', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '101', name: 'KAS BANK BRI', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '102', name: 'KAS KECIL', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '103', name: 'PERSEDIAAN BARANG DAGANG', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '104', name: 'PERSEDIAAN BARANG KONSINYASI', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '105', name: 'PIUTANG DAGANG', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '106', name: 'PIUTANG JASA', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '107', name: 'PIUTANG KONSINYASI', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '108', name: 'PERLENGKAPAN', category: 'Aset Lancar', type: 'debit', isDefault: true },
+  { id: '109', name: 'PERALATAN', category: 'Aset Lancar', type: 'debit', isDefault: true },
   // Aset Tetap
+  { id: '1201', name: 'TANAH', category: 'Aset Tetap', type: 'debit', isDefault: true },
+  { id: '1202', name: 'BANGUNAN', category: 'Aset Tetap', type: 'debit', isDefault: true },
   // Kewajiban Jangka Pendek
-  { id: '201', name: 'Hutang Konsinyasi', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
-  { id: '202', name: 'Hutang Dagang', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
-  { id: '203', name: 'Hutang Simpanan Anggota', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
+  { id: '201', name: 'UTANG DAGANG', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
+  { id: '203', name: 'UTANG BANK', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
+  { id: '2101', name: 'UTANG KONSINYASI', category: 'Kewajiban Jangka Pendek', type: 'credit', isDefault: true },
   // Ekuitas
-  { id: '301', name: 'Modal Koperasi (Simpanan Pokok)', category: 'Ekuitas', type: 'credit', isDefault: true },
-  { id: '302', name: 'Modal Koperasi (Simpanan Wajib)', category: 'Ekuitas', type: 'credit', isDefault: true },
-  { id: '303', name: 'Modal Koperasi (Simpanan Sukarela)', category: 'Ekuitas', type: 'credit', isDefault: true },
-  { id: '304', name: 'Laba SHU di tahan', category: 'Ekuitas', type: 'credit', isDefault: true },
-  { id: '305', name: 'Laba SHU Berjalan', category: 'Ekuitas', type: 'credit', isDefault: true },
+  { id: '301', name: 'MODAL KOPERASI (SIMPANAN POKOK)', category: 'Ekuitas', type: 'credit', isDefault: true },
+  { id: '302', name: 'MODAL KOPERASI (SIMPANAN WAJIB)', category: 'Ekuitas', type: 'credit', isDefault: true },
+  { id: '303', name: 'MODAL KOPERASI (SIMPANAN SUKARELA)', category: 'Ekuitas', type: 'credit', isDefault: true },
+  { id: '304', name: 'LABA SHU DITAHAN', category: 'Ekuitas', type: 'credit', isDefault: true },
+  { id: '305', name: 'LABA SHU TAHUN BERJALAN', category: 'Ekuitas', type: 'credit', isDefault: true },
   { id: '399', name: 'Saldo Penyeimbang', category: 'Ekuitas', type: 'credit', isDefault: true },
   // Pendapatan
-  { id: '401', name: 'Pendapatan Penjualan Ritel', category: 'Pendapatan', type: 'credit', isDefault: true },
-  { id: '402', name: 'Pendapatan Jasa', category: 'Pendapatan', type: 'credit', isDefault: true },
-  { id: '403', name: 'Pendapatan Komisi', category: 'Pendapatan', type: 'credit', isDefault: true },
-  { id: '404', name: 'Pendapatan Bunga Pinjaman', category: 'Pendapatan', type: 'credit', isDefault: true },
-  { id: '405', name: 'Pendapatan Lainnya', category: 'Pendapatan Lain-lain', type: 'credit', isDefault: true },
+  { id: '402', name: 'PENDAPATAN JASA', category: 'Pendapatan', type: 'credit', isDefault: true },
+  { id: '403', name: 'PENDAPATAN KONSINYASI', category: 'Pendapatan', type: 'credit', isDefault: true },
+  { id: '4101', name: 'PENDAPATAN PENJUALAN BARANG DAGANG', category: 'Pendapatan', type: 'credit', isDefault: true },
+  // Pendapatan Lain-lain
+  { id: '4201', name: 'PENDAPATAN BUNGA BANK', category: 'Pendapatan Lain-lain', type: 'credit', isDefault: true },
   // HPP
-  { id: '501', name: 'Harga Pokok Penjualan', category: 'Harga Pokok Penjualan', type: 'debit', isDefault: true },
+  { id: '5105', name: 'HARGA POKOK PENJUALAN', category: 'Harga Pokok Penjualan', type: 'debit', isDefault: true },
   // Beban Operasional
-  { id: '601', name: 'Beban Gaji Karyawan', category: 'Beban Operasional', type: 'debit', isDefault: true },
-  { id: '602', name: 'Beban Listrik & Air', category: 'Beban Operasional', type: 'debit', isDefault: true },
-  { id: '603', name: 'Beban Sewa Gedung', category: 'Beban Operasional', type: 'debit', isDefault: true },
-  { id: '604', name: 'Beban Perlengkapan & ATK', category: 'Beban Operasional', type: 'debit', isDefault: true },
-  { id: '605', name: 'Beban Transportasi', category: 'Beban Operasional', type: 'debit', isDefault: true },
-  { id: '606', name: 'Beban Penyusutan', category: 'Beban Operasional', type: 'debit', isDefault: true },
-  { id: '607', name: 'Beban Pemasaran', category: 'Beban Operasional', type: 'debit', isDefault: true },
-  { id: '608', name: 'Beban Lainnya', category: 'Beban Lain-lain', type: 'debit', isDefault: true },
+  { id: '6101', name: 'BIAYA OPERASIONAL', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '6102', name: 'BIAYA ADMINISTRASI', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  { id: '6103', name: 'BIAYA TRANSPORTASI', category: 'Beban Operasional', type: 'debit', isDefault: true },
+  // Beban Lain-lain
+  { id: '6201', name: 'BIAYA ADMIN BANK', category: 'Beban Lain-lain', type: 'debit', isDefault: true },
+  { id: '6202', name: 'BIAYA BULANAN REKENING', category: 'Beban Lain-lain', type: 'debit', isDefault: true },
+  { id: '603', name: 'BIAYA PAJAK REKENING', category: 'Beban Lain-lain', type: 'debit', isDefault: true },
 ];
 
 // ─── Jurnal Saldo Awal Persediaan ────────────────────────────────────────────
@@ -399,7 +407,7 @@ export const useStore = create(
         ref: 'CLS',
         debit: totalLaba < 0 ? Math.abs(totalLaba) : 0,
         credit: totalLaba > 0 ? totalLaba : 0,
-        account: 'Laba SHU Berjalan',
+        account: getAccountName(state, '305'),
         isClosingEntry: true
       });
     }
