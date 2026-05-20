@@ -13,6 +13,7 @@ const ReceiveNew = () => {
   const restockProduct      = useStore((s) => s.restockProduct);
   const restockConsignment  = useStore((s) => s.restockConsignment);
   const restockService      = useStore((s) => s.restockService);
+  const addTransaction      = useStore((s) => s.addTransaction);
 
   const [activeTab, setActiveTab] = useState('retail');
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +61,16 @@ const ReceiveNew = () => {
       restockConsignment(modalItem.id, qty);
     } else if (activeTab === 'services') {
       restockService(modalItem.id, hpp);
+    } else if (activeTab === 'services-buy') {
+      // Terima Kuota: catat pembelian jasa/kuota dengan jurnal
+      const totalCost = qty * hpp;
+      const newId = `JU-${String(journal.length / 2 + 1).padStart(4, '0')}`;
+      const desc = `Pembelian ${modalItem.name}${form.supplier ? ` (Supplier: ${form.supplier})` : ''}`;
+      addTransaction([
+        { id: newId, date: form.date, description: desc, ref: 'BKK', debit: totalCost, credit: 0, account: 'Persediaan Barang' },
+        { id: newId, date: form.date, description: desc, ref: 'BKK', debit: 0, credit: totalCost, account: form.paymentMethod },
+      ]);
+      setActiveTab('services');
     }
 
     setShowModal(false);
@@ -321,6 +332,13 @@ const ReceiveNew = () => {
                       >
                         <RefreshCw size={13} /> Update HPP
                       </button>
+                      <button
+                        className="table-action-btn"
+                        style={{ color: 'var(--color-success)', borderColor: 'rgba(16,185,129,0.3)', marginLeft: '0.5rem' }}
+                        onClick={() => { setActiveTab('services-buy'); openModal(item); }}
+                      >
+                        <PackagePlus size={13} /> Terima Kuota
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -381,7 +399,7 @@ const ReceiveNew = () => {
             <div className="modal-header">
               <h3>
                 <PackagePlus size={18} />
-                {activeTab === 'services' ? 'Update HPP Layanan' : 'Pembelian / Terima Barang'}
+                {activeTab === 'services' ? 'Update HPP Layanan' : activeTab === 'services-buy' ? 'Terima Kuota / Beli Jasa' : 'Pembelian / Terima Barang'}
               </h3>
               <button className="modal-close-btn" onClick={() => setShowModal(false)}>
                 <X size={16} />
@@ -400,7 +418,7 @@ const ReceiveNew = () => {
                   <input type="date" className="form-control" value={form.date} onChange={(e) => setForm(f => ({ ...f, date: e.target.value }))} required />
                 </div>
 
-                {activeTab !== 'services' && (
+                {activeTab !== 'services' && activeTab !== 'services-buy' && (
                   <>
                     <div className="form-group">
                       <label className="form-label">Stok Saat Ini</label>
@@ -419,10 +437,22 @@ const ReceiveNew = () => {
                   </>
                 )}
 
+                {activeTab === 'services-buy' && (
+                  <div className="form-group">
+                    <label className="form-label">Jumlah Unit / Kuota</label>
+                    <input
+                      type="number" className="form-control" min={1}
+                      value={form.qty}
+                      onChange={(e) => setForm(f => ({ ...f, qty: e.target.value }))}
+                      required
+                    />
+                  </div>
+                )}
+
                 {activeTab !== 'consignment' && (
                   <div className="form-group">
                     <label className="form-label">
-                      {activeTab === 'services' ? 'HPP / Modal Layanan Baru (Rp)' : 'HPP / Harga Beli Baru (Rp)'}
+                      {activeTab === 'services' ? 'HPP / Modal Layanan Baru (Rp)' : activeTab === 'services-buy' ? 'Harga Beli per Unit (Rp)' : 'HPP / Harga Beli Baru (Rp)'}
                     </label>
                     <input
                       type="number" className="form-control" min={0}
@@ -433,7 +463,7 @@ const ReceiveNew = () => {
                   </div>
                 )}
 
-                {activeTab === 'retail' && (
+                {(activeTab === 'retail' || activeTab === 'services-buy') && (
                   <>
                     <div className="form-group">
                       <label className="form-label">Nama Supplier</label>
@@ -479,12 +509,12 @@ const ReceiveNew = () => {
                   />
                 </div>
 
-                {activeTab === 'retail' && (
+                {(activeTab === 'retail' || activeTab === 'services-buy') && (
                   <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-                    Total biaya restock: <strong style={{ color: 'var(--color-success)' }}>
+                    Total biaya: <strong style={{ color: 'var(--color-success)' }}>
                       {fmt(Number(form.qty) * Number(form.hpp))}
                     </strong>
-                    <br />Akan dicatat sebagai jurnal Persediaan Barang &amp; {form.paymentMethod}.
+                    <br />Akan dicatat sebagai jurnal {activeTab === 'services-buy' ? 'Persediaan Barang' : 'Persediaan Barang'} &amp; {form.paymentMethod}.
                   </div>
                 )}
               </div>
