@@ -13,15 +13,28 @@ const BukuBesar = () => {
 
   const accounts = useStore((s) => s.accounts) || [];
 
+  // Normalize: pastikan nama akun di jurnal match dengan Daftar Akun (case-insensitive)
+  const normalizedJournal = useMemo(() => {
+    if (!journal || !accounts || accounts.length === 0) return journal;
+    return journal.map(j => {
+      if (!j.account) return j;
+      const matched = accounts.find(a => a.name.toLowerCase() === j.account.toLowerCase());
+      if (matched && matched.name !== j.account) {
+        return { ...j, account: matched.name };
+      }
+      return j;
+    });
+  }, [journal, accounts]);
+
   // Semua akun unik dari jurnal dan master data
   const allAccounts = useMemo(() => {
-    if (!journal || !accounts) return [];
+    if (!normalizedJournal || !accounts) return [];
     const list = new Set([
       ...accounts.map(a => a.name),
-      ...journal.map(j => j.account)
+      ...normalizedJournal.map(j => j.account)
     ]);
     return [...list].sort();
-  }, [journal, accounts]);
+  }, [normalizedJournal, accounts]);
 
   const [selectedAccount, setSelectedAccount] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -31,9 +44,9 @@ const BukuBesar = () => {
   const [expandedAccounts, setExpandedAccounts] = useState({});
 
   const monthOptions = useMemo(() => {
-    const months = [...new Set(journal.map(j => j.date?.slice(0, 7)))].filter(Boolean).sort().reverse();
+    const months = [...new Set(normalizedJournal.map(j => j.date?.slice(0, 7)))].filter(Boolean).sort().reverse();
     return months;
-  }, [journal]);
+  }, [normalizedJournal]);
 
   const fmtMonth = (ym) => {
     if (!ym) return 'Semua Periode';
@@ -43,12 +56,12 @@ const BukuBesar = () => {
 
   // Filter jurnal
   const filtered = useMemo(() => {
-    return journal.filter(j => {
+    return normalizedJournal.filter(j => {
       const matchAccount = !selectedAccount || j.account === selectedAccount;
       const matchMonth   = !selectedMonth   || j.date?.startsWith(selectedMonth);
       return matchAccount && matchMonth;
     });
-  }, [journal, selectedAccount, selectedMonth]);
+  }, [normalizedJournal, selectedAccount, selectedMonth]);
 
   // Group by akun dengan perhitungan Saldo Awal
   const groupedByAccount = useMemo(() => {
@@ -56,7 +69,7 @@ const BukuBesar = () => {
 
     // 1. Jika ada filter bulan, hitung saldo awal (akumulasi transaksi sebelum bulan terpilih)
     if (selectedMonth) {
-      journal.forEach(entry => {
+      normalizedJournal.forEach(entry => {
         const matchAccount = !selectedAccount || entry.account === selectedAccount;
         if (matchAccount && entry.date < `${selectedMonth}-01`) {
           if (!map[entry.account]) map[entry.account] = { saldoAwal: 0, entries: [] };
@@ -72,7 +85,7 @@ const BukuBesar = () => {
     });
 
     return map;
-  }, [filtered, journal, selectedMonth, selectedAccount]);
+  }, [filtered, normalizedJournal, selectedMonth, selectedAccount]);
 
   // Hitung saldo berjalan per akun
   const getEntriesWithBalance = (akunData) => {
