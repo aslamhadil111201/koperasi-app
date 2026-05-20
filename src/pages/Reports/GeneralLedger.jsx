@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Filter, Download, Calendar, Search, X, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Reports.css';
@@ -10,6 +10,7 @@ const GeneralLedger = () => {
   const deleteTransaction = useStore((state) => state.deleteTransaction);
   const addTransaction = useStore((state) => state.addTransaction);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // ── Filter State ──────────────────────────────────────────────────────────
   const [searchTerm,   setSearchTerm]   = useState(location.state?.searchStr || '');
@@ -283,7 +284,7 @@ const GeneralLedger = () => {
 
   return (
     <div className="reports-container">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h2>Jurnal Umum</h2>
           <p className="text-muted">Catatan historis seluruh transaksi keuangan koperasi.</p>
@@ -296,6 +297,14 @@ const GeneralLedger = () => {
             <Download size={16} /> Cetak PDF
           </button>
         </div>
+      </div>
+
+      {/* Quick Links ke Laporan */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+        <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }} onClick={() => navigate('/reports/buku-besar')}>📖 Buku Besar</button>
+        <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }} onClick={() => navigate('/reports/arus-kas')}>💰 Arus Kas</button>
+        <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }} onClick={() => navigate('/reports/profit-loss')}>📊 Laba / Rugi</button>
+        <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }} onClick={() => navigate('/reports/neraca')}>⚖️ Neraca</button>
       </div>
 
       {/* ── Filter Bar ── */}
