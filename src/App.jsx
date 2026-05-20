@@ -28,6 +28,7 @@ import BukuBesar from './pages/Reports/BukuBesar';
 import ArusKas from './pages/Reports/ArusKas';
 import PettyCash from './pages/Reports/PettyCash';
 import Closing from './pages/Reports/Closing';
+import ResetData from './pages/Reports/ResetData';
 
 const AppLayout = ({ children }) => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
@@ -132,6 +133,7 @@ function App() {
         <Route path="/reports/buku-besar" element={<ProtectedRoute requiredRole="admin"><AppLayout><BukuBesar /></AppLayout></ProtectedRoute>} />
         <Route path="/reports/arus-kas" element={<ProtectedRoute requiredRole="admin"><AppLayout><ArusKas /></AppLayout></ProtectedRoute>} />
         <Route path="/reports/closing" element={<ProtectedRoute requiredRole="admin"><AppLayout><Closing /></AppLayout></ProtectedRoute>} />
+        <Route path="/reports/reset-data" element={<ProtectedRoute requiredRole="admin"><AppLayout><ResetData /></AppLayout></ProtectedRoute>} />
         
         {/* Master Data Routes (Admin Only) */}
         <Route path="/master/members" element={<ProtectedRoute requiredRole="admin"><AppLayout><Members /></AppLayout></ProtectedRoute>} />

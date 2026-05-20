@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Wrench,
   PiggyBank, Banknote, CreditCard, BookOpen, TrendingUp,
   LogOut, Users, Database, PieChart, Scale, PackagePlus,
-  BookMarked, Waves, ChevronLeft, ChevronRight, X, ListChecks, Wallet, Lock
+  BookMarked, Waves, ChevronLeft, ChevronRight, X, ListChecks, Wallet, Lock, Trash2
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Sidebar.css';
@@ -52,7 +52,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
       { title: 'Laba / Rugi',     path: '/reports/profit-loss',  icon: <TrendingUp size={20} /> },
       { title: 'Neraca',          path: '/reports/neraca',       icon: <Scale size={20} /> },
       { title: 'Perhitungan SHU', path: '/reports/shu',          icon: <PieChart size={20} /> },
-      { title: 'Tutup Buku',      path: '/reports/closing',      icon: <Lock size={20} /> }
+      { title: 'Tutup Buku',      path: '/reports/closing',      icon: <Lock size={20} /> },
+      { title: 'Reset Data',      path: '/reports/reset-data',   icon: <Trash2 size={20} /> }
     );
   }
 
