@@ -244,7 +244,7 @@ export default function PettyCash() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nominal Pengeluaran (Rp)</label>
-                  <input type="number" className="form-control" value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} required min="1" max={pettyCashBalance} autoFocus />
+                  <input type="number" className="form-control" value={expenseAmount} onChange={e => setExpenseAmount(e.target.value)} required min="1" autoFocus />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Keterangan / Rincian Belanja</label>
