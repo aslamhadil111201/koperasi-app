@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
-import { Wallet, Plus, ArrowDownToLine, ReceiptText, X, History } from 'lucide-react';
+import { Wallet, Plus, ArrowDownToLine, ArrowUpFromLine, ReceiptText, X, History } from 'lucide-react';
 
 export default function PettyCash() {
-  const { journal, replenishPettyCash, addPettyCashExpense } = useStore();
+  const { journal, replenishPettyCash, addPettyCashExpense, addTransaction } = useStore();
   
   const [showReplenishModal, setShowReplenishModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showIncomeModal, setShowIncomeModal] = useState(false);
   
   // Replenish form
   const [replenishAmount, setReplenishAmount] = useState('');
@@ -18,6 +19,12 @@ export default function PettyCash() {
   const [expenseAccount, setExpenseAccount] = useState('Beban Operasional');
   const [expenseDesc, setExpenseDesc] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Income form
+  const [incomeAmount, setIncomeAmount] = useState('');
+  const [incomeAccount, setIncomeAccount] = useState('Pendapatan Lain-lain');
+  const [incomeDesc, setIncomeDesc] = useState('');
+  const [incomeDate, setIncomeDate] = useState(new Date().toISOString().split('T')[0]);
 
   // 1. Hitung Saldo Kas Kecil
   const pettyCashBalance = useMemo(() => {
@@ -83,7 +90,6 @@ export default function PettyCash() {
     e.preventDefault();
     const amountNum = Number(expenseAmount);
     if (amountNum <= 0) return alert('Nominal harus lebih dari 0');
-    if (amountNum > pettyCashBalance) return alert('Saldo Kas Kecil tidak mencukupi!');
     if (!expenseDesc.trim()) return alert('Keterangan tidak boleh kosong');
 
     addPettyCashExpense(expenseAccount, amountNum, expenseDesc, expenseDate);
@@ -92,6 +98,24 @@ export default function PettyCash() {
     setExpenseDesc('');
     setExpenseAccount('Beban Operasional');
     alert('Pengeluaran Kas Kecil Berhasil Dicatat!');
+  };
+
+  const handleIncome = (e) => {
+    e.preventDefault();
+    const amountNum = Number(incomeAmount);
+    if (amountNum <= 0) return alert('Nominal harus lebih dari 0');
+    if (!incomeDesc.trim()) return alert('Keterangan tidak boleh kosong');
+
+    const newId = `JU-${String(journal.length / 2 + 1).padStart(3, '0')}`;
+    addTransaction([
+      { id: newId, date: incomeDate, description: incomeDesc, ref: 'BKM', debit: amountNum, credit: 0, account: 'Kas Kecil' },
+      { id: newId, date: incomeDate, description: incomeDesc, ref: 'BKM', debit: 0, credit: amountNum, account: incomeAccount },
+    ]);
+    setShowIncomeModal(false);
+    setIncomeAmount('');
+    setIncomeDesc('');
+    setIncomeAccount('Pendapatan Lain-lain');
+    alert('Pemasukan Kas Kecil Berhasil Dicatat!');
   };
 
   return (
@@ -112,25 +136,35 @@ export default function PettyCash() {
           <div className="text-4xl font-black text-primary">Rp {pettyCashBalance.toLocaleString('id-ID')}</div>
         </div>
 
-        <div className="col-span-2 grid grid-cols-2 gap-4">
+        <div className="col-span-2 grid grid-cols-3 gap-4">
           <div 
             className="glass-panel cursor-pointer hover-card flex flex-col items-center justify-center text-center"
-            style={{ padding: '2rem', border: '2px dashed var(--color-success)', background: 'rgba(34,197,94,0.05)' }}
+            style={{ padding: '1.5rem', border: '2px dashed var(--color-success)', background: 'rgba(34,197,94,0.05)' }}
             onClick={() => setShowReplenishModal(true)}
           >
-            <ArrowDownToLine size={40} className="text-success mb-3" />
-            <h3 className="font-bold text-lg mb-1">Isi Saldo (Reimburse)</h3>
-            <p className="text-sm text-muted">Tarik dana dari Kas Utama ke Kas Kecil</p>
+            <ArrowDownToLine size={32} className="text-success mb-2" />
+            <h3 className="font-bold mb-1" style={{ fontSize: '0.9rem' }}>Isi Saldo (Reimburse)</h3>
+            <p className="text-xs text-muted">Tarik dana dari Kas Utama</p>
           </div>
 
           <div 
             className="glass-panel cursor-pointer hover-card flex flex-col items-center justify-center text-center"
-            style={{ padding: '2rem', border: '2px dashed var(--color-danger)', background: 'rgba(239,68,68,0.05)' }}
+            style={{ padding: '1.5rem', border: '2px dashed var(--color-primary)', background: 'rgba(255,77,0,0.05)' }}
+            onClick={() => setShowIncomeModal(true)}
+          >
+            <ArrowUpFromLine size={32} className="text-primary mb-2" />
+            <h3 className="font-bold mb-1" style={{ fontSize: '0.9rem' }}>Catat Pemasukan</h3>
+            <p className="text-xs text-muted">Pendapatan masuk ke Kas Kecil</p>
+          </div>
+
+          <div 
+            className="glass-panel cursor-pointer hover-card flex flex-col items-center justify-center text-center"
+            style={{ padding: '1.5rem', border: '2px dashed var(--color-danger)', background: 'rgba(239,68,68,0.05)' }}
             onClick={() => setShowExpenseModal(true)}
           >
-            <ReceiptText size={40} className="text-danger mb-3" />
-            <h3 className="font-bold text-lg mb-1">Catat Pengeluaran</h3>
-            <p className="text-sm text-muted">Beli ATK, Konsumsi, Transportasi, dll</p>
+            <ReceiptText size={32} className="text-danger mb-2" />
+            <h3 className="font-bold mb-1" style={{ fontSize: '0.9rem' }}>Catat Pengeluaran</h3>
+            <p className="text-xs text-muted">Beli ATK, Konsumsi, dll</p>
           </div>
         </div>
       </div>
@@ -260,6 +294,51 @@ export default function PettyCash() {
               <div className="modal-footer flex gap-2 justify-end">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowExpenseModal(false)}>Batal</button>
                 <button type="submit" className="btn btn-danger">Catat Pengeluaran</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Catat Pemasukan */}
+      {showIncomeModal && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3>Catat Pemasukan Kas Kecil</h3>
+              <button className="modal-close-btn" onClick={() => setShowIncomeModal(false)}><X size={16} /></button>
+            </div>
+            <form onSubmit={handleIncome}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label className="form-label">Tanggal Transaksi</label>
+                  <input type="date" className="form-control" value={incomeDate} onChange={e => setIncomeDate(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Kategori Pemasukan</label>
+                  <select className="form-control" value={incomeAccount} onChange={e => setIncomeAccount(e.target.value)}>
+                    <optgroup label="Pendapatan">
+                      <option value="Pendapatan Lain-lain">Pendapatan Lain-lain</option>
+                      <option value="Pendapatan Bunga">Pendapatan Bunga</option>
+                      <option value="Pendapatan Jasa">Pendapatan Jasa</option>
+                    </optgroup>
+                    <optgroup label="Piutang">
+                      <option value="Piutang Dagang">Pelunasan Piutang Dagang</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Nominal Pemasukan (Rp)</label>
+                  <input type="number" className="form-control" value={incomeAmount} onChange={e => setIncomeAmount(e.target.value)} required min="1" autoFocus />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Keterangan</label>
+                  <input type="text" className="form-control" placeholder="Contoh: Terima pembayaran piutang" value={incomeDesc} onChange={e => setIncomeDesc(e.target.value)} required />
+                </div>
+              </div>
+              <div className="modal-footer flex gap-2 justify-end">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowIncomeModal(false)}>Batal</button>
+                <button type="submit" className="btn btn-primary">Catat Pemasukan</button>
               </div>
             </form>
           </div>
