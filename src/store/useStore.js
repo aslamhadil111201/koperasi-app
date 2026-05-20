@@ -2,6 +2,13 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { buildSchedule } from '../utils/installment';
 
+// Helper: generate unique journal ID (timestamp-based, no collision)
+let _idCounter = 0;
+const genJournalId = () => {
+  _idCounter++;
+  return `JU-${Date.now().toString(36).toUpperCase()}${_idCounter.toString(36)}`;
+};
+
 // â”€â”€â”€ Master Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const INITIAL_MEMBERS = [];
 
@@ -230,7 +237,7 @@ export const useStore = create(
 
   // Manual entry: Beban (expense) â€” Debet Beban X, Kredit Kas
   addExpense: (akunBeban, description, amount, txDate) => set((state) => {
-    const newId = `JU-${String(state.journal.length + 1).padStart(4, '0')}`;
+    const newId = genJournalId();
     const date  = txDate || new Date().toISOString().split('T')[0];
     return {
       journal: [
@@ -243,7 +250,7 @@ export const useStore = create(
 
   // Manual entry: Pendapatan lain â€” Debet Kas, Kredit Pendapatan X
   addIncome: (akunPendapatan, description, amount, txDate) => set((state) => {
-    const newId = `JU-${String(state.journal.length + 1).padStart(4, '0')}`;
+    const newId = genJournalId();
     const date  = txDate || new Date().toISOString().split('T')[0];
     return {
       journal: [
@@ -256,7 +263,7 @@ export const useStore = create(
 
   // Kas Kecil: Pengisian Saldo
   replenishPettyCash: (amount, description = 'Pengisian Kas Kecil', txDate) => set((state) => {
-    const newId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newId = genJournalId();
     const date  = txDate || new Date().toISOString().split('T')[0];
     return {
       journal: [
@@ -269,7 +276,7 @@ export const useStore = create(
 
   // Kas Kecil: Pencatatan Pengeluaran
   addPettyCashExpense: (akunBeban, amount, description, txDate) => set((state) => {
-    const newId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newId = genJournalId();
     const date  = txDate || new Date().toISOString().split('T')[0];
     return {
       journal: [
@@ -387,24 +394,24 @@ export const useStore = create(
     const pokok = Number(member.pokok || 0);
     const wajib = Number(member.wajib || 0);
     const sukarela = Number(member.sukarela || 0);
-    let journalIdx = Math.floor(state.journal.length / 2) + 1;
+    let journalIdx = 0; // unused, using genJournalId()
 
     if (pokok > 0) {
-      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      const jId = genJournalId();
       journalEntries.push(
         { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: pokok, credit: 0, account: 'Kas Bank' },
         { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: pokok, account: 'Simpanan Anggota' }
       );
     }
     if (wajib > 0) {
-      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      const jId = genJournalId();
       journalEntries.push(
         { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: wajib, credit: 0, account: 'Kas Bank' },
         { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: wajib, account: 'Simpanan Anggota' }
       );
     }
     if (sukarela > 0) {
-      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      const jId = genJournalId();
       journalEntries.push(
         { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: sukarela, credit: 0, account: 'Kas Bank' },
         { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: sukarela, account: 'Simpanan Anggota' }
@@ -447,7 +454,7 @@ export const useStore = create(
         : m
     );
 
-    const newJournalId = `JU-${String(Math.floor(state.journal.length / 2) + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     const today = new Date();
     const date = customDate || `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     const journalEntries = [
@@ -468,10 +475,9 @@ export const useStore = create(
     );
 
     const journalEntries = [];
-    const baseId = Math.floor(state.journal.length / 2) + 1;
     
     memberIds.forEach((mId, index) => {
-      const newJournalId = `JU-${String(baseId + index).padStart(3, '0')}`;
+      const newJournalId = genJournalId();
       journalEntries.push(
         { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: Number(wajibAmount), credit: 0, account: 'Kas Bank' },
         { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: 0, credit: Number(wajibAmount), account: 'Simpanan Anggota' }
@@ -550,7 +556,7 @@ export const useStore = create(
       return p;
     });
 
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
@@ -619,7 +625,7 @@ export const useStore = create(
       return p;
     });
 
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     const date = txDate || new Date().toISOString().split('T')[0];
 
     // Create item details string
@@ -645,7 +651,7 @@ export const useStore = create(
   }),
 
   checkoutService: (cart, totalAmount, biayaJasa = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
@@ -704,7 +710,7 @@ export const useStore = create(
 
   restockProduct: (productId, qty, hpp, supplier = '', paymentMethod = 'Kas Bank', notes = '', txDate) => set((state) => {
     const date = txDate || new Date().toISOString().split('T')[0];
-    const newId = `JU-${String(Math.floor(state.journal.length / 2) + 1).padStart(4, '0')}`;
+    const newId = genJournalId();
     const product = state.products.find(p => p.id === productId);
     const totalCost = qty * hpp;
     
@@ -751,7 +757,7 @@ export const useStore = create(
 
     const newLoans = state.cashLoans.map(l => l.id === loanId ? { ...l, status: 'Active', installments: schedule } : l);
     
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     const journalEntries = [
       { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: loan.amount, credit: 0, account: 'Piutang Anggota' },
       { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: loan.amount, account: 'Kas Bank' }
@@ -783,7 +789,7 @@ export const useStore = create(
 
     const newLoans = state.cashLoans.map(l => l.id === loanId ? { ...l, remainingAmount: newRemaining, status: newStatus, installments: newInstallments } : l);
 
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     
     // Simplification: Not calculating interest separation, just pure deduction for simulation
     const journalEntries = [
@@ -815,7 +821,7 @@ export const useStore = create(
 
     const newCredits = state.creditGoods.map(c => c.id === creditId ? { ...c, status: 'Active', installments: schedule } : c);
     
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     
     const journalEntries = [
       { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: credit.amount, credit: 0, account: 'Piutang Barang' },
@@ -857,7 +863,7 @@ export const useStore = create(
 
     const newCredits = state.creditGoods.map(c => c.id === creditId ? { ...c, remainingAmount: newRemaining, status: newStatus, installments: newInstallments } : c);
 
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     
     const journalEntries = [
       { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: paymentAmount, credit: 0, account: 'Kas Bank' },
@@ -870,7 +876,7 @@ export const useStore = create(
   // Payroll Deduction (Potong Gaji per Member)
   processPayrollDeduction: (memberId, payments, txDate) => set((state) => {
     const date = txDate || new Date().toISOString().split('T')[0];
-    const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
+    const newJournalId = genJournalId();
     const journalEntries = [];
     const newCashLoans = [...state.cashLoans];
     const newCreditGoods = [...state.creditGoods];

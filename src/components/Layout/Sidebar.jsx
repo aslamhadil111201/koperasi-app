@@ -19,7 +19,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   // Tutup sidebar saat navigasi di mobile
   useEffect(() => {
     if (onClose) onClose();
-  }, [location.pathname]);
+  }, [location.pathname, onClose]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 

@@ -45,7 +45,7 @@ const Receipt = ({
 
     const markupHTML = markupAmount > 0 ? `
       <div class="row"><span>Subtotal</span><span>Rp ${(subtotal||0).toLocaleString('id-ID')}</span></div>
-      <div class="row"><span>Markup Kredit (10%)</span><span>Rp ${markupAmount.toLocaleString('id-ID')}</span></div>
+      <div class="row"><span>Markup Kredit</span><span>Rp ${markupAmount.toLocaleString('id-ID')}</span></div>
       <hr>` : '';
 
     const scheduleHTML = paymentMethod === 'Kredit' && schedule.length > 0 ? `
@@ -155,7 +155,7 @@ const Receipt = ({
 
     let markupHTML = '';
     if (markupAmount > 0) {
-      markupHTML = "<tr><td colspan='4' style='text-align:right'>Subtotal</td><td style='text-align:right'>Rp " + subtotal.toLocaleString('id-ID') + "</td></tr><tr><td colspan='4' style='text-align:right'>Markup Kredit (10%)</td><td style='text-align:right'>Rp " + markupAmount.toLocaleString('id-ID') + "</td></tr>";
+      markupHTML = "<tr><td colspan='4' style='text-align:right'>Subtotal</td><td style='text-align:right'>Rp " + subtotal.toLocaleString('id-ID') + "</td></tr><tr><td colspan='4' style='text-align:right'>Markup Kredit</td><td style='text-align:right'>Rp " + markupAmount.toLocaleString('id-ID') + "</td></tr>";
     }
 
     const payMethodStr = paymentMethod === 'Kredit' ? 'Kredit / Cicilan' : 'Cash / Lunas';
@@ -301,7 +301,7 @@ const Receipt = ({
               <span>Subtotal</span><span>Rp ${(subtotal||0).toLocaleString('id-ID')}</span>
             </div>
             <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, marginBottom:2 }}>
-              <span>Markup Kredit (10%)</span><span>Rp {markupAmount.toLocaleString('id-ID')}</span>
+              <span>Markup Kredit</span><span>Rp {markupAmount.toLocaleString('id-ID')}</span>
             </div>
             <hr style={{ border:'none', borderTop:'1px dashed #999', margin:'6px 0' }} />
           </>
