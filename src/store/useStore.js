@@ -9,6 +9,33 @@ const genJournalId = () => {
   return `JU-${Date.now().toString(36).toUpperCase()}${_idCounter.toString(36)}`;
 };
 
+// Helper: resolve nama akun dari master data berdasarkan kode akun (ID)
+// Ini memastikan nama akun di jurnal selalu sinkron dengan Daftar Akun
+const getAccountName = (state, accountId) => {
+  const acc = state.accounts.find(a => a.id === accountId);
+  return acc ? acc.name : accountId;
+};
+
+// Mapping kode akun default (digunakan di seluruh transaksi)
+const ACC = {
+  KAS_BANK: '101',
+  KAS_KECIL: '102',
+  PIUTANG_ANGGOTA: '103',
+  PIUTANG_DAGANG: '104',
+  PIUTANG_BARANG: '105',
+  PERSEDIAAN: '106',
+  HUTANG_KONSINYASI: '201',
+  HUTANG_DAGANG: '202',
+  MODAL_POKOK: '301',
+  MODAL_WAJIB: '302',
+  MODAL_SUKARELA: '303',
+  PENDAPATAN_RITEL: '401',
+  PENDAPATAN_JASA: '402',
+  PENDAPATAN_KOMISI: '403',
+  PENDAPATAN_BUNGA: '404',
+  HPP: '501',
+};
+
 // â”€â”€â”€ Master Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const INITIAL_MEMBERS = [];
 
@@ -97,7 +124,7 @@ const INITIAL_JOURNAL = NILAI_PERSEDIAAN_AWAL > 0 ? [
     ref: 'INIT',
     debit: NILAI_PERSEDIAAN_AWAL,
     credit: 0,
-    account: 'Persediaan Barang',
+    account: getAccountName(state, ACC.PERSEDIAAN),
   },
   {
     id: 'JU-INIT',
@@ -106,7 +133,7 @@ const INITIAL_JOURNAL = NILAI_PERSEDIAAN_AWAL > 0 ? [
     ref: 'INIT',
     debit: 0,
     credit: NILAI_PERSEDIAAN_AWAL,
-    account: 'Modal Koperasi (Simpanan Pokok)',
+    account: getAccountName(state, ACC.MODAL_POKOK),
   },
 ] : [];
 
@@ -246,7 +273,7 @@ export const useStore = create(
       journal: [
         ...state.journal,
         { id: newId, date, description, ref: 'BKK', debit: amount,  credit: 0,      account: akunBeban },
-        { id: newId, date, description, ref: 'BKK', debit: 0,       credit: amount, account: 'Kas Bank'     },
+        { id: newId, date, description, ref: 'BKK', debit: 0,       credit: amount, account: getAccountName(state, ACC.KAS_BANK)     },
       ]
     };
   }),
@@ -258,7 +285,7 @@ export const useStore = create(
     return {
       journal: [
         ...state.journal,
-        { id: newId, date, description, ref: 'BKM', debit: amount, credit: 0,      account: 'Kas Bank'            },
+        { id: newId, date, description, ref: 'BKM', debit: amount, credit: 0,      account: getAccountName(state, ACC.KAS_BANK)            },
         { id: newId, date, description, ref: 'BKM', debit: 0,      credit: amount, account: akunPendapatan    },
       ]
     };
@@ -271,8 +298,8 @@ export const useStore = create(
     return {
       journal: [
         ...state.journal,
-        { id: newId, date, description, ref: 'BKK', debit: amount, credit: 0, account: 'Kas Kecil' },
-        { id: newId, date, description, ref: 'BKK', debit: 0, credit: amount, account: 'Kas Bank' },
+        { id: newId, date, description, ref: 'BKK', debit: amount, credit: 0, account: getAccountName(state, ACC.KAS_KECIL) },
+        { id: newId, date, description, ref: 'BKK', debit: 0, credit: amount, account: getAccountName(state, ACC.KAS_BANK) },
       ]
     };
   }),
@@ -285,7 +312,7 @@ export const useStore = create(
       journal: [
         ...state.journal,
         { id: newId, date, description, ref: 'BKK', debit: amount, credit: 0, account: akunBeban },
-        { id: newId, date, description, ref: 'BKK', debit: 0, credit: amount, account: 'Kas Kecil' },
+        { id: newId, date, description, ref: 'BKK', debit: 0, credit: amount, account: getAccountName(state, ACC.KAS_KECIL) },
       ]
     };
   }),
@@ -402,22 +429,22 @@ export const useStore = create(
     if (pokok > 0) {
       const jId = genJournalId();
       journalEntries.push(
-        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: pokok, credit: 0, account: 'Kas Bank' },
-        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: pokok, account: 'Modal Koperasi (Simpanan Pokok)' }
+        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: pokok, credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: pokok, account: getAccountName(state, ACC.MODAL_POKOK) }
       );
     }
     if (wajib > 0) {
       const jId = genJournalId();
       journalEntries.push(
-        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: wajib, credit: 0, account: 'Kas Bank' },
-        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: wajib, account: 'Modal Koperasi (Simpanan Wajib)' }
+        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: wajib, credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: wajib, account: getAccountName(state, ACC.MODAL_WAJIB) }
       );
     }
     if (sukarela > 0) {
       const jId = genJournalId();
       journalEntries.push(
-        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: sukarela, credit: 0, account: 'Kas Bank' },
-        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: sukarela, account: 'Modal Koperasi (Simpanan Sukarela)' }
+        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: sukarela, credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: sukarela, account: getAccountName(state, ACC.MODAL_SUKARELA) }
       );
     }
 
@@ -464,22 +491,22 @@ export const useStore = create(
     if (Number(pokok) > 0) {
       const jId = genJournalId();
       journalEntries.push(
-        { id: jId, date, description: 'Setoran Simpanan Pokok', ref: memberId, debit: Number(pokok), credit: 0, account: 'Kas Bank' },
-        { id: jId, date, description: 'Setoran Simpanan Pokok', ref: memberId, debit: 0, credit: Number(pokok), account: 'Modal Koperasi (Simpanan Pokok)' }
+        { id: jId, date, description: 'Setoran Simpanan Pokok', ref: memberId, debit: Number(pokok), credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: jId, date, description: 'Setoran Simpanan Pokok', ref: memberId, debit: 0, credit: Number(pokok), account: getAccountName(state, ACC.MODAL_POKOK) }
       );
     }
     if (Number(wajib) > 0) {
       const jId = genJournalId();
       journalEntries.push(
-        { id: jId, date, description: 'Setoran Simpanan Wajib', ref: memberId, debit: Number(wajib), credit: 0, account: 'Kas Bank' },
-        { id: jId, date, description: 'Setoran Simpanan Wajib', ref: memberId, debit: 0, credit: Number(wajib), account: 'Modal Koperasi (Simpanan Wajib)' }
+        { id: jId, date, description: 'Setoran Simpanan Wajib', ref: memberId, debit: Number(wajib), credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: jId, date, description: 'Setoran Simpanan Wajib', ref: memberId, debit: 0, credit: Number(wajib), account: getAccountName(state, ACC.MODAL_WAJIB) }
       );
     }
     if (Number(sukarela) > 0) {
       const jId = genJournalId();
       journalEntries.push(
-        { id: jId, date, description: 'Setoran Simpanan Sukarela', ref: memberId, debit: Number(sukarela), credit: 0, account: 'Kas Bank' },
-        { id: jId, date, description: 'Setoran Simpanan Sukarela', ref: memberId, debit: 0, credit: Number(sukarela), account: 'Modal Koperasi (Simpanan Sukarela)' }
+        { id: jId, date, description: 'Setoran Simpanan Sukarela', ref: memberId, debit: Number(sukarela), credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: jId, date, description: 'Setoran Simpanan Sukarela', ref: memberId, debit: 0, credit: Number(sukarela), account: getAccountName(state, ACC.MODAL_SUKARELA) }
       );
     }
 
@@ -500,8 +527,8 @@ export const useStore = create(
     memberIds.forEach((mId, index) => {
       const newJournalId = genJournalId();
       journalEntries.push(
-        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: Number(wajibAmount), credit: 0, account: 'Kas Bank' },
-        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: 0, credit: Number(wajibAmount), account: 'Modal Koperasi (Simpanan Wajib)' }
+        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: Number(wajibAmount), credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: newJournalId, date, description: 'Setoran Simpanan Wajib (Massal)', ref: mId, debit: 0, credit: Number(wajibAmount), account: getAccountName(state, ACC.MODAL_WAJIB) }
       );
     });
 
@@ -585,7 +612,7 @@ export const useStore = create(
     const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
 
     // Cash -> Kas, Kredit -> Piutang Dagang
-    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
+    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : getAccountName(state, ACC.KAS_BANK);
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Ritel [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Ritel [${itemDetails}]`;
@@ -596,13 +623,13 @@ export const useStore = create(
     const timestamp = new Date().toISOString();
     const journalEntries = [
       { id: newJournalId, date, timestamp, description: desc, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: grandTotal, credit: 0, account: akunDebit },
-      { id: newJournalId, date, timestamp, description: desc, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: 0, credit: totalAmount, account: 'Pendapatan Penjualan Ritel' },
+      { id: newJournalId, date, timestamp, description: desc, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: 0, credit: totalAmount, account: getAccountName(state, ACC.PENDAPATAN_RITEL) },
       ...(markupAmount > 0 ? [
-        { id: newJournalId, date, timestamp, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: 0, credit: markupAmount, account: 'Pendapatan Bunga Pinjaman' }
+        { id: newJournalId, date, timestamp, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? buyerId : 'BKM-RTL', debit: 0, credit: markupAmount, account: getAccountName(state, ACC.PENDAPATAN_BUNGA) }
       ] : []),
       ...(totalHPP > 0 ? [
-        { id: newJournalId, date, timestamp, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
-        { id: newJournalId, date, timestamp, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
+        { id: newJournalId, date, timestamp, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: getAccountName(state, ACC.HPP) },
+        { id: newJournalId, date, timestamp, description: 'HPP Penjualan Ritel', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: getAccountName(state, ACC.PERSEDIAAN) },
       ] : []),
     ];
 
@@ -652,15 +679,15 @@ export const useStore = create(
     // Create item details string
     const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
 
-    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
+    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : getAccountName(state, ACC.KAS_BANK);
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Titipan [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Titipan [${itemDetails}]`;
 
     const journalEntries = [
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: totalAmount, credit: 0, account: akunDebit },
-      { id: newJournalId, date, description: 'Komisi Konsinyasi', ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: 0, credit: totalCommission, account: 'Pendapatan Komisi' },
-      { id: newJournalId, date, description: 'Hutang Titipan', ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: 0, credit: totalSupplier, account: 'Hutang Konsinyasi' }
+      { id: newJournalId, date, description: 'Komisi Konsinyasi', ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: 0, credit: totalCommission, account: getAccountName(state, ACC.PENDAPATAN_KOMISI) },
+      { id: newJournalId, date, description: 'Hutang Titipan', ref: paymentMethod === 'Kredit' ? memberId : 'BKM-KNS', debit: 0, credit: totalSupplier, account: getAccountName(state, ACC.HUTANG_KONSINYASI) }
     ];
 
     const member = memberId ? state.members.find(m => m.id === memberId) : null;
@@ -677,7 +704,7 @@ export const useStore = create(
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
     const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
-    const akunDebit = paymentMethod === 'Kredit' ? 'Piutang Dagang' : 'Kas Bank';
+    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : getAccountName(state, ACC.KAS_BANK);
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Jasa/PPOB [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Jasa/PPOB [${itemDetails}]`;
@@ -686,13 +713,13 @@ export const useStore = create(
 
     const journalEntries = [
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: grandTotal, credit: 0, account: akunDebit },
-      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: totalAmount, account: 'Pendapatan Jasa' },
+      { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: totalAmount, account: getAccountName(state, ACC.PENDAPATAN_JASA) },
       ...(biayaJasa > 0 ? [
-        { id: newJournalId, date, description: `Biaya Jasa (${paymentMethod})`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: biayaJasa, account: 'Pendapatan Jasa' }
+        { id: newJournalId, date, description: `Biaya Jasa (${paymentMethod})`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: biayaJasa, account: getAccountName(state, ACC.PENDAPATAN_JASA) }
       ] : []),
       ...(totalHPP > 0 ? [
-        { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },
-        { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: 'Persediaan Barang' },
+        { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: getAccountName(state, ACC.HPP) },
+        { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: 0, credit: totalHPP, account: getAccountName(state, ACC.PERSEDIAAN) },
       ] : []),
     ];
 
@@ -747,13 +774,13 @@ export const useStore = create(
     if (supplier) desc += ` (Supplier: ${supplier})`;
     if (notes) desc += ` - ${notes}`;
 
-    const kreditAccount = paymentMethod === 'Hutang Dagang' ? 'Hutang Dagang' : 
-                          paymentMethod === 'Kas Kecil' ? 'Kas Kecil' : 'Kas Bank';
+    const kreditAccount = paymentMethod === 'Hutang Dagang' ? getAccountName(state, ACC.HUTANG_DAGANG) : 
+                          paymentMethod === 'Kas Kecil' ? getAccountName(state, ACC.KAS_KECIL) : getAccountName(state, ACC.KAS_BANK);
 
     return {
       products: state.products.map(p => p.id === productId ? { ...p, stock: newTotalStock, hpp: avgHpp } : p),
       journal: [...state.journal,
-        { id: newId, date, description: desc, ref: 'BKK-RST', debit: totalCost, credit: 0, account: 'Persediaan Barang' },
+        { id: newId, date, description: desc, ref: 'BKK-RST', debit: totalCost, credit: 0, account: getAccountName(state, ACC.PERSEDIAAN) },
         { id: newId, date, description: desc, ref: 'BKK-RST', debit: 0, credit: totalCost, account: kreditAccount },
       ]
     };
@@ -788,8 +815,8 @@ export const useStore = create(
     
     const newJournalId = genJournalId();
     const journalEntries = [
-      { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: loan.amount, credit: 0, account: 'Piutang Anggota' },
-      { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: loan.amount, account: 'Kas Bank' }
+      { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: loan.amount, credit: 0, account: getAccountName(state, ACC.PIUTANG_ANGGOTA) },
+      { id: newJournalId, date, description: `Pencairan Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: loan.amount, account: getAccountName(state, ACC.KAS_BANK) }
     ];
 
     return { cashLoans: newLoans, journal: [...state.journal, ...journalEntries] };
@@ -822,8 +849,8 @@ export const useStore = create(
     
     // Simplification: Not calculating interest separation, just pure deduction for simulation
     const journalEntries = [
-      { id: newJournalId, date, description: `Angsuran Pinjaman ${loan.name}`, ref: loan.id, debit: paymentAmount, credit: 0, account: 'Kas Bank' },
-      { id: newJournalId, date, description: `Angsuran Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: paymentAmount, account: 'Piutang Anggota' }
+      { id: newJournalId, date, description: `Angsuran Pinjaman ${loan.name}`, ref: loan.id, debit: paymentAmount, credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+      { id: newJournalId, date, description: `Angsuran Pinjaman ${loan.name}`, ref: loan.id, debit: 0, credit: paymentAmount, account: getAccountName(state, ACC.PIUTANG_ANGGOTA) }
     ];
 
     return { cashLoans: newLoans, journal: [...state.journal, ...journalEntries] };
@@ -853,17 +880,17 @@ export const useStore = create(
     const newJournalId = genJournalId();
     
     const journalEntries = [
-      { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: credit.amount, credit: 0, account: 'Piutang Barang' },
-      { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.amount, account: 'Persediaan Barang' },
+      { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: credit.amount, credit: 0, account: getAccountName(state, ACC.PIUTANG_BARANG) },
+      { id: newJournalId, date, description: `Kredit Barang ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.amount, account: getAccountName(state, ACC.PERSEDIAAN) },
       // DP Handling
       ...(credit.dp > 0 ? [
-        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: credit.dp, credit: 0, account: 'Kas Bank' },
-        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.dp, account: 'Piutang Barang' }
+        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: credit.dp, credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+        { id: newJournalId + 'DP', date, description: `DP Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: credit.dp, account: getAccountName(state, ACC.PIUTANG_BARANG) }
       ] : []),
       // Bunga Handling
       ...(totalBunga > 0 ? [
-        { id: newJournalId + 'B', date, description: `Bunga Kredit ${credit.itemName}`, ref: credit.id, debit: totalBunga, credit: 0, account: 'Piutang Barang' },
-        { id: newJournalId + 'B', date, description: `Bunga Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: totalBunga, account: 'Pendapatan Bunga Pinjaman' }
+        { id: newJournalId + 'B', date, description: `Bunga Kredit ${credit.itemName}`, ref: credit.id, debit: totalBunga, credit: 0, account: getAccountName(state, ACC.PIUTANG_BARANG) },
+        { id: newJournalId + 'B', date, description: `Bunga Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: totalBunga, account: getAccountName(state, ACC.PENDAPATAN_BUNGA) }
       ] : [])
     ];
 
@@ -895,8 +922,8 @@ export const useStore = create(
     const newJournalId = genJournalId();
     
     const journalEntries = [
-      { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: paymentAmount, credit: 0, account: 'Kas Bank' },
-      { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: paymentAmount, account: 'Piutang Barang' }
+      { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: paymentAmount, credit: 0, account: getAccountName(state, ACC.KAS_BANK) },
+      { id: newJournalId, date, description: `Angsuran Kredit ${credit.itemName}`, ref: credit.id, debit: 0, credit: paymentAmount, account: getAccountName(state, ACC.PIUTANG_BARANG) }
     ];
 
     return { creditGoods: newCredits, journal: [...state.journal, ...journalEntries] };
@@ -965,15 +992,15 @@ export const useStore = create(
     });
 
     if (totalCash > 0) {
-      journalEntries.push({ id: newJournalId, date, description: `Pelunasan Potong Gaji`, ref: memberId, debit: totalCash, credit: 0, account: 'Kas Bank' });
+      journalEntries.push({ id: newJournalId, date, description: `Pelunasan Potong Gaji`, ref: memberId, debit: totalCash, credit: 0, account: getAccountName(state, ACC.KAS_BANK) });
       if (totalDagang > 0) {
-        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kasbon Ritel/Jasa`, ref: memberId, debit: 0, credit: totalDagang, account: 'Piutang Dagang' });
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kasbon Ritel/Jasa`, ref: memberId, debit: 0, credit: totalDagang, account: getAccountName(state, ACC.PIUTANG_DAGANG) });
       }
       if (totalAnggota > 0) {
-        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Pinjaman Tunai`, ref: memberId, debit: 0, credit: totalAnggota, account: 'Piutang Anggota' });
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Pinjaman Tunai`, ref: memberId, debit: 0, credit: totalAnggota, account: getAccountName(state, ACC.PIUTANG_ANGGOTA) });
       }
       if (totalBarang > 0) {
-        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kredit Barang`, ref: memberId, debit: 0, credit: totalBarang, account: 'Piutang Barang' });
+        journalEntries.push({ id: newJournalId, date, description: `Pelunasan Kredit Barang`, ref: memberId, debit: 0, credit: totalBarang, account: getAccountName(state, ACC.PIUTANG_BARANG) });
       }
     }
 
@@ -989,7 +1016,7 @@ export const useStore = create(
     const newJournal = state.journal.map(j => {
       if (j.account === 'Kas') {
         changed = true;
-        return { ...j, account: 'Kas Bank' };
+        return { ...j, account: getAccountName(state, ACC.KAS_BANK) };
       }
       return j;
     });
@@ -1047,8 +1074,8 @@ export const useStore = create(
         const sudahAda = state.journal.some(j => j.id === 'JU-INIT');
         if (!sudahAda && NILAI_PERSEDIAAN_AWAL > 0) {
           state.journal = [
-            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Persediaan Barang', ref: 'INIT', debit: NILAI_PERSEDIAAN_AWAL, credit: 0, account: 'Persediaan Barang' },
-            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Modal Koperasi', ref: 'INIT', debit: 0, credit: NILAI_PERSEDIAAN_AWAL, account: 'Modal Koperasi (Simpanan Pokok)' },
+            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Persediaan Barang', ref: 'INIT', debit: NILAI_PERSEDIAAN_AWAL, credit: 0, account: getAccountName(state, ACC.PERSEDIAAN) },
+            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Modal Koperasi', ref: 'INIT', debit: 0, credit: NILAI_PERSEDIAAN_AWAL, account: getAccountName(state, ACC.MODAL_POKOK) },
             ...state.journal,
           ];
         }

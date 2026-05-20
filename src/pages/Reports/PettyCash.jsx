@@ -4,6 +4,10 @@ import { Wallet, Plus, ArrowDownToLine, ArrowUpFromLine, ReceiptText, X, History
 
 export default function PettyCash() {
   const { journal, replenishPettyCash, addPettyCashExpense, addTransaction } = useStore();
+  const accounts = useStore((s) => s.accounts) || [];
+  
+  // Resolve nama akun Kas Kecil dari master data (kode 102)
+  const kasKecilName = accounts.find(a => a.id === '102')?.name || 'Kas Kecil';
   
   const [showReplenishModal, setShowReplenishModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -30,12 +34,12 @@ export default function PettyCash() {
   const pettyCashBalance = useMemo(() => {
     let balance = 0;
     journal.forEach(entry => {
-      if (entry.account === 'Kas Kecil') {
+      if (entry.account === kasKecilName) {
         balance += (entry.debit || 0) - (entry.credit || 0);
       }
     });
     return balance;
-  }, [journal]);
+  }, [journal, kasKecilName]);
 
   // 2. Ambil Riwayat Transaksi Kas Kecil
   const pettyCashHistory = useMemo(() => {
@@ -51,13 +55,13 @@ export default function PettyCash() {
 
     Object.keys(grouped).forEach(jid => {
       const entries = grouped[jid];
-      const hasPettyCash = entries.find(e => e.account === 'Kas Kecil');
+      const hasPettyCash = entries.find(e => e.account === kasKecilName);
       if (hasPettyCash) {
         // Tentukan apakah Kas Kecil di debit (Masuk) atau kredit (Keluar)
         const isMasuk = hasPettyCash.debit > 0;
         const amount = isMasuk ? hasPettyCash.debit : hasPettyCash.credit;
         // Cari akun pasangannya
-        const lawan = entries.find(e => e.account !== 'Kas Kecil');
+        const lawan = entries.find(e => e.account !== kasKecilName);
         
         history.push({
           id: jid,
@@ -108,7 +112,7 @@ export default function PettyCash() {
 
     const newId = `JU-${Date.now().toString(36).toUpperCase()}`;
     addTransaction([
-      { id: newId, date: incomeDate, description: incomeDesc, ref: 'BKM', debit: amountNum, credit: 0, account: 'Kas Kecil' },
+      { id: newId, date: incomeDate, description: incomeDesc, ref: 'BKM', debit: amountNum, credit: 0, account: kasKecilName },
       { id: newId, date: incomeDate, description: incomeDesc, ref: 'BKM', debit: 0, credit: amountNum, account: incomeAccount },
     ]);
     setShowIncomeModal(false);
