@@ -30,11 +30,12 @@ export default function PettyCash() {
   const [incomeDesc, setIncomeDesc] = useState('');
   const [incomeDate, setIncomeDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // 1. Hitung Saldo Kas Kecil
+  // 1. Hitung Saldo Kas Kecil (case-insensitive match)
   const pettyCashBalance = useMemo(() => {
     let balance = 0;
+    const name = kasKecilName.toLowerCase();
     journal.forEach(entry => {
-      if (entry.account === kasKecilName) {
+      if (entry.account?.toLowerCase() === name) {
         balance += (entry.debit || 0) - (entry.credit || 0);
       }
     });
@@ -55,13 +56,13 @@ export default function PettyCash() {
 
     Object.keys(grouped).forEach(jid => {
       const entries = grouped[jid];
-      const hasPettyCash = entries.find(e => e.account === kasKecilName);
+      const hasPettyCash = entries.find(e => e.account?.toLowerCase() === kasKecilName.toLowerCase());
       if (hasPettyCash) {
         // Tentukan apakah Kas Kecil di debit (Masuk) atau kredit (Keluar)
         const isMasuk = hasPettyCash.debit > 0;
         const amount = isMasuk ? hasPettyCash.debit : hasPettyCash.credit;
         // Cari akun pasangannya
-        const lawan = entries.find(e => e.account !== kasKecilName);
+        const lawan = entries.find(e => e.account?.toLowerCase() !== kasKecilName.toLowerCase());
         
         history.push({
           id: jid,
