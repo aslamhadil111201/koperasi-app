@@ -124,7 +124,7 @@ const INITIAL_JOURNAL = NILAI_PERSEDIAAN_AWAL > 0 ? [
     ref: 'INIT',
     debit: NILAI_PERSEDIAAN_AWAL,
     credit: 0,
-    account: getAccountName(state, ACC.PERSEDIAAN),
+    account: INITIAL_ACCOUNTS.find(a => a.id === ACC.PERSEDIAAN)?.name || 'Persediaan Barang',
   },
   {
     id: 'JU-INIT',
@@ -133,7 +133,7 @@ const INITIAL_JOURNAL = NILAI_PERSEDIAAN_AWAL > 0 ? [
     ref: 'INIT',
     debit: 0,
     credit: NILAI_PERSEDIAAN_AWAL,
-    account: getAccountName(state, ACC.MODAL_POKOK),
+    account: INITIAL_ACCOUNTS.find(a => a.id === ACC.MODAL_POKOK)?.name || 'Modal Koperasi (Simpanan Pokok)',
   },
 ] : [];
 
@@ -1073,9 +1073,12 @@ export const useStore = create(
 
         const sudahAda = state.journal.some(j => j.id === 'JU-INIT');
         if (!sudahAda && NILAI_PERSEDIAAN_AWAL > 0) {
+          const accList = state.accounts || INITIAL_ACCOUNTS;
+          const persediaanName = accList.find(a => a.id === ACC.PERSEDIAAN)?.name || 'Persediaan Barang';
+          const modalName = accList.find(a => a.id === ACC.MODAL_POKOK)?.name || 'Modal Koperasi (Simpanan Pokok)';
           state.journal = [
-            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Persediaan Barang', ref: 'INIT', debit: NILAI_PERSEDIAAN_AWAL, credit: 0, account: getAccountName(state, ACC.PERSEDIAAN) },
-            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Modal Koperasi', ref: 'INIT', debit: 0, credit: NILAI_PERSEDIAAN_AWAL, account: getAccountName(state, ACC.MODAL_POKOK) },
+            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Persediaan Barang', ref: 'INIT', debit: NILAI_PERSEDIAAN_AWAL, credit: 0, account: persediaanName },
+            { id: 'JU-INIT', date: '2026-01-01', description: 'Saldo Awal Modal Koperasi', ref: 'INIT', debit: 0, credit: NILAI_PERSEDIAAN_AWAL, account: modalName },
             ...state.journal,
           ];
         }
