@@ -23,8 +23,7 @@ const Savings = () => {
   const filteredMembers = members.filter(m => {
     const matchSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         m.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchType   = filterType === 'Semua' || m.type === filterType;
-    return matchSearch && matchType;
+    return matchSearch;
   });
 
   // Reset ke halaman 1 saat search/filter berubah
@@ -36,8 +35,8 @@ const Savings = () => {
   // Riwayat setoran simpanan anggota dari jurnal
   const getMemberHistory = (memberId) =>
     journal
-      .filter(j => j.ref === memberId && j.account === 'Kas Bank' && j.debit > 0 &&
-                   j.description.toLowerCase().includes('simpanan'))
+      .filter(j => j.ref === memberId && j.debit > 0 &&
+                   (j.description.toLowerCase().includes('simpanan') || j.description.toLowerCase().includes('setoran')))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const openDetail = (member) => {
@@ -56,11 +55,13 @@ const Savings = () => {
 
   const handleBulkDeposit = (e) => {
     e.preventDefault();
-    const activeMembers = members.filter(m => m.type === 'Penuh' || m.type === 'Calon');
+    // Anggota yang dikecualikan dari simpanan wajib massal
+    const excludedIds = ['KPKCG-043', 'KPKCG-028']; // Asep Mukhlas, Saifan
+    const activeMembers = members.filter(m => !excludedIds.includes(m.id));
     const memberIds = activeMembers.map(m => m.id);
     
     if (memberIds.length === 0) return alert('Tidak ada anggota aktif untuk diproses.');
-    if (!window.confirm(`Proses Simpanan Wajib Rp 100.000 untuk ${memberIds.length} anggota?\nKas Koperasi akan bertambah Rp ${(memberIds.length * 100000).toLocaleString('id-ID')}.`)) return;
+    if (!window.confirm(`Proses Simpanan Wajib Rp 100.000 untuk ${memberIds.length} anggota?\n(Dikecualikan: Asep Mukhlas & Saifan)\nKas Koperasi akan bertambah Rp ${(memberIds.length * 100000).toLocaleString('id-ID')}.`)) return;
 
     useStore.getState().depositSavingsBulk(memberIds, 100000, bulkDate);
     setShowBulk(false);
@@ -82,15 +83,12 @@ const Savings = () => {
 
       {/* Filter Chips */}
       <div className="filter-chips">
-        {['Semua', 'Penuh', 'Calon'].map(t => (
-          <button
-            key={t}
-            className={`filter-chip chip-${t === 'Semua' ? 'all' : t === 'Penuh' ? 'active' : 'pending'} ${filterType === t ? 'active' : ''}`}
-            onClick={() => setFilterType(t)}
-          >
-            {t === 'Semua' ? 'Semua Anggota' : t === 'Penuh' ? '✓ Anggota Penuh' : '⏳ Calon Anggota'}
-          </button>
-        ))}
+        <button
+          className={`filter-chip chip-all ${filterType === 'Semua' ? 'active' : ''}`}
+          onClick={() => setFilterType('Semua')}
+        >
+          Semua Anggota
+        </button>
         <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginLeft: '0.25rem' }}>
           {filteredMembers.length} anggota
         </span>
@@ -239,9 +237,7 @@ const Savings = () => {
                   <div className="savings-detail-item">
                     <span className="savings-detail-label">Status</span>
                     <span className="savings-detail-value">
-                      <span className={`badge ${selectedMember.type === 'Penuh' ? 'badge-success' : 'badge-warning'}`}>
-                        {selectedMember.type}
-                      </span>
+                      <span className="badge badge-success">Penuh</span>
                     </span>
                   </div>
                   <div className="savings-detail-item">
@@ -252,19 +248,7 @@ const Savings = () => {
                         : '—'}
                     </span>
                   </div>
-                  <div className="savings-detail-item" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
-                    <span className="savings-detail-label">Simpanan Pokok</span>
-                    <span className="savings-detail-value">Rp {selectedMember.pokok.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="savings-detail-item">
-                    <span className="savings-detail-label">Simpanan Wajib</span>
-                    <span className="savings-detail-value">Rp {selectedMember.wajib.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="savings-detail-item">
-                    <span className="savings-detail-label">Simpanan Sukarela</span>
-                    <span className="savings-detail-value">Rp {selectedMember.sukarela.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="savings-detail-item savings-detail-total">
+                  <div className="savings-detail-item savings-detail-total" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
                     <span className="savings-detail-label">Total Simpanan</span>
                     <span className="savings-detail-value text-primary">Rp {total.toLocaleString('id-ID')}</span>
                   </div>
@@ -275,7 +259,7 @@ const Savings = () => {
                   Riwayat Setoran
                 </h4>
 
-                {history.length > 0 ? (
+                {(history.length > 0 || total > 0) ? (
                   <div className="savings-history-list">
                     {history.map((tx, i) => (
                       <div key={`${tx.id}-${i}`} className="savings-history-item">
@@ -295,6 +279,61 @@ const Savings = () => {
                         </span>
                       </div>
                     ))}
+                    {/* Saldo awal jika ada simpanan tapi belum ada riwayat jurnal */}
+                    {selectedMember.pokok > 0 && (
+                      <div className="savings-history-item" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div className="savings-history-icon" style={{ background: 'rgba(100,100,100,0.1)' }}>
+                            <Calendar size={15} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Simpanan Pokok</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Calendar size={11} /> {selectedMember.joinDate || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                          Rp {selectedMember.pokok.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    )}
+                    {selectedMember.wajib > 0 && (
+                      <div className="savings-history-item" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div className="savings-history-icon" style={{ background: 'rgba(100,100,100,0.1)' }}>
+                            <Calendar size={15} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Simpanan Wajib</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Calendar size={11} /> {selectedMember.joinDate || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                          Rp {selectedMember.wajib.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    )}
+                    {selectedMember.sukarela > 0 && (
+                      <div className="savings-history-item" style={{ opacity: 0.7 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div className="savings-history-icon" style={{ background: 'rgba(100,100,100,0.1)' }}>
+                            <Calendar size={15} />
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, margin: 0 }}>Simpanan Sukarela</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <Calendar size={11} /> {selectedMember.joinDate || '—'}
+                            </p>
+                          </div>
+                        </div>
+                        <span style={{ fontWeight: 700, color: 'var(--color-text-muted)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
+                          Rp {selectedMember.sukarela.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
@@ -392,7 +431,10 @@ const Savings = () => {
                 
                 <div style={{ background: 'rgba(255, 77, 0, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 77, 0, 0.1)', marginBottom: '1rem' }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text)' }}>
-                    Sistem akan memotong otomatis dan menambahkan <strong>Rp 100.000</strong> ke Simpanan Wajib untuk <strong>seluruh anggota aktif</strong> ({members.length} orang).
+                    Sistem akan memotong otomatis dan menambahkan <strong>Rp 100.000</strong> ke Simpanan Wajib untuk <strong>seluruh anggota aktif</strong> ({members.filter(m => !['KPKCG-043', 'KPKCG-028'].includes(m.id)).length} orang).
+                  </p>
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--color-warning)' }}>
+                    Dikecualikan: Asep Mukhlas (KPKCG-043), Saifan (KPKCG-028)
                   </p>
                   <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                     Tindakan ini akan menghasilkan jurnal Kas masuk secara massal.

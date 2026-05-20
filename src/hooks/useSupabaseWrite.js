@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { isSupabaseReady } from '../lib/supabase';
 import {
-  insertMember, updateMemberDB,
+  insertMember, updateMemberDB, deleteMemberDB,
   insertProduct, updateProductDB, deleteProductDB,
   insertConsignment, updateConsignmentDB, deleteConsignmentDB,
   insertService, updateServiceDB, deleteServiceDB,
@@ -16,6 +16,7 @@ import {
   insertMemberSalesTx,
   deleteTransactionDB, deleteCreditGoodsDB, deleteCashLoanDB,
   saveSaldoAwalDB,
+  insertAccountDB, updateAccountDB, deleteAccountDB,
 } from '../services/supabaseService';
 
 export const useSupabaseWrite = () => {
@@ -30,6 +31,10 @@ export const useSupabaseWrite = () => {
     // Patch store actions untuk juga write ke Supabase
     const origAddMember    = store.addMember;
     const origUpdateMember = store.updateMember;
+    const origDeleteMember = store.deleteMember;
+    const origAddAccount   = store.addAccount;
+    const origUpdateAccount = store.updateAccount;
+    const origDeleteAccount = store.deleteAccount;
     const origAddProduct   = store.addProduct;
     const origUpdateProduct = store.updateProduct;
     const origDeleteProduct = store.deleteProduct;
@@ -63,14 +68,20 @@ export const useSupabaseWrite = () => {
     const origDeleteCreditGoods = store.deleteCreditGoods;
     const origDeleteCashLoan = store.deleteCashLoan;
     const origSetSaldoAwal = store.setSaldoAwal;
+    const origClosePeriod = store.closePeriod;
 
     // Override dengan versi yang juga write ke Supabase
     const patchedActions = {
       addMember: (member) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
         origAddMember(member);
         const state = useStore.getState();
         const newMember = state.members[state.members.length - 1];
         if (newMember) insertMember(newMember).catch(console.error);
+        // Insert journal entries for initial savings
+        const newJournals = state.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
       },
       updateMember: (id, data) => {
         origUpdateMember(id, data);
@@ -79,11 +90,35 @@ export const useSupabaseWrite = () => {
           alert('Gagal menyimpan ke database (Supabase): ' + e.message);
         });
       },
+      deleteMember: (id) => {
+        origDeleteMember(id);
+        deleteMemberDB(id).catch(e => {
+          console.error(e);
+          alert('Gagal menghapus dari database (Supabase): ' + e.message);
+        });
+      },
+      addAccount: (account) => {
+        origAddAccount(account);
+        const state = useStore.getState();
+        const newAccount = state.accounts[state.accounts.length - 1];
+        if (newAccount) insertAccountDB(newAccount).catch(console.error);
+      },
+      updateAccount: (id, data) => {
+        origUpdateAccount(id, data);
+        updateAccountDB(id, data).catch(console.error);
+      },
+      deleteAccount: (id) => {
+        origDeleteAccount(id);
+        deleteAccountDB(id).catch(console.error);
+      },
       addProduct: (product) => {
         origAddProduct(product);
         const state = useStore.getState();
         const newProduct = state.products[state.products.length - 1];
-        if (newProduct) insertProduct(newProduct).catch(console.error);
+        if (newProduct) insertProduct(newProduct).catch(e => {
+          console.error('INSERT PRODUCT ERROR:', e);
+          alert('Gagal simpan produk ke database: ' + e.message);
+        });
       },
       updateProduct: (id, data) => {
         origUpdateProduct(id, data);
@@ -97,7 +132,10 @@ export const useSupabaseWrite = () => {
         origAddConsignment(item);
         const state = useStore.getState();
         const newItem = state.consignmentProducts[state.consignmentProducts.length - 1];
-        if (newItem) insertConsignment(newItem).catch(console.error);
+        if (newItem) insertConsignment(newItem).catch(e => {
+          console.error('INSERT CONSIGNMENT ERROR:', e);
+          alert('Gagal simpan konsinyasi ke database: ' + e.message);
+        });
       },
       updateConsignment: (id, data) => {
         origUpdateConsignment(id, data);
@@ -111,7 +149,10 @@ export const useSupabaseWrite = () => {
         origAddService(service);
         const state = useStore.getState();
         const newService = state.services[state.services.length - 1];
-        if (newService) insertService(newService).catch(console.error);
+        if (newService) insertService(newService).catch(e => {
+          console.error('INSERT SERVICE ERROR:', e);
+          alert('Gagal simpan layanan ke database: ' + e.message);
+        });
       },
       updateService: (id, data) => {
         origUpdateService(id, data);
@@ -382,6 +423,15 @@ export const useSupabaseWrite = () => {
         const accountName = args[0];
         saveSaldoAwalDB(accountName, stateAfter.journal).catch(console.error);
       },
+      closePeriod: (...args) => {
+        const stateBefore = useStore.getState();
+        const oldJournalLen = stateBefore.journal.length;
+        origClosePeriod(...args);
+        const stateAfter = useStore.getState();
+
+        const newJournals = stateAfter.journal.slice(oldJournalLen);
+        if (newJournals.length > 0) insertJournalEntries(newJournals).catch(console.error);
+      },
     };
 
     // Tandai agar tidak di-patch berulang kali saat hot reload
@@ -390,6 +440,10 @@ export const useSupabaseWrite = () => {
     useStore.setState({
       addMember: patchedActions.addMember,
       updateMember: patchedActions.updateMember,
+      deleteMember: patchedActions.deleteMember,
+      addAccount: patchedActions.addAccount,
+      updateAccount: patchedActions.updateAccount,
+      deleteAccount: patchedActions.deleteAccount,
       addProduct: patchedActions.addProduct,
       updateProduct: patchedActions.updateProduct,
       deleteProduct: patchedActions.deleteProduct,
@@ -421,6 +475,7 @@ export const useSupabaseWrite = () => {
       deleteCreditGoods: patchedActions.deleteCreditGoods,
       deleteCashLoan: patchedActions.deleteCashLoan,
       setSaldoAwal: patchedActions.setSaldoAwal,
+      closePeriod: patchedActions.closePeriod,
     });
   }, []);
 };

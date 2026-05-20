@@ -50,11 +50,8 @@ const GeneralLedger = () => {
       return matchSearch && matchMonth && matchAkun;
     });
 
-    // Urutkan dari yang terbaru (Descending) untuk UI
-    return result.sort((a, b) => {
-      if (a.date !== b.date) return new Date(b.date) - new Date(a.date);
-      return b.id.localeCompare(a.id); // Jika tanggal sama, ID terbaru di atas
-    });
+    // Urutkan dari yang terakhir diinput (index terbesar = paling atas)
+    return result.reverse();
   }, [journal, searchTerm, filterMonth, filterAkun]);
 
   const totalDebit  = filtered.reduce((sum, item) => sum + item.debit,  0);

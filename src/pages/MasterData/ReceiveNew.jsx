@@ -31,7 +31,7 @@ const ReceiveNew = () => {
   const restockHistory = useMemo(() => {
     return journal
       .filter(e => e.ref === 'BKK-RST' && e.debit > 0)
-      .sort((a, b) => b.date.localeCompare(a.date))
+      .reverse()
       .slice(0, 20);
   }, [journal]);
 

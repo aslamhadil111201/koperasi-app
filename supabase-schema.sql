@@ -33,6 +33,7 @@ create table if not exists products (
   price      bigint default 0,
   hpp        bigint default 0,
   stock      int default 0,
+  min_stock  int default 10,
   category   text,
   image      text,
   created_at timestamptz default now()
@@ -44,6 +45,7 @@ create table if not exists consignment_products (
   name           text not null,
   price          bigint default 0,
   stock          int default 0,
+  min_stock      int default 10,
   supplier       text,
   supplier_price bigint default 0,
   image          text,
@@ -60,6 +62,9 @@ create table if not exists services (
   provider    text,
   is_fee_only boolean default false,
   image       text,
+  biaya_jasa  bigint default 0,
+  admin_bank  bigint default 0,
+  payment_type text default 'cash',
   created_at  timestamptz default now()
 );
 
@@ -158,6 +163,20 @@ on conflict (username) do nothing;
 insert into storage.buckets (id, name, public)
 values ('kpkcg-images', 'kpkcg-images', true)
 on conflict (id) do nothing;
+
+-- ── Accounts (COA) ────────────────────────────────────────────────────────────
+create table if not exists accounts (
+  id           serial primary key,
+  account_id   text unique not null,
+  name         text not null,
+  category     text not null,
+  type         text not null default 'debit',
+  is_default   boolean default false,
+  created_at   timestamptz default now()
+);
+
+alter table accounts enable row level security;
+create policy "Allow all for authenticated" on accounts for all using (true);
 
 -- Allow public read
 create policy "Public read kpkcg-images"

@@ -47,6 +47,44 @@ export const updateMemberDB = async (memberId, updates) => {
   if (error) throw error;
 };
 
+export const deleteMemberDB = async (memberId) => {
+  const oldId = memberId.replace('KPKCG-', 'ANG-');
+  const { error } = await supabase.from('members')
+    .delete()
+    .or(`member_id.eq.${memberId},member_id.eq.${oldId}`);
+  if (error) throw error;
+};
+
+// ── Accounts (COA) ────────────────────────────────────────────────────────────
+export const fetchAccounts = async () => {
+  const { data, error } = await supabase.from('accounts').select('*').order('account_id');
+  if (error) throw error;
+  return data.map(a => ({
+    id: a.account_id, name: a.name, category: a.category,
+    type: a.type, isDefault: a.is_default,
+  }));
+};
+
+export const insertAccountDB = async (account) => {
+  const { error } = await supabase.from('accounts').insert({
+    account_id: account.id, name: account.name, category: account.category,
+    type: account.type, is_default: account.isDefault || false,
+  });
+  if (error) throw error;
+};
+
+export const updateAccountDB = async (accountId, updates) => {
+  const { error } = await supabase.from('accounts').update({
+    name: updates.name, category: updates.category, type: updates.type,
+  }).eq('account_id', accountId);
+  if (error) throw error;
+};
+
+export const deleteAccountDB = async (accountId) => {
+  const { error } = await supabase.from('accounts').delete().eq('account_id', accountId);
+  if (error) throw error;
+};
+
 // ── Products ──────────────────────────────────────────────────────────────────
 export const fetchProducts = async () => {
   const { data, error } = await supabase.from('products').select('*').order('id');
@@ -55,8 +93,16 @@ export const fetchProducts = async () => {
 };
 
 export const insertProduct = async (product) => {
-  const payload = { ...product, min_stock: product.minStock || 10 };
-  delete payload.minStock;
+  const payload = {
+    name: product.name,
+    price: product.price,
+    hpp: product.hpp || 0,
+    stock: product.stock || 0,
+    min_stock: product.minStock || 10,
+    category: product.category || '',
+    image: product.image || null,
+  };
+  // Jangan kirim id, biarkan Supabase auto-generate
   const { data, error } = await supabase.from('products').insert(payload).select().single();
   if (error) throw error;
   return data;
@@ -116,16 +162,27 @@ export const deleteConsignmentDB = async (id) => {
 export const fetchServices = async () => {
   const { data, error } = await supabase.from('services').select('*').order('id');
   if (error) throw error;
-  return data.map(s => ({ ...s, isFeeOnly: s.is_fee_only }));
+  return data.map(s => ({
+    ...s, isFeeOnly: s.is_fee_only,
+    biayaJasa: s.biaya_jasa || 0,
+    adminBank: s.admin_bank || 0,
+    paymentType: s.payment_type || 'cash',
+  }));
 };
 
 export const insertService = async (service) => {
   const { data, error } = await supabase.from('services').insert({
     name: service.name, price: service.price, hpp: service.hpp || 0,
-    type: service.type, provider: service.provider,
-    is_fee_only: service.isFeeOnly || false, image: service.image,
+    type: service.type || service.category || '', provider: service.provider,
+    is_fee_only: service.isFeeOnly || false, image: service.image || null,
+    biaya_jasa: service.biayaJasa || 0,
+    admin_bank: service.adminBank || 0,
+    payment_type: service.paymentType || 'cash',
   }).select().single();
-  if (error) throw error;
+  if (error) {
+    console.error('insertService error:', error);
+    throw error;
+  }
   return data;
 };
 
@@ -133,6 +190,9 @@ export const updateServiceDB = async (id, updates) => {
   const { error } = await supabase.from('services').update({
     name: updates.name, price: updates.price, hpp: updates.hpp || 0,
     type: updates.type, provider: updates.provider, image: updates.image,
+    biaya_jasa: updates.biayaJasa || 0,
+    admin_bank: updates.adminBank || 0,
+    payment_type: updates.paymentType || 'cash',
   }).eq('id', id);
   if (error) throw error;
 };

@@ -214,6 +214,7 @@ export const useStore = create(
   }),
 
   // Bulk setters untuk Supabase sync
+  setAccounts:               (accounts) => set({ accounts }),
   setMembers:                (members)  => set({ members }),
   setProducts:               (products) => set({ products }),
   setConsignmentProducts:    (items)    => set({ consignmentProducts: items }),
@@ -379,13 +380,49 @@ export const useStore = create(
     const newId = `KPKCG-${String(maxNum + 1).padStart(3, '0')}`;
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const date = member.joinDate || todayStr;
+
+    // Buat jurnal entry terpisah untuk simpanan pokok dan wajib
+    const journalEntries = [];
+    const pokok = Number(member.pokok || 0);
+    const wajib = Number(member.wajib || 0);
+    const sukarela = Number(member.sukarela || 0);
+    let journalIdx = Math.floor(state.journal.length / 2) + 1;
+
+    if (pokok > 0) {
+      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      journalEntries.push(
+        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: pokok, credit: 0, account: 'Kas Bank' },
+        { id: jId, date, description: `Simpanan Pokok Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: pokok, account: 'Simpanan Anggota' }
+      );
+    }
+    if (wajib > 0) {
+      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      journalEntries.push(
+        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: wajib, credit: 0, account: 'Kas Bank' },
+        { id: jId, date, description: `Simpanan Wajib Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: wajib, account: 'Simpanan Anggota' }
+      );
+    }
+    if (sukarela > 0) {
+      const jId = `JU-${String(journalIdx++).padStart(3, '0')}`;
+      journalEntries.push(
+        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: sukarela, credit: 0, account: 'Kas Bank' },
+        { id: jId, date, description: `Simpanan Sukarela Anggota Baru (${member.name || newId})`, ref: newId, debit: 0, credit: sukarela, account: 'Simpanan Anggota' }
+      );
+    }
+
     return {
-      members: [...state.members, { ...member, id: newId, joinDate: member.joinDate || todayStr }]
+      members: [...state.members, { ...member, id: newId, joinDate: date }],
+      journal: [...state.journal, ...journalEntries]
     };
   }),
 
   updateMember: (id, data) => set((state) => ({
     members: state.members.map(m => m.id === id ? { ...m, ...data } : m)
+  })),
+
+  deleteMember: (id) => set((state) => ({
+    members: state.members.filter(m => m.id !== id)
   })),
 
   // Patch joinDate untuk anggota lama yang belum punya
@@ -458,7 +495,8 @@ export const useStore = create(
   }),
 
   addProduct: (product) => set((state) => {
-    const newId = state.products.length + 1;
+    const maxId = state.products.reduce((max, p) => Math.max(max, p.id || 0), 0);
+    const newId = maxId + 1;
     return { products: [...state.products, { ...product, id: newId, minStock: product.minStock || 10 }] };
   }),
 
@@ -471,7 +509,8 @@ export const useStore = create(
   })),
 
   addConsignment: (consignment) => set((state) => {
-    const newId = 100 + state.consignmentProducts.length + 1;
+    const maxId = state.consignmentProducts.reduce((max, p) => Math.max(max, p.id || 0), 0);
+    const newId = maxId + 1;
     return { consignmentProducts: [...state.consignmentProducts, { ...consignment, id: newId, minStock: consignment.minStock || 10 }] };
   }),
 
@@ -484,7 +523,8 @@ export const useStore = create(
   })),
 
   addService: (service) => set((state) => {
-    const newId = 200 + state.services.length + 1;
+    const maxId = state.services.reduce((max, s) => Math.max(max, s.id || 0), 0);
+    const newId = maxId + 1;
     return { services: [...state.services, { ...service, id: newId }] };
   }),
 
@@ -604,7 +644,7 @@ export const useStore = create(
     return { consignmentProducts: newConsignment, journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx };
   }),
 
-  checkoutService: (cart, totalAmount, markupAmount = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
+  checkoutService: (cart, totalAmount, biayaJasa = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
     const newJournalId = `JU-${String(state.journal.length / 2 + 1).padStart(3, '0')}`;
     const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
@@ -615,13 +655,13 @@ export const useStore = create(
       ? `Penjualan Jasa/PPOB [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Jasa/PPOB [${itemDetails}]`;
 
-    const grandTotal = totalAmount + markupAmount;
+    const grandTotal = totalAmount + biayaJasa;
 
     const journalEntries = [
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: grandTotal, credit: 0, account: akunDebit },
       { id: newJournalId, date, description: desc, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: totalAmount, account: 'Pendapatan Jasa' },
-      ...(markupAmount > 0 ? [
-        { id: newJournalId, date, description: `Markup Kredit 10%`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: markupAmount, account: 'Pendapatan Bunga Cicilan' }
+      ...(biayaJasa > 0 ? [
+        { id: newJournalId, date, description: `Biaya Jasa (${paymentMethod})`, ref: paymentMethod === 'Kredit' ? memberId : 'BKM-JSA', debit: 0, credit: biayaJasa, account: 'Pendapatan Jasa' }
       ] : []),
       ...(totalHPP > 0 ? [
         { id: newJournalId, date, description: 'HPP Penjualan Jasa', ref: 'BKK-HPP', debit: totalHPP, credit: 0, account: 'Harga Pokok Penjualan' },

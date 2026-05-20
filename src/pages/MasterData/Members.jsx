@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import { Search, Users, UserPlus, X, UserCheck, UserCog, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Users, UserPlus, X, UserCheck, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './MasterData.css';
 
 const Members = () => {
   const members      = useStore((state) => state.members);
   const addMember    = useStore((state) => state.addMember);
   const updateMember = useStore((state) => state.updateMember);
+  const deleteMember = useStore((state) => state.deleteMember);
   const currentUser  = useStore((state) => state.currentUser);
   const location     = useLocation();
 
@@ -23,15 +24,14 @@ const Members = () => {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-  const emptyForm = { name: '', type: 'Calon', pokok: 500000, wajib: 100000, sukarela: 0, joinDate: todayStr };  const [form, setForm] = useState(emptyForm);
+  const emptyForm = { name: '', type: 'Penuh', pokok: 500000, wajib: 100000, sukarela: 0, joinDate: todayStr };  const [form, setForm] = useState(emptyForm);
 
   const filteredMembers = members.filter(m =>
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const fullCount     = members.filter(m => m.type === 'Penuh').length;
-  const calonCount    = members.filter(m => m.type === 'Calon').length;
+  const fullCount     = members.length;
   const totalSimpanan = members.reduce((sum, m) => sum + m.pokok + m.wajib + m.sukarela, 0);
 
   const openAddModal = () => {
@@ -113,13 +113,6 @@ const Members = () => {
           </div>
         </div>
         <div className="stat-card" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div className="stat-icon warning"><UserCog size={22} /></div>
-          <div className="stat-info" style={{ textAlign: 'center' }}>
-            <div className="stat-value">{calonCount}</div>
-            <div className="stat-label">Calon Anggota</div>
-          </div>
-        </div>
-        <div className="stat-card" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           <div className="stat-icon secondary"><Users size={22} /></div>
           <div className="stat-info" style={{ textAlign: 'center' }}>
             <div className="stat-value">Rp {(totalSimpanan / 1_000_000).toFixed(1)}Jt</div>
@@ -154,7 +147,6 @@ const Members = () => {
               <tr>
                 <th>ID Anggota</th>
                 <th>Nama Anggota</th>
-                <th>Status</th>
                 <th>Tgl Masuk</th>
                 <th>Simpanan Pokok</th>
                 <th>Simpanan Wajib</th>
@@ -167,11 +159,6 @@ const Members = () => {
                 <tr key={member.id}>
                   <td><span className="cell-id">{member.id}</span></td>
                   <td><span className="cell-name">{member.name}</span></td>
-                  <td>
-                    <span className={member.type === 'Penuh' ? 'member-type-full' : 'member-type-calon'}>
-                      {member.type}
-                    </span>
-                  </td>
                   <td style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
                     {member.joinDate ? new Date(member.joinDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                   </td>
@@ -180,12 +167,24 @@ const Members = () => {
                   <td className="cell-amount">Rp {member.sukarela.toLocaleString('id-ID')}</td>
                   {canEdit && (
                     <td>
-                      <button
-                        className="table-action-btn"
-                        onClick={() => openEditModal(member)}
-                      >
-                        <Pencil size={13} /> Edit
-                      </button>
+                      <div className="table-action-group">
+                        <button
+                          className="table-action-btn"
+                          onClick={() => openEditModal(member)}
+                        >
+                          <Pencil size={13} /> Edit
+                        </button>
+                        <button
+                          className="table-action-btn table-action-delete"
+                          onClick={() => {
+                            if (window.confirm(`Hapus anggota "${member.name}" (${member.id})? Data tidak bisa dikembalikan.`)) {
+                              deleteMember(member.id);
+                            }
+                          }}
+                        >
+                          <Trash2 size={13} /> Hapus
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -282,18 +281,6 @@ const Members = () => {
                     value={form.joinDate || ''}
                     onChange={(e) => setForm({ ...form, joinDate: e.target.value })}
                   />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Status Keanggotaan</label>
-                  <select
-                    className="form-control"
-                    value={form.type}
-                    onChange={(e) => setForm({ ...form, type: e.target.value })}
-                  >
-                    <option value="Calon">Calon Anggota</option>
-                    <option value="Penuh">Anggota Penuh</option>
-                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

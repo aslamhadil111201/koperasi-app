@@ -35,13 +35,14 @@ const Inventory = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [itemForm, setItemForm] = useState({
     name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10,
-    supplier: '', supplierPrice: 0, provider: '', type: '', image: ''
+    supplier: '', supplierPrice: 0, provider: '', type: '', image: '',
+    biayaJasa: 0, adminBank: 0, paymentType: 'cash'
   });
 
   const openAddModal = () => {
     setEditingItem(null);
     setImagePreview(null);
-    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10, supplier: '', supplierPrice: 0, provider: '', type: '', image: '' });
+    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10, supplier: '', supplierPrice: 0, provider: '', type: '', image: '', biayaJasa: 0, adminBank: 0, paymentType: 'cash' });
     setShowModal(true);
   };
 
@@ -60,6 +61,9 @@ const Inventory = () => {
       provider: item.provider ?? '',
       type: item.type ?? '',
       image: item.image ?? '',
+      biayaJasa: item.biayaJasa ?? 0,
+      adminBank: item.adminBank ?? 0,
+      paymentType: item.paymentType ?? 'cash',
     });
     setShowModal(true);
   };
@@ -115,7 +119,8 @@ const Inventory = () => {
           commission: itemForm.price - itemForm.supplierPrice, image: itemForm.image
         });
       } else if (activeTab === 'services') {
-        updateService(editingItem.id, { name: itemForm.name, category: itemForm.category, provider: itemForm.provider, price: itemForm.price, hpp: itemForm.hpp, type: itemForm.type, image: itemForm.image });
+        const totalPrice = Number(itemForm.hpp || 0) + Number(itemForm.adminBank || 0);
+        updateService(editingItem.id, { name: itemForm.name, category: itemForm.category, provider: itemForm.provider, price: totalPrice, hpp: itemForm.hpp, type: itemForm.type, image: itemForm.image, biayaJasa: 0, adminBank: itemForm.adminBank, paymentType: itemForm.paymentType });
       }
     } else {
       // ADD mode
@@ -128,13 +133,14 @@ const Inventory = () => {
           commission: itemForm.price - itemForm.supplierPrice, image: itemForm.image
         });
       } else if (activeTab === 'services') {
-        addService({ name: itemForm.name, category: itemForm.category || 'Lainnya', provider: itemForm.provider, price: itemForm.price, hpp: itemForm.hpp, type: itemForm.type || 'PPOB', image: itemForm.image });
+        const totalPrice = Number(itemForm.hpp || 0) + Number(itemForm.adminBank || 0);
+        addService({ name: itemForm.name, category: itemForm.category || 'Lainnya', provider: itemForm.provider, price: totalPrice, hpp: itemForm.hpp, type: itemForm.type || 'PPOB', image: itemForm.image, biayaJasa: 0, adminBank: itemForm.adminBank, paymentType: itemForm.paymentType });
       }
     }
     setShowModal(false);
     setEditingItem(null);
     setImagePreview(null);
-    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10, supplier: '', supplierPrice: 0, provider: '', type: '', image: '' });
+    setItemForm({ name: '', category: 'Sembako', price: 0, hpp: 0, stock: 0, minStock: 10, supplier: '', supplierPrice: 0, provider: '', type: '', image: '', biayaJasa: 0, adminBank: 0, paymentType: 'cash' });
   };
 
   const handleDelete = (item) => {
@@ -406,10 +412,12 @@ const Inventory = () => {
                   <th>ID Jasa</th>
                   <th>Foto</th>
                   <th>Nama Layanan</th>
+                  <th>Jenis Pembayaran</th>
                   <th>Kategori</th>
                   <th>Provider</th>
                   <th>HPP</th>
-                  <th>Harga / Biaya Admin</th>
+                  <th>Admin Bank</th>
+                  <th>Total Harga</th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -424,12 +432,22 @@ const Inventory = () => {
                       }
                     </td>
                     <td><span className="cell-name">{item.name}</span></td>
+                    <td>
+                      <span className={`badge ${item.paymentType === 'credit' ? 'badge-warning' : 'badge-success'}`}>
+                        {item.paymentType === 'credit' ? 'Credit' : 'Cash'}
+                      </span>
+                    </td>
                     <td><span className="badge badge-primary">{item.category ?? item.type}</span></td>
                     <td>{item.provider}</td>
                     <td className="cell-amount" style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
                       Rp {(item.hpp || 0).toLocaleString('id-ID')}
                     </td>
-                    <td className="cell-amount">Rp {item.price.toLocaleString('id-ID')}</td>
+                    <td className="cell-amount" style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
+                      Rp {(item.adminBank || 0).toLocaleString('id-ID')}
+                    </td>
+                    <td className="cell-amount" style={{ fontWeight: 600 }}>
+                      Rp {(item.price || 0).toLocaleString('id-ID')}
+                    </td>
                     <td>
                       <div className="table-action-group">
                         {canEdit && <button className="table-action-btn" onClick={() => openEditModal(item)}><Pencil size={13} /> Edit</button>}
@@ -629,19 +647,44 @@ const Inventory = () => {
                         onChange={(e) => setItemForm({ ...itemForm, hpp: Number(e.target.value) })}
                       />
                     </div>
+                    <div className="form-group">
+                      <label className="form-label">Jenis Pembayaran</label>
+                      <select
+                        className="form-control"
+                        value={itemForm.paymentType}
+                        onChange={(e) => setItemForm({ ...itemForm, paymentType: e.target.value })}
+                      >
+                        <option value="cash">Cash</option>
+                        <option value="credit">Credit</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="form-group">
+                        <label className="form-label">Admin Bank (Rp)</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="0"
+                          value={itemForm.adminBank}
+                          onChange={(e) => setItemForm({ ...itemForm, adminBank: Number(e.target.value) })}
+                        />
+                      </div>
+                    </div>
                   </>
                 )}
 
-                <div className="form-group">
-                  <label className="form-label">Harga Jual / Biaya Admin (Rp)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={itemForm.price}
-                    onChange={(e) => setItemForm({ ...itemForm, price: Number(e.target.value) })}
-                    required
-                  />
-                </div>
+                {activeTab !== 'services' && (
+                  <div className="form-group">
+                    <label className="form-label">Harga Jual (Rp)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={itemForm.price}
+                      onChange={(e) => setItemForm({ ...itemForm, price: Number(e.target.value) })}
+                      required
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="modal-footer">

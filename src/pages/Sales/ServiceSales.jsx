@@ -16,7 +16,6 @@ const ServiceSales = () => {
   const [searchTerm, setSearchTerm]         = useState('');
   const [selectedMember, setSelectedMember] = useState('');
   const [paymentMethod, setPaymentMethod]   = useState('Cash');
-  const [markupPercent, setMarkupPercent]   = useState(10);
   const [txDate, setTxDate]                 = useState(new Date().toISOString().split('T')[0]);
   const [takeDate, setTakeDate]             = useState('');
   const [installments, setInstallments]     = useState(1);
@@ -45,8 +44,8 @@ const ServiceSales = () => {
   const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
 
   const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const markupAmount = paymentMethod === 'Kredit' ? Math.floor(totalAmount * (markupPercent / 100)) : 0;
-  const grandTotal = totalAmount + markupAmount;
+  const biayaJasa = cart.length > 0 ? (paymentMethod === 'Kredit' ? 10000 : 5000) : 0;
+  const grandTotal = totalAmount + biayaJasa;
 
   const schedule = useMemo(() =>
     paymentMethod === 'Kredit' ? buildSchedule(grandTotal, installments, startDate) : [],
@@ -59,10 +58,10 @@ const ServiceSales = () => {
     if (paymentMethod === 'Kredit' && !startDate) return alert('Isi tanggal mulai cicilan!');
     const member = selectedMember ? members.find(m => m.id === selectedMember) : null;
     const txId = `JSA-${Date.now()}`;
-    checkoutService(cart, totalAmount, markupAmount, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
+    checkoutService(cart, totalAmount, biayaJasa, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
     setLastTransaction({
       items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, hpp: i.hpp })),
-      total: grandTotal, subtotal: totalAmount, markupAmount, type: 'service',
+      total: grandTotal, subtotal: totalAmount, markupAmount: biayaJasa, type: 'service',
       memberName: member?.name || null,
       date: txDate || new Date().toISOString(),
       transactionId: txId,
@@ -112,6 +111,9 @@ const ServiceSales = () => {
                 <p className="product-price">Rp {service.price.toLocaleString('id-ID')}</p>
                 <div className="product-meta">
                   <span className="badge badge-primary">{service.type}</span>
+                  <span className={`badge ${service.paymentType === 'credit' ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '0.65rem' }}>
+                    {service.paymentType === 'credit' ? 'Credit' : 'Cash'}
+                  </span>
                   <span className="product-category">{service.provider}</span>
                 </div>
               </div>
@@ -238,14 +240,10 @@ const ServiceSales = () => {
             </div>
           )}
           <div className="summary-row"><span>Subtotal</span><span>Rp {totalAmount.toLocaleString('id-ID')}</span></div>
-          {paymentMethod === 'Kredit' && markupAmount > 0 && (
+          {biayaJasa > 0 && (
             <div className="summary-row" style={{ color: 'var(--color-warning)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                Markup Kredit (
-                <input type="number" min="0" max="100" value={markupPercent} onChange={e => setMarkupPercent(Number(e.target.value) || 0)} style={{ width: 40, textAlign: 'center', border: '1px solid var(--color-border)', borderRadius: 4, padding: '0 2px', fontSize: '0.82rem', background: 'var(--color-surface)', color: 'var(--color-warning)' }} />
-                %)
-              </span>
-              <span>Rp {markupAmount.toLocaleString('id-ID')}</span>
+              <span>Biaya Jasa ({paymentMethod === 'Kredit' ? 'Kredit' : 'Cash'})</span>
+              <span>Rp {biayaJasa.toLocaleString('id-ID')}</span>
             </div>
           )}
           {paymentMethod === 'Kredit' && installments > 1 && (
