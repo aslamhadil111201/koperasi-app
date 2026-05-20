@@ -232,14 +232,20 @@ export default function PettyCash() {
                   <input type="date" className="form-control" value={expenseDate} onChange={e => setExpenseDate(e.target.value)} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Kategori Pengeluaran (Beban)</label>
-                  <select className="form-select" value={expenseAccount} onChange={e => setExpenseAccount(e.target.value)}>
-                    <option value="Beban Operasional">Beban Operasional Umum</option>
-                    <option value="Beban ATK">Beban Alat Tulis Kantor (ATK)</option>
-                    <option value="Beban Konsumsi">Beban Konsumsi / Rapat</option>
-                    <option value="Beban Transportasi">Beban Transportasi / Bensin</option>
-                    <option value="Beban Kebersihan">Beban Kebersihan / Keamanan</option>
-                    <option value="Beban Lain-Lain">Beban Lain-Lain</option>
+                  <label className="form-label">Kategori Pengeluaran</label>
+                  <select className="form-control" value={expenseAccount} onChange={e => setExpenseAccount(e.target.value)}>
+                    <optgroup label="Beban Operasional">
+                      <option value="Beban Operasional">Beban Operasional Umum</option>
+                      <option value="Beban ATK">Beban Alat Tulis Kantor (ATK)</option>
+                      <option value="Beban Konsumsi">Beban Konsumsi / Rapat</option>
+                      <option value="Beban Transportasi">Beban Transportasi / Bensin</option>
+                      <option value="Beban Kebersihan">Beban Kebersihan / Keamanan</option>
+                      <option value="Beban Lain-Lain">Beban Lain-Lain</option>
+                    </optgroup>
+                    <optgroup label="Kewajiban">
+                      <option value="Hutang Konsinyasi">Hutang Konsinyasi</option>
+                      <option value="Hutang Dagang">Hutang Dagang</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div className="form-group">
