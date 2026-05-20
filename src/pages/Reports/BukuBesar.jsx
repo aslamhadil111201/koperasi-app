@@ -13,14 +13,19 @@ const BukuBesar = () => {
 
   const accounts = useStore((s) => s.accounts) || [];
 
-  // Normalize: pastikan nama akun di jurnal match dengan Daftar Akun (case-insensitive)
+  // Normalize: pastikan nama akun di jurnal match dengan Daftar Akun (case-insensitive + trim)
   const normalizedJournal = useMemo(() => {
     if (!journal || !accounts || accounts.length === 0) return journal;
+    // Build lookup map: lowercase trimmed name -> canonical name
+    const nameMap = {};
+    accounts.forEach(a => { nameMap[a.name.toLowerCase().trim()] = a.name; });
+    
     return journal.map(j => {
       if (!j.account) return j;
-      const matched = accounts.find(a => a.name.toLowerCase() === j.account.toLowerCase());
-      if (matched && matched.name !== j.account) {
-        return { ...j, account: matched.name };
+      const key = j.account.toLowerCase().trim();
+      const canonical = nameMap[key];
+      if (canonical && canonical !== j.account) {
+        return { ...j, account: canonical };
       }
       return j;
     });

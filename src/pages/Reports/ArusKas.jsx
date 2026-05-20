@@ -9,6 +9,33 @@ const fmtM = (n) => `Rp ${(Number(n || 0) / 1_000_000).toFixed(1)}Jt`;
 
 const ArusKas = () => {
   const journal = useStore((s) => s.journal);
+  const accounts = useStore((s) => s.accounts) || [];
+
+  // Resolve nama akun kas dari master data
+  const kasAccounts = useMemo(() => {
+    const names = [];
+    // Cari by ID
+    const kasBankAcc = accounts.find(a => a.id === '101');
+    const kasKecilAcc = accounts.find(a => a.id === '102');
+    if (kasBankAcc) names.push(kasBankAcc.name.toLowerCase().trim());
+    if (kasKecilAcc) names.push(kasKecilAcc.name.toLowerCase().trim());
+    // Cari by nama yang mengandung 'kas'
+    accounts.forEach(a => {
+      const lower = a.name.toLowerCase().trim();
+      if ((lower.includes('kas') || lower.includes('petty')) && !names.includes(lower)) {
+        names.push(lower);
+      }
+    });
+    // Fallback
+    if (names.length === 0) names.push('kas bank', 'kas kecil', 'kas bank bri');
+    return names;
+  }, [accounts]);
+
+  const isKasAccount = (accountName) => {
+    if (!accountName) return false;
+    const lower = accountName.toLowerCase().trim();
+    return kasAccounts.some(k => lower === k) || lower.includes('kas bank') || lower.includes('kas kecil') || lower.includes('petty') || lower.includes('kas ');
+  };
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -29,8 +56,8 @@ const ArusKas = () => {
 
   // Hanya entri akun Kas
   const kasEntries = useMemo(() =>
-    journal.filter(j => j.account === 'Kas Bank'),
-    [journal]
+    journal.filter(j => isKasAccount(j.account)),
+    [journal, kasAccounts]
   );
 
   const filtered = useMemo(() => {
