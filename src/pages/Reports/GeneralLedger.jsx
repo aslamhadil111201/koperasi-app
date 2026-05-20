@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Filter, Download, Calendar, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Filter, Download, Calendar, Search, X, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import './Reports.css';
 
@@ -8,6 +8,7 @@ const GeneralLedger = () => {
   const journal = useStore((state) => state.journal);
   const currentUser = useStore((state) => state.currentUser);
   const deleteTransaction = useStore((state) => state.deleteTransaction);
+  const addTransaction = useStore((state) => state.addTransaction);
   const location = useLocation();
 
   // ── Filter State ──────────────────────────────────────────────────────────
@@ -19,6 +20,71 @@ const GeneralLedger = () => {
 
   // Reset halaman saat filter berubah
   React.useEffect(() => { setCurrentPage(1); }, [searchTerm, filterMonth, filterAkun]);
+
+  // ── Jurnal Manual Modal ───────────────────────────────────────────────────
+  const [showJurnalModal, setShowJurnalModal] = useState(false);
+  const [jurnalForm, setJurnalForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    description: '',
+    ref: '',
+    entries: [
+      { account: '', debit: '', credit: '' },
+      { account: '', debit: '', credit: '' },
+    ]
+  });
+
+  const addJurnalRow = () => {
+    setJurnalForm(f => ({ ...f, entries: [...f.entries, { account: '', debit: '', credit: '' }] }));
+  };
+
+  const removeJurnalRow = (idx) => {
+    if (jurnalForm.entries.length <= 2) return;
+    setJurnalForm(f => ({ ...f, entries: f.entries.filter((_, i) => i !== idx) }));
+  };
+
+  const updateJurnalEntry = (idx, field, value) => {
+    setJurnalForm(f => ({
+      ...f,
+      entries: f.entries.map((e, i) => i === idx ? { ...e, [field]: value } : e)
+    }));
+  };
+
+  const handleSubmitJurnal = (e) => {
+    e.preventDefault();
+    const { date, description, ref, entries } = jurnalForm;
+    if (!date || !description) return alert('Tanggal dan keterangan wajib diisi.');
+    
+    const validEntries = entries.filter(e => e.account && (Number(e.debit) > 0 || Number(e.credit) > 0));
+    if (validEntries.length < 2) return alert('Minimal 2 baris jurnal dengan akun dan nominal.');
+    
+    const totalDebit = validEntries.reduce((s, e) => s + (Number(e.debit) || 0), 0);
+    const totalCredit = validEntries.reduce((s, e) => s + (Number(e.credit) || 0), 0);
+    if (totalDebit !== totalCredit) return alert(`Jurnal tidak seimbang! Debit: ${totalDebit.toLocaleString('id-ID')}, Kredit: ${totalCredit.toLocaleString('id-ID')}`);
+
+    const newId = `JU-${String(journal.length / 2 + 1).padStart(4, '0')}`;
+    const journalEntries = validEntries.map(e => ({
+      id: newId,
+      date,
+      description,
+      ref: ref || 'MNL',
+      debit: Number(e.debit) || 0,
+      credit: Number(e.credit) || 0,
+      account: e.account,
+    }));
+
+    addTransaction(journalEntries);
+    setShowJurnalModal(false);
+    setJurnalForm({
+      date: new Date().toISOString().split('T')[0],
+      description: '',
+      ref: '',
+      entries: [
+        { account: '', debit: '', credit: '' },
+        { account: '', debit: '', credit: '' },
+      ]
+    });
+    alert('Jurnal manual berhasil dicatat!');
+  };
 
   const accounts = useStore((state) => state.accounts) || [];
 
@@ -223,6 +289,9 @@ const GeneralLedger = () => {
           <p className="text-muted">Catatan historis seluruh transaksi keuangan koperasi.</p>
         </div>
         <div className="flex gap-3">
+          <button className="btn btn-primary" onClick={() => setShowJurnalModal(true)}>
+            <Plus size={16} /> Jurnal Manual
+          </button>
           <button className="btn btn-primary" onClick={handleCetakPDF}>
             <Download size={16} /> Cetak PDF
           </button>
@@ -392,6 +461,107 @@ const GeneralLedger = () => {
           <PaginationBar />
         </div>
       </div>
+
+      {/* Modal Jurnal Manual */}
+      {showJurnalModal && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowJurnalModal(false)}>
+          <div className="modal-content" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Buat Jurnal Manual</h3>
+              <button className="modal-close-btn" onClick={() => setShowJurnalModal(false)}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleSubmitJurnal}>
+              <div className="modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Tanggal</label>
+                    <input type="date" className="form-control" value={jurnalForm.date} onChange={e => setJurnalForm(f => ({ ...f, date: e.target.value }))} required />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Keterangan</label>
+                    <input type="text" className="form-control" placeholder="Deskripsi transaksi" value={jurnalForm.description} onChange={e => setJurnalForm(f => ({ ...f, description: e.target.value }))} required />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Ref (Opsional)</label>
+                    <input type="text" className="form-control" placeholder="BKK / BKM / MNL" value={jurnalForm.ref} onChange={e => setJurnalForm(f => ({ ...f, ref: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(0,0,0,0.03)', borderBottom: '1px solid var(--color-border)' }}>
+                        <th style={{ padding: '0.6rem 0.75rem', textAlign: 'left', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>Akun</th>
+                        <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--color-text-muted)', width: 140 }}>Debit (Rp)</th>
+                        <th style={{ padding: '0.6rem 0.75rem', textAlign: 'right', fontWeight: 600, fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--color-text-muted)', width: 140 }}>Kredit (Rp)</th>
+                        <th style={{ width: 36 }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {jurnalForm.entries.map((entry, idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                          <td style={{ padding: '0.4rem 0.5rem' }}>
+                            <select className="form-control" style={{ fontSize: '0.8rem', padding: '0.3rem 0.5rem' }} value={entry.account} onChange={e => updateJurnalEntry(idx, 'account', e.target.value)} required>
+                              <option value="">-- Pilih Akun --</option>
+                              {accounts.sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric:true})).map(a => (
+                                <option key={a.id} value={a.name}>{a.id} - {a.name}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td style={{ padding: '0.4rem 0.5rem' }}>
+                            <input type="number" min="0" className="form-control" style={{ fontSize: '0.8rem', padding: '0.3rem 0.5rem', textAlign: 'right' }} placeholder="0" value={entry.debit} onChange={e => updateJurnalEntry(idx, 'debit', e.target.value)} />
+                          </td>
+                          <td style={{ padding: '0.4rem 0.5rem' }}>
+                            <input type="number" min="0" className="form-control" style={{ fontSize: '0.8rem', padding: '0.3rem 0.5rem', textAlign: 'right' }} placeholder="0" value={entry.credit} onChange={e => updateJurnalEntry(idx, 'credit', e.target.value)} />
+                          </td>
+                          <td style={{ padding: '0.4rem 0.25rem' }}>
+                            {jurnalForm.entries.length > 2 && (
+                              <button type="button" onClick={() => removeJurnalRow(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2 }}>
+                                <X size={14} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ background: 'rgba(0,0,0,0.02)' }}>
+                        <td style={{ padding: '0.5rem 0.75rem' }}>
+                          <button type="button" onClick={addJurnalRow} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Plus size={14} /> Tambah Baris
+                          </button>
+                        </td>
+                        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', fontWeight: 700, fontSize: '0.82rem' }}>
+                          {(jurnalForm.entries.reduce((s, e) => s + (Number(e.debit) || 0), 0)).toLocaleString('id-ID')}
+                        </td>
+                        <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', fontWeight: 700, fontSize: '0.82rem' }}>
+                          {(jurnalForm.entries.reduce((s, e) => s + (Number(e.credit) || 0), 0)).toLocaleString('id-ID')}
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                {(() => {
+                  const td = jurnalForm.entries.reduce((s, e) => s + (Number(e.debit) || 0), 0);
+                  const tc = jurnalForm.entries.reduce((s, e) => s + (Number(e.credit) || 0), 0);
+                  const balanced = td === tc && td > 0;
+                  return (
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: balanced ? 'var(--color-success)' : 'var(--color-danger)', fontWeight: 600 }}>
+                      {balanced ? '✓ Jurnal seimbang' : td > 0 || tc > 0 ? `✗ Tidak seimbang (selisih: Rp ${Math.abs(td - tc).toLocaleString('id-ID')})` : ''}
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowJurnalModal(false)}>Batal</button>
+                <button type="submit" className="btn btn-primary"><Plus size={14} /> Simpan Jurnal</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
