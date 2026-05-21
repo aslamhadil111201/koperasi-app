@@ -57,7 +57,18 @@ const Dashboard = () => {
   const lastMonth  = lastMonthDate.toISOString().slice(0, 7);
 
   // ── Helper: hitung kas bersih dari entri jurnal ────────────────────────────
-  const kasEntries = journal.filter(j => j.account === 'Kas Bank');
+  const accounts = useStore((state) => state.accounts) || [];
+  const isKasAccount = (accountName) => {
+    if (!accountName) return false;
+    const lower = accountName.toLowerCase().trim();
+    // Match by ID 101/102 from master data
+    const kasBankName = (accounts.find(a => a.id === '101')?.name || '').toLowerCase().trim();
+    const kasKecilName = (accounts.find(a => a.id === '102')?.name || '').toLowerCase().trim();
+    if (kasBankName && lower === kasBankName) return true;
+    if (kasKecilName && lower === kasKecilName) return true;
+    return lower.includes('kas') || lower.includes('petty');
+  };
+  const kasEntries = journal.filter(j => isKasAccount(j.account));
 
   const kasNetForMonth = (ym) =>
     kasEntries

@@ -19,7 +19,8 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   // Tutup sidebar saat navigasi di mobile
   useEffect(() => {
     if (onClose) onClose();
-  }, [location.pathname, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
