@@ -1038,22 +1038,15 @@ export const useStore = create(
 
     }),
     {
-      name: 'koperasi-store-v6',           // localStorage key — bump versi untuk reset data lama
+      name: 'koperasi-store-v7',           // localStorage key — bump versi untuk reset data lama
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Simpan semua data kecuali session login (keamanan)
+        // Hanya simpan data kecil di localStorage untuk menghindari quota exceeded
+        // Data besar (journal, products, members, dll) di-sync dari Supabase saat load
         accounts:               state.accounts,
-        members:                state.members,
-        customers:              state.customers,
-        products:               state.products,
-        consignmentProducts:    state.consignmentProducts,
-        services:               state.services,
-        journal:                state.journal,
-        cashLoans:              state.cashLoans,
-        creditGoods:            state.creditGoods,
-        memberSalesTransactions: state.memberSalesTransactions,
         darkMode:               state.darkMode,
         currentUser:            state.currentUser,
+        customers:              state.customers,
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
