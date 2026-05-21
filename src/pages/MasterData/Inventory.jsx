@@ -412,7 +412,6 @@ const Inventory = () => {
                   <th>ID Jasa</th>
                   <th>Foto</th>
                   <th>Nama Layanan</th>
-                  <th>Jenis Pembayaran</th>
                   <th>Kategori</th>
                   <th>Provider</th>
                   <th>HPP</th>
@@ -432,11 +431,6 @@ const Inventory = () => {
                       }
                     </td>
                     <td><span className="cell-name">{item.name}</span></td>
-                    <td>
-                      <span className={`badge ${item.paymentType === 'credit' ? 'badge-warning' : 'badge-success'}`}>
-                        {item.paymentType === 'credit' ? 'Credit' : 'Cash'}
-                      </span>
-                    </td>
                     <td><span className="badge badge-primary">{item.category ?? item.type}</span></td>
                     <td>{item.provider}</td>
                     <td className="cell-amount" style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
@@ -646,17 +640,6 @@ const Inventory = () => {
                         value={itemForm.hpp}
                         onChange={(e) => setItemForm({ ...itemForm, hpp: Number(e.target.value) })}
                       />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Jenis Pembayaran</label>
-                      <select
-                        className="form-control"
-                        value={itemForm.paymentType}
-                        onChange={(e) => setItemForm({ ...itemForm, paymentType: e.target.value })}
-                      >
-                        <option value="cash">Cash</option>
-                        <option value="credit">Credit</option>
-                      </select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="form-group">
