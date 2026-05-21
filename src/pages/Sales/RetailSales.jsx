@@ -25,6 +25,7 @@ const RetailSales = () => {
 
   const [paymentMethod, setPaymentMethod]   = useState('Cash');
   const [markupPercent, setMarkupPercent]   = useState(10);
+  const [cashTarget, setCashTarget]         = useState('KAS_BANK');
   const [txDate, setTxDate]                 = useState(new Date().toISOString().split('T')[0]);
   const [takeDate, setTakeDate]             = useState('');
   const [installments, setInstallments]     = useState(1);
@@ -110,7 +111,7 @@ const RetailSales = () => {
     }
 
     const txId = `RTL-${Date.now()}`;
-    checkoutRetail(cart, totalAmount, markupAmount, buyer, paymentMethod, installments, startDate || null, notes, txDate);
+    checkoutRetail(cart, totalAmount, markupAmount, buyer, paymentMethod, installments, startDate || null, notes, txDate, cashTarget);
     setLastTransaction({
       items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, hpp: i.hpp })),
       total: grandTotal, subtotal: totalAmount, markupAmount, type: 'retail',
@@ -225,6 +226,16 @@ const RetailSales = () => {
         </div>
 
         {buyerType !== 'customer' && (
+          <>
+          <div className="payment-method-selector" style={{ marginBottom: '0.5rem' }}>
+            <label className="member-selector-label"><Banknote size={14} /> Kas Tujuan</label>
+            <div className="payment-method-btns">
+              <button type="button" className={`payment-btn ${cashTarget === 'KAS_BANK' ? 'active-cash' : ''}`}
+                onClick={() => setCashTarget('KAS_BANK')}>🏦 Kas Bank BRI</button>
+              <button type="button" className={`payment-btn ${cashTarget === 'KAS_KECIL' ? 'active-cash' : ''}`}
+                onClick={() => setCashTarget('KAS_KECIL')}>💰 Kas Kecil</button>
+            </div>
+          </div>
           <div className="payment-method-selector">
             <label className="member-selector-label"><Banknote size={14} /> Metode Pembayaran</label>
             <div className="payment-method-btns">
@@ -234,6 +245,7 @@ const RetailSales = () => {
                 onClick={() => setPaymentMethod('Kredit')}><CreditCard size={15} /> Kredit / Cicilan</button>
             </div>
           </div>
+          </>
         )}
 
         <div className="form-group" style={{ marginBottom: '0.75rem' }}>

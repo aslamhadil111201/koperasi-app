@@ -608,7 +608,7 @@ export const useStore = create(
   }),
 
   // Transactions Actions
-  checkoutRetail: (cart, totalAmount, markupAmount = 0, buyer, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
+  checkoutRetail: (cart, totalAmount, markupAmount = 0, buyer, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate, cashTarget = 'KAS_BANK') => set((state) => {
     // Deduct stock
     const newProducts = state.products.map(p => {
       const cartItem = cart.find(c => c.id === p.id);
@@ -623,8 +623,9 @@ export const useStore = create(
     // Create item details string
     const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
 
-    // Cash -> Kas, Kredit -> Piutang Dagang
-    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : getAccountName(state, ACC.KAS_BANK);
+    // Cash -> Kas (sesuai cashTarget), Kredit -> Piutang Dagang
+    const kasAccount = cashTarget === 'KAS_KECIL' ? getAccountName(state, ACC.KAS_KECIL) : getAccountName(state, ACC.KAS_BANK);
+    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : kasAccount;
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Ritel [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Ritel [${itemDetails}]`;
@@ -678,7 +679,7 @@ export const useStore = create(
     return { products: newProducts, journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx, creditGoods: newCreditGoods };
   }),
 
-  checkoutConsignment: (cart, totalAmount, totalCommission, totalSupplier, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
+  checkoutConsignment: (cart, totalAmount, totalCommission, totalSupplier, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate, cashTarget = 'KAS_BANK') => set((state) => {
     const newConsignment = state.consignmentProducts.map(p => {
       const cartItem = cart.find(c => c.id === p.id);
       if (cartItem) return { ...p, stock: p.stock - cartItem.qty };
@@ -691,7 +692,8 @@ export const useStore = create(
     // Create item details string
     const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
 
-    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : getAccountName(state, ACC.KAS_BANK);
+    const kasAccount = cashTarget === 'KAS_KECIL' ? getAccountName(state, ACC.KAS_KECIL) : getAccountName(state, ACC.KAS_BANK);
+    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : kasAccount;
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Titipan [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Titipan [${itemDetails}]`;
@@ -710,13 +712,14 @@ export const useStore = create(
     return { consignmentProducts: newConsignment, journal: [...state.journal, ...journalEntries], memberSalesTransactions: newMemberTx };
   }),
 
-  checkoutService: (cart, totalAmount, biayaJasa = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate) => set((state) => {
+  checkoutService: (cart, totalAmount, biayaJasa = 0, memberId, paymentMethod = 'Cash', installments = 1, startDate = null, notes = '', txDate, cashTarget = 'KAS_BANK') => set((state) => {
     const newJournalId = genJournalId();
     const date = txDate || new Date().toISOString().split('T')[0];
     const totalHPP = cart.reduce((s, item) => s + (item.hpp || 0) * item.qty, 0);
 
     const itemDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
-    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : getAccountName(state, ACC.KAS_BANK);
+    const kasAccount = cashTarget === 'KAS_KECIL' ? getAccountName(state, ACC.KAS_KECIL) : getAccountName(state, ACC.KAS_BANK);
+    const akunDebit = paymentMethod === 'Kredit' ? getAccountName(state, ACC.PIUTANG_DAGANG) : kasAccount;
     const desc = paymentMethod === 'Kredit'
       ? `Penjualan Jasa/PPOB [${itemDetails}] (Kredit${startDate ? `, mulai ${startDate}` : ''}${notes ? ` - ${notes}` : ''})`
       : `Penjualan Jasa/PPOB [${itemDetails}]`;

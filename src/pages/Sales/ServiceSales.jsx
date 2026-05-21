@@ -16,6 +16,7 @@ const ServiceSales = () => {
   const [searchTerm, setSearchTerm]         = useState('');
   const [selectedMember, setSelectedMember] = useState('');
   const [paymentMethod, setPaymentMethod]   = useState('Cash');
+  const [cashTarget, setCashTarget]         = useState('KAS_BANK');
   const [txDate, setTxDate]                 = useState(new Date().toISOString().split('T')[0]);
   const [takeDate, setTakeDate]             = useState('');
   const [installments, setInstallments]     = useState(1);
@@ -58,7 +59,7 @@ const ServiceSales = () => {
     if (paymentMethod === 'Kredit' && !startDate) return alert('Isi tanggal mulai cicilan!');
     const member = selectedMember ? members.find(m => m.id === selectedMember) : null;
     const txId = `JSA-${Date.now()}`;
-    checkoutService(cart, totalAmount, biayaJasa, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate);
+    checkoutService(cart, totalAmount, biayaJasa, selectedMember || null, paymentMethod, installments, startDate || null, notes, txDate, cashTarget);
     setLastTransaction({
       items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, hpp: i.hpp })),
       total: grandTotal, subtotal: totalAmount, markupAmount: biayaJasa, type: 'service',
@@ -144,6 +145,16 @@ const ServiceSales = () => {
         <div className="form-group" style={{ marginBottom: '0.75rem' }}>
           <label className="member-selector-label"><Calendar size={14} /> Tanggal Transaksi</label>
           <input type="date" className="form-control" value={txDate} onChange={(e) => setTxDate(e.target.value)} required />
+        </div>
+
+        <div className="payment-method-selector" style={{ marginBottom: '0.5rem' }}>
+          <label className="member-selector-label"><Banknote size={14} /> Kas Tujuan</label>
+          <div className="payment-method-btns">
+            <button type="button" className={`payment-btn ${cashTarget === 'KAS_BANK' ? 'active-cash' : ''}`}
+              onClick={() => setCashTarget('KAS_BANK')}>🏦 Kas Bank BRI</button>
+            <button type="button" className={`payment-btn ${cashTarget === 'KAS_KECIL' ? 'active-cash' : ''}`}
+              onClick={() => setCashTarget('KAS_KECIL')}>💰 Kas Kecil</button>
+          </div>
         </div>
 
         <div className="payment-method-selector">
