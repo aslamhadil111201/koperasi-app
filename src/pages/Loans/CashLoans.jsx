@@ -9,10 +9,19 @@ const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
 const CashLoans = () => {
   const cashLoans       = useStore((state) => state.cashLoans);
   const journal         = useStore((state) => state.journal);
+  const accounts        = useStore((state) => state.accounts) || [];
   const approveCashLoan = useStore((state) => state.approveCashLoan);
   const payCashLoan     = useStore((state) => state.payCashLoan);
   const addCashLoan     = useStore((state) => state.addCashLoan);
   const members         = useStore((state) => state.members);
+
+  const isKasAccount = (name) => {
+    if (!name) return false;
+    const lower = name.toLowerCase().trim();
+    const kasBankName = (accounts.find(a => a.id === '101')?.name || '').toLowerCase().trim();
+    if (kasBankName && lower === kasBankName) return true;
+    return lower.includes('kas bank') || lower.includes('kas kecil') || lower.includes('kas ');
+  };
 
   const today    = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
@@ -94,10 +103,10 @@ const CashLoans = () => {
   const totalActive        = cashLoans.filter(l => l.status === 'Active').reduce((s,l) => s + l.remainingAmount, 0);
   const totalPending       = cashLoans.filter(l => l.status === 'Pending').reduce((s,l) => s + l.amount, 0);
   const pencairanBulanIni  = journal
-    .filter(j => j.account === 'Piutang Anggota' && j.debit > 0 && j.date.startsWith(thisMonth))
+    .filter(j => j.account.toLowerCase().includes('piutang') && j.debit > 0 && j.date.startsWith(thisMonth))
     .reduce((s,j) => s + j.debit, 0);
   const angsuranBulanIni   = journal
-    .filter(j => j.account === 'Kas Bank' && j.debit > 0 && j.date.startsWith(thisMonth) &&
+    .filter(j => isKasAccount(j.account) && j.debit > 0 && j.date.startsWith(thisMonth) &&
                  j.description.toLowerCase().includes('angsuran pinjaman'))
     .reduce((s,j) => s + j.debit, 0);
 

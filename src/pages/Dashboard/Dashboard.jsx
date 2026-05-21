@@ -90,7 +90,7 @@ const Dashboard = () => {
   // Simpanan bulan ini vs bulan lalu dari jurnal
   const simpananNet = (ym) =>
     journal
-      .filter(j => j.account === 'Simpanan Anggota' && j.date.startsWith(ym))
+      .filter(j => j.account.toLowerCase().includes('modal koperasi') && j.date.startsWith(ym))
       .reduce((s, j) => s + j.credit - j.debit, 0);
   const simpananThisMonth = simpananNet(thisMonth);
   const simpananLastMonth = simpananNet(lastMonth);
@@ -105,10 +105,10 @@ const Dashboard = () => {
 
   // Pinjaman aktif bulan lalu (approved di bulan lalu)
   const loansApprovedThisMonth = journal
-    .filter(j => j.account === 'Piutang Anggota' && j.debit > 0 && j.date.startsWith(thisMonth))
+    .filter(j => j.account.toLowerCase().includes('piutang') && j.debit > 0 && j.date.startsWith(thisMonth))
     .reduce((s, j) => s + j.debit, 0);
   const loansApprovedLastMonth = journal
-    .filter(j => j.account === 'Piutang Anggota' && j.debit > 0 && j.date.startsWith(lastMonth))
+    .filter(j => j.account.toLowerCase().includes('piutang') && j.debit > 0 && j.date.startsWith(lastMonth))
     .reduce((s, j) => s + j.debit, 0);
   const loanTrend = loansApprovedLastMonth !== 0
     ? (((loansApprovedThisMonth - loansApprovedLastMonth) / Math.abs(loansApprovedLastMonth)) * 100).toFixed(1)

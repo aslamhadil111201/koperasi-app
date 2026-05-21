@@ -17,7 +17,7 @@ export default function Receivables() {
   const rawPiutangDagangMap = useMemo(() => {
     const map = {};
     journal.forEach(entry => {
-      if (entry.account === 'Piutang Dagang') {
+      if (entry.account.toLowerCase().includes('piutang dagang') || entry.account.toLowerCase().includes('piutang')) {
         const memberId = entry.ref;
         if (!map[memberId]) map[memberId] = 0;
         map[memberId] += (entry.debit || 0) - (entry.credit || 0);
