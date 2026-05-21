@@ -35,15 +35,16 @@ const NeracaSaldo = () => {
   // Ambil saldo awal yang sudah ada dari jurnal JU-INIT
   const existingSaldo = useMemo(() => {
     const map = {};
+    const accList = accounts;
     journal.filter(j => j.id === 'JU-INIT' && j.account !== 'Saldo Penyeimbang').forEach(j => {
-      const acc = accounts.find(a => a.name === j.account);
-      const isDebitNormal = acc ? isDebitCategory(acc.category) : true;
+      // Match account name case-insensitive to master data
+      const matchedAcc = accList.find(a => a.name.toLowerCase().trim() === (j.account || '').toLowerCase().trim());
+      const accName = matchedAcc ? matchedAcc.name : j.account;
+      const isDebitNormal = matchedAcc ? isDebitCategory(matchedAcc.category) : true;
       if (isDebitNormal) {
-        // Akun debit normal: debit = positif, credit = negatif
-        map[j.account] = j.debit > 0 ? j.debit : -j.credit;
+        map[accName] = j.debit > 0 ? j.debit : -j.credit;
       } else {
-        // Akun kredit normal: credit = positif, debit = negatif
-        map[j.account] = j.credit > 0 ? j.credit : -j.debit;
+        map[accName] = j.credit > 0 ? j.credit : -j.debit;
       }
     });
     return map;
