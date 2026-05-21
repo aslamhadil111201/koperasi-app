@@ -112,9 +112,6 @@ const ServiceSales = () => {
                 <p className="product-price">Rp {service.price.toLocaleString('id-ID')}</p>
                 <div className="product-meta">
                   <span className="badge badge-primary">{service.type}</span>
-                  <span className={`badge ${service.paymentType === 'credit' ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: '0.65rem' }}>
-                    {service.paymentType === 'credit' ? 'Credit' : 'Cash'}
-                  </span>
                   <span className="product-category">{service.provider}</span>
                 </div>
               </div>
