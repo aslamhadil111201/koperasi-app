@@ -232,10 +232,15 @@ export const insertJournalEntries = async (entries) => {
 export const saveSaldoAwalDB = async (accountName, journalEntries) => {
   if (!isSupabaseReady()) return;
   try {
-    // 1. Hapus JU-INIT untuk akun ini saja
-    await supabase.from('journal').delete().eq('journal_id', 'JU-INIT').eq('account', accountName);
+    // 1. Hapus JU-INIT untuk akun ini (case-insensitive via ilike)
+    await supabase.from('journal')
+      .delete()
+      .eq('journal_id', 'JU-INIT')
+      .ilike('account', accountName);
     // 2. Insert entri JU-INIT baru untuk akun ini saja
-    const newEntry = journalEntries.find(j => j.id === 'JU-INIT' && j.account === accountName);
+    const newEntry = journalEntries.find(
+      j => j.id === 'JU-INIT' && j.account?.toLowerCase() === accountName?.toLowerCase()
+    );
     if (newEntry) {
       const row = {
         journal_id: newEntry.id, date: newEntry.date, description: newEntry.description,
@@ -246,6 +251,38 @@ export const saveSaldoAwalDB = async (accountName, journalEntries) => {
     }
   } catch (error) {
     console.error('Failed to save saldo awal to Supabase:', error);
+  }
+};
+
+// Deduplikasi JU-INIT di Supabase: untuk setiap nama akun, hapus duplikat dan pertahankan satu entry
+export const deduplicateJUINITDB = async () => {
+  if (!isSupabaseReady()) return;
+  try {
+    // Ambil semua JU-INIT dari DB
+    const { data, error } = await supabase.from('journal').select('*').eq('journal_id', 'JU-INIT');
+    if (error || !data || data.length === 0) return;
+
+    // Group by nama akun (case-insensitive), temukan duplikat
+    const grouped = {};
+    data.forEach(row => {
+      const key = (row.account || '').toLowerCase().trim();
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(row);
+    });
+
+    // Untuk setiap akun yang punya lebih dari 1 entry, hapus semua kecuali yang terakhir
+    for (const key of Object.keys(grouped)) {
+      const rows = grouped[key];
+      if (rows.length <= 1) continue;
+      // Urutkan by id (row id Supabase), pertahankan yang terakhir
+      rows.sort((a, b) => a.id - b.id);
+      const toDelete = rows.slice(0, rows.length - 1); // hapus semua kecuali terakhir
+      for (const row of toDelete) {
+        await supabase.from('journal').delete().eq('id', row.id);
+      }
+    }
+  } catch (err) {
+    console.error('deduplicateJUINITDB error:', err);
   }
 };
 

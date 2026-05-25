@@ -4,7 +4,7 @@ import { isSupabaseReady } from '../lib/supabase';
 import {
   fetchMembers, fetchProducts, fetchConsignments, fetchServices,
   fetchJournal, fetchCashLoans, fetchCreditGoods, fetchMemberSalesTx,
-  fetchAccounts, insertAccountDB,
+  fetchAccounts, insertAccountDB, deduplicateJUINITDB,
 } from '../services/supabaseService';
 
 /**
@@ -80,6 +80,24 @@ export const useSupabaseSync = () => {
         setCashLoans(cashLoans);
         setCreditGoods(creditGoods);
         setMemberSalesTx(memberTx);
+
+        // Bersihkan duplikat JU-INIT di Supabase, lalu re-fetch journal agar store sinkron
+        deduplicateJUINITDB().then(async () => {
+          try {
+            const cleanJournal = await fetchJournal();
+            const accList2 = accounts.length > 0 ? accounts : useStore.getState().accounts || [];
+            const cleanNormalized = cleanJournal.map(j => {
+              if (!j.account) return j;
+              const matchedAcc = accList2.find(a => a.name.toLowerCase() === j.account.toLowerCase());
+              if (matchedAcc && matchedAcc.name !== j.account) return { ...j, account: matchedAcc.name };
+              return j;
+            });
+            setJournal(cleanNormalized);
+          } catch (e) {
+            console.warn('Re-fetch journal after dedup failed:', e);
+          }
+        }).catch(e => console.warn('deduplicateJUINITDB:', e));
+
         setSynced(true);
       } catch (err) {
         console.error('Supabase sync error:', err);
