@@ -72,11 +72,14 @@ export default function PettyCash() {
 
     Object.keys(grouped).forEach(jid => {
       const entries = grouped[jid];
-      const hasPettyCash = entries.find(e => isKasKecilAccount(e.account));
-      if (hasPettyCash) {
+      const pettyCashEntries = entries.filter(e => isKasKecilAccount(e.account));
+      if (pettyCashEntries.length === 0) return;
+
+      pettyCashEntries.forEach(hasPettyCash => {
         // Tentukan apakah Kas Kecil di debit (Masuk) atau kredit (Keluar)
         const isMasuk = hasPettyCash.debit > 0;
         const amount = isMasuk ? hasPettyCash.debit : hasPettyCash.credit;
+        if (amount === 0) return; // skip entry kosong
         // Cari akun pasangannya
         const lawan = entries.find(e => !isKasKecilAccount(e.account));
         
@@ -88,7 +91,7 @@ export default function PettyCash() {
           type: isMasuk ? 'Masuk' : 'Keluar',
           amount: amount
         });
-      }
+      });
     });
 
     // Urutkan dari yang terbaru

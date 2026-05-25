@@ -196,10 +196,30 @@ export const useStore = create(
   deleteCashLoan: (id) => set((state) => ({
     cashLoans: state.cashLoans.filter(l => l.id !== id),
   })),
+
+  // Deduplikasi entry JU-INIT: hapus entry duplikat untuk akun yang sama, pertahankan yang terakhir
+  deduplicateJUINIT: () => set((state) => {
+    const nonInit = state.journal.filter(j => j.id !== 'JU-INIT');
+    const initEntries = state.journal.filter(j => j.id === 'JU-INIT');
+    
+    // Untuk setiap nama akun, simpan hanya entry terakhir (index tertinggi)
+    const seen = new Map();
+    initEntries.forEach((entry, idx) => {
+      const key = (entry.account || '').toLowerCase().trim();
+      seen.set(key, entry); // overwrite → yang terakhir menang
+    });
+    
+    const deduped = Array.from(seen.values());
+    return { journal: [...nonInit, ...deduped] };
+  }),
+
   setSaldoAwal: (accountName, amount, date) => set((state) => {
     const saldoDate = date || '2026-01-01';
-    // 1. Hapus entri JU-INIT untuk akun ini yang sebelumnya (jika ada)
-    const oldJournal = state.journal.filter(j => !(j.id === 'JU-INIT' && j.account === accountName));
+    // 1. Hapus entri JU-INIT untuk akun ini yang sebelumnya (case-insensitive agar tidak double entry)
+    const accountNameLower = (accountName || '').toLowerCase().trim();
+    const oldJournal = state.journal.filter(j => !(
+      j.id === 'JU-INIT' && (j.account || '').toLowerCase().trim() === accountNameLower
+    ));
     
     // 2. Tambahkan entri baru jika amount != 0
     const newEntries = [];

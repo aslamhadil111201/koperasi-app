@@ -52,12 +52,27 @@ function App() {
   const setMembers = useStore((state) => state.setMembers);
   const journal = useStore((state) => state.journal);
   const migrateKasToKasBank = useStore((state) => state.migrateKasToKasBank);
+  const deduplicateJUINIT = useStore((state) => state.deduplicateJUINIT);
   const { syncing } = useSupabaseSync();
   useSupabaseWrite();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
+
+  // Bersihkan duplikat JU-INIT yang mungkin tersimpan dari bug sebelumnya
+  useEffect(() => {
+    if (journal && journal.length > 0) {
+      const initEntries = journal.filter(j => j.id === 'JU-INIT');
+      const accountNames = initEntries.map(e => (e.account || '').toLowerCase().trim());
+      const uniqueNames = new Set(accountNames);
+      // Jika ada duplikat (lebih banyak entry dari nama unik), jalankan deduplikasi
+      if (initEntries.length > uniqueNames.size) {
+        deduplicateJUINIT();
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // hanya saat mount pertama kali
 
   // Migrasi permanen: konversi ANG-xxx → KPKCG-xxx dan simpan ke localStorage
   useEffect(() => {

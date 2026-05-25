@@ -11,6 +11,7 @@ const NeracaSaldo = () => {
   const accounts = useStore((s) => s.accounts) || [];
   const journal = useStore((s) => s.journal) || [];
   const setSaldoAwal = useStore((s) => s.setSaldoAwal);
+  const deduplicateJUINIT = useStore((s) => s.deduplicateJUINIT);
 
   // Ambil tanggal dari JU-INIT yang sudah ada di jurnal
   const savedDate = useMemo(() => {
@@ -105,11 +106,21 @@ const NeracaSaldo = () => {
       if (!window.confirm(`Total Debit dan Kredit belum seimbang (selisih ${fmt(selisih)}). Sistem akan otomatis menambahkan Saldo Penyeimbang. Lanjutkan?`)) return;
     }
 
-    // Simpan semua akun yang punya nilai
+    // Simpan hanya akun yang punya nilai input (diisi user) atau yang sudah ada di jurnal
+    // Akun dengan nilai 0 dan tidak pernah diisi tidak perlu disimpan (hindari entry kosong)
     allAccounts.forEach(acc => {
+      const inputVal = saldoInputs[acc.name];
+      const existingVal = existingSaldo[acc.name];
+      // Lewati akun yang tidak diubah dan tidak punya saldo awal
+      if (inputVal === undefined && !existingVal) return;
       const val = Number(getInputValue(acc.name)) || 0;
       setSaldoAwal(acc.name, val, tanggal);
     });
+
+    // Bersihkan duplikat JU-INIT yang mungkin terjadi akibat simpan berulang
+    setTimeout(() => {
+      deduplicateJUINIT();
+    }, 100);
 
     // Bersihkan duplikat Saldo Penyeimbang di DB setelah semua tersimpan
     setTimeout(() => {
