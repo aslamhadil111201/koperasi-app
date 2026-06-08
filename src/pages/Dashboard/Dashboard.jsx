@@ -190,7 +190,7 @@ const Dashboard = () => {
   const handleUnduhLaporan = async () => {
     const todayLabel = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const logoBase64 = await getLogoBase64();
-    const headerHTML = buildPrintHeader(logoBase64, 'LAPORAN DASHBOARD', `Ringkasan Keuangan — ${todayLabel}`, todayLabel);
+    const headerHTML = buildPrintHeader(logoBase64, 'LAPORAN DASHBOARD', `Ringkasan Keuangan — ${todayLabel}`, todayLabel, false);
 
     const html = `<!DOCTYPE html>
 <html>
