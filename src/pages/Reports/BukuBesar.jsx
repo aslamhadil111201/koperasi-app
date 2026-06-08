@@ -155,21 +155,47 @@ const BukuBesar = () => {
     const logoBase64 = await getLogoBase64();
     const headerHTML = buildPrintHeader(logoBase64, 'BUKU BESAR', `Periode: ${periodeLabel} &nbsp;|&nbsp; Akun: ${akunLabel} &nbsp;|&nbsp; ${filtered.length} entri · ${accountsToShow.length} akun`, today);
 
+    // Helper: format saldo dengan tanda D/K berdasarkan tipe normal akun
+    const fmtSaldo = (balance, akunName) => {
+      const acc = accounts.find(a => a.name === akunName);
+      const isDebitNormal = !acc || acc.type === 'debit';
+      const absVal = Math.abs(balance).toLocaleString('id-ID');
+      // Untuk akun normal debit: positif = D, negatif = K
+      // Untuk akun normal kredit: positif = K, negatif = D
+      if (isDebitNormal) {
+        return balance >= 0
+          ? `Rp ${absVal} (D)`
+          : `Rp ${absVal} (K)`;
+      } else {
+        return balance <= 0
+          ? `Rp ${absVal} (K)`
+          : `Rp ${absVal} (D)`;
+      }
+    };
+
+    const fmtSaldoColor = (balance, akunName) => {
+      const acc = accounts.find(a => a.name === akunName);
+      const isDebitNormal = !acc || acc.type === 'debit';
+      // Warna merah jika saldo berlawanan dengan normal (tidak wajar)
+      const isNormal = isDebitNormal ? balance >= 0 : balance <= 0;
+      return isNormal ? '#FF4D00' : '#ef4444';
+    };
+
     const accountsHTML = accountsToShow.map(akun => {
       const entries = getEntriesWithBalance(groupedByAccount[akun] || { saldoAwal: 0, entries: [] });
-      const totalDebit  = entries.reduce((s,e) => s + e.debit,  0);
-      const totalCredit = entries.reduce((s,e) => s + e.credit, 0);
+      const totalDebit  = entries.reduce((s,e) => s + (e.debit  || 0), 0);
+      const totalCredit = entries.reduce((s,e) => s + (e.credit || 0), 0);
       const saldoAkhir  = totalDebit - totalCredit;
 
       const rowsHTML = entries.map((e, i) => `
         <tr style="background:${i%2===0?'#fff':'#f9fafb'}">
-          <td>${e.date}</td>
-          <td style="font-family:monospace;font-size:10px">${e.id}</td>
-          <td>${e.description}</td>
-          <td style="text-align:right;color:${e.debit>0?'#111':'#9ca3af'}">${e.debit>0?'Rp '+e.debit.toLocaleString('id-ID'):'-'}</td>
-          <td style="text-align:right;color:${e.credit>0?'#111':'#9ca3af'}">${e.credit>0?'Rp '+e.credit.toLocaleString('id-ID'):'-'}</td>
-          <td style="text-align:right;font-weight:600;color:${e.balance>=0?'#FF4D00':'#ef4444'}">
-            Rp ${Math.abs(e.balance).toLocaleString('id-ID')} ${e.balance<0?'(K)':'(D)'}
+          <td style="padding:5px 8px">${e.date}</td>
+          <td style="padding:5px 8px;font-family:monospace;font-size:10px">${e.id}</td>
+          <td style="padding:5px 8px">${e.description}</td>
+          <td style="padding:5px 8px;text-align:right;color:${e.debit>0?'#111':'#9ca3af'}">${e.debit>0?'Rp '+e.debit.toLocaleString('id-ID'):'-'}</td>
+          <td style="padding:5px 8px;text-align:right;color:${e.credit>0?'#111':'#9ca3af'}">${e.credit>0?'Rp '+e.credit.toLocaleString('id-ID'):'-'}</td>
+          <td style="padding:5px 8px;text-align:right;font-weight:600;color:${fmtSaldoColor(e.balance, akun)}">
+            ${fmtSaldo(e.balance, akun)}
           </td>
         </tr>`).join('');
 
@@ -180,7 +206,7 @@ const BukuBesar = () => {
             <span style="font-size:10px">
               D: Rp ${totalDebit.toLocaleString('id-ID')} &nbsp;|&nbsp;
               K: Rp ${totalCredit.toLocaleString('id-ID')} &nbsp;|&nbsp;
-              Saldo: Rp ${Math.abs(saldoAkhir).toLocaleString('id-ID')} ${saldoAkhir<0?'(K)':'(D)'}
+              Saldo: ${fmtSaldo(saldoAkhir, akun)}
             </span>
           </div>
           <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -200,8 +226,8 @@ const BukuBesar = () => {
                 <td colspan="3" style="padding:6px 10px;text-align:right">Total</td>
                 <td style="padding:6px 10px;text-align:right;color:#10b981">Rp ${totalDebit.toLocaleString('id-ID')}</td>
                 <td style="padding:6px 10px;text-align:right;color:#ef4444">Rp ${totalCredit.toLocaleString('id-ID')}</td>
-                <td style="padding:6px 10px;text-align:right;color:${saldoAkhir>=0?'#FF4D00':'#ef4444'}">
-                  Rp ${Math.abs(saldoAkhir).toLocaleString('id-ID')} ${saldoAkhir<0?'(K)':'(D)'}
+                <td style="padding:6px 10px;text-align:right;color:${fmtSaldoColor(saldoAkhir, akun)}">
+                  ${fmtSaldo(saldoAkhir, akun)}
                 </td>
               </tr>
             </tfoot>
@@ -227,7 +253,7 @@ const BukuBesar = () => {
   ${accountsHTML}
 
   <div class="footer">KPKCG — Koperasi Pemasaran Karya Cipta Gemilang &nbsp;|&nbsp; ${today}</div>
-  <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}</script>
+  <script>setTimeout(function(){window.print();setTimeout(function(){window.close();},1000);}, 800);</script>
 </body>
 </html>`;
 
