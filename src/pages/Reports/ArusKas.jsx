@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Waves, Calendar, Printer, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { getLogoBase64, buildPrintHeader } from '../../utils/printHeader';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import './Reports.css';
 
@@ -153,9 +154,11 @@ const ArusKas = () => {
     { key: 'pendanaan', label: 'Aktivitas Pendanaan',  desc: 'Simpanan anggota, modal',            color: 'var(--color-success)' },
   ];
 
-  const handleCetak = () => {
+  const handleCetak = async () => {
     const todayLabel = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const periodeLabel = fmtMonth(selectedMonth);
+    const logoBase64 = await getLogoBase64();
+    const headerHTML = buildPrintHeader(logoBase64, 'LAPORAN ARUS KAS', `Periode: ${periodeLabel}`, todayLabel);
 
     const kategoriHTML = categories.map(cat => {
       const masuk  = totals[cat.key].masuk;
@@ -194,9 +197,6 @@ const ArusKas = () => {
   @page { size: A4; margin: 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #FF4D00; padding-bottom: 10px; }
-  .header h1 { font-size: 18px; font-weight: 800; color: #FF4D00; }
-  .header p  { font-size: 10px; color: #6b7280; margin-top: 2px; }
   h2 { font-size: 13px; font-weight: 700; margin: 16px 0 8px; color: #FF4D00; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
   .summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
   .card { border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 12px; }
@@ -210,14 +210,7 @@ const ArusKas = () => {
 </style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1>KPKCG — Laporan Arus Kas</h1>
-      <p>Koperasi Pemasaran Karya Cipta Gemilang</p>
-      <p>Periode: ${periodeLabel} &nbsp;|&nbsp; ${filtered.length} transaksi kas</p>
-    </div>
-    <div style="font-size:10px;color:#6b7280;text-align:right">Dicetak: ${todayLabel}</div>
-  </div>
+  ${headerHTML}
 
   <div class="summary">
     <div class="card" style="background:#f9fafb">

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Download, Calendar, TrendingUp, TrendingDown, DollarSign, Plus, X, FileText } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { getLogoBase64, buildPrintHeader } from '../../utils/printHeader';
 import './Reports.css';
 
 
@@ -105,9 +106,11 @@ const ProfitLoss = () => {
 
   const fmt = (n) => `Rp ${n.toLocaleString('id-ID')}`;
 
-  const handleCetak = () => {
+  const handleCetak = async () => {
     const todayLabel = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const periodeLabel = selectedMonth ? fmtMonth(selectedMonth) : 'Semua Periode';
+    const logoBase64 = await getLogoBase64();
+    const headerHTML = buildPrintHeader(logoBase64, 'LAPORAN LABA / RUGI', `Periode: ${periodeLabel}`, todayLabel);
 
     const revenueRows = revenues.filter(r => r.value > 0).map(r =>
       `<tr><td style="padding-left:20px">${r.akun}</td><td style="text-align:right">Rp ${r.value.toLocaleString('id-ID')}</td></tr>`
@@ -130,10 +133,6 @@ const ProfitLoss = () => {
   @page { size: A4; margin: 20mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 12px; color: #111; }
-  .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #FF4D00; padding-bottom: 12px; }
-  .header h1 { font-size: 16px; font-weight: 800; }
-  .header h2 { font-size: 14px; font-weight: 700; margin-top: 4px; }
-  .header p  { font-size: 10px; color: #6b7280; margin-top: 2px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
   .section-title td { font-weight: 700; font-size: 13px; padding: 10px 0 4px; border-bottom: 2px solid #FF4D00; color: #FF4D00; }
   td { padding: 5px 8px; }
@@ -146,12 +145,7 @@ const ProfitLoss = () => {
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1>KOPERASI PEMASARAN KARYA CIPTA GEMILANG</h1>
-    <h2>LAPORAN LABA / RUGI</h2>
-    <p>Periode: ${periodeLabel}</p>
-    <p>Dicetak: ${todayLabel}</p>
-  </div>
+  ${headerHTML}
 
   <table>
     <tr class="section-title"><td colspan="2">PENDAPATAN</td></tr>

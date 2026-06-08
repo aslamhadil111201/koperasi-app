@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Scale, Printer, Calendar } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { getLogoBase64, buildPrintHeader } from '../../utils/printHeader';
 import './Reports.css';
 
 const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
@@ -88,8 +89,11 @@ const Neraca = () => {
     </div>
   );
 
-  const handleCetak = () => {
+  const handleCetak = async () => {
     const isSeimbang = Math.abs(balances.totalAktiva - (balances.totalKewajiban + balances.totalEkuitas)) < 1;
+    const todayLabel = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+    const logoBase64 = await getLogoBase64();
+    const headerHTML = buildPrintHeader(logoBase64, 'NERACA', `Per ${today}`, todayLabel);
 
     const aktivaHTML = balances.aktivaLancarItems.map(i => 
       `<div class="row indent"><span>${i.name}</span><span>${fmt(i.value)}</span></div>`
@@ -113,10 +117,6 @@ const Neraca = () => {
   @page { size: A4; margin: 20mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 12px; color: #111; }
-  .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #111; padding-bottom: 12px; }
-  .header h1 { font-size: 14px; font-weight: 800; text-transform: uppercase; }
-  .header h2 { font-size: 13px; font-weight: 700; margin-top: 4px; }
-  .header p  { font-size: 11px; color: #444; margin-top: 2px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   .section { border: 1px solid #ddd; border-radius: 6px; padding: 16px; }
   .section-title { font-size: 13px; font-weight: 800; margin-bottom: 12px; text-transform: uppercase; }
@@ -134,11 +134,7 @@ const Neraca = () => {
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Koperasi Pemasaran Karya Cipta Gemilang</h1>
-    <h2>NERACA</h2>
-    <p>Per ${today}</p>
-  </div>
+  ${headerHTML}
 
   <div class="grid">
     <div class="section">
