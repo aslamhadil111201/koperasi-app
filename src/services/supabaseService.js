@@ -320,8 +320,14 @@ export const cleanupSaldoPenyeimbangDB = async () => {
 
 export const migrateKasToKasBankDB = async () => {
   if (!isSupabaseReady()) return;
-  const { error } = await supabase.from('journal').update({ account: 'Kas Bank' }).eq('account', 'Kas');
-  if (error) console.error('Failed to migrate Kas to Kas Bank in DB:', error);
+  // Rename semua variasi nama KAS BANK lama ke nama canonical "KAS BANK BRI"
+  const oldNames = ['Kas', 'Kas Bank', 'KAS BANK', 'kas bank', 'kas bank bri'];
+  for (const oldName of oldNames) {
+    await supabase.from('journal')
+      .update({ account: 'KAS BANK BRI' })
+      .eq('account', oldName)
+      .neq('account', 'KAS BANK BRI'); // skip yang sudah benar
+  }
 };
 
 // ── Cash Loans ────────────────────────────────────────────────────────────────

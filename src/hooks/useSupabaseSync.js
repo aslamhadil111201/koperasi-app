@@ -4,7 +4,7 @@ import { isSupabaseReady } from '../lib/supabase';
 import {
   fetchMembers, fetchProducts, fetchConsignments, fetchServices,
   fetchJournal, fetchCashLoans, fetchCreditGoods, fetchMemberSalesTx,
-  fetchAccounts, insertAccountDB, deduplicateJUINITDB,
+  fetchAccounts, insertAccountDB, deduplicateJUINITDB, migrateKasToKasBankDB,
 } from '../services/supabaseService';
 
 /**
@@ -81,8 +81,11 @@ export const useSupabaseSync = () => {
         setCreditGoods(creditGoods);
         setMemberSalesTx(memberTx);
 
-        // Bersihkan duplikat JU-INIT di Supabase, lalu re-fetch journal agar store sinkron
-        deduplicateJUINITDB().then(async () => {
+        // Bersihkan duplikat JU-INIT & migrate nama akun KAS BANK di Supabase, lalu re-fetch journal
+        Promise.all([
+          deduplicateJUINITDB(),
+          migrateKasToKasBankDB(),
+        ]).then(async () => {
           try {
             const cleanJournal = await fetchJournal();
             const accList2 = accounts.length > 0 ? accounts : useStore.getState().accounts || [];
@@ -94,9 +97,9 @@ export const useSupabaseSync = () => {
             });
             setJournal(cleanNormalized);
           } catch (e) {
-            console.warn('Re-fetch journal after dedup failed:', e);
+            console.warn('Re-fetch journal after migration failed:', e);
           }
-        }).catch(e => console.warn('deduplicateJUINITDB:', e));
+        }).catch(e => console.warn('Migration error:', e));
 
         setSynced(true);
       } catch (err) {

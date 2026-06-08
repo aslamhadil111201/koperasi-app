@@ -1048,11 +1048,13 @@ export const useStore = create(
   }),
 
   migrateKasToKasBank: () => set((state) => {
+    const kasVariants = ['kas', 'kas bank', 'kas bank bri'];
+    const canonicalName = getAccountName(state, ACC.KAS_BANK); // 'KAS BANK BRI'
     let changed = false;
     const newJournal = state.journal.map(j => {
-      if (j.account === 'Kas') {
+      if (j.account && j.account !== canonicalName && kasVariants.includes(j.account.toLowerCase().trim())) {
         changed = true;
-        return { ...j, account: getAccountName(state, ACC.KAS_BANK) };
+        return { ...j, account: canonicalName };
       }
       return j;
     });
