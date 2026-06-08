@@ -211,9 +211,29 @@ export const deleteServiceDB = async (id) => {
 
 // ── Journal ───────────────────────────────────────────────────────────────────
 export const fetchJournal = async () => {
-  const { data, error } = await supabase.from('journal').select('*').order('date').order('id');
-  if (error) throw error;
-  return data.map(j => ({
+  // Supabase default limit 1000 baris — ambil semua dengan pagination
+  const PAGE_SIZE = 1000;
+  let allData = [];
+  let from = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('journal')
+      .select('*')
+      .order('date')
+      .order('id')
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    hasMore = data.length === PAGE_SIZE;
+    from += PAGE_SIZE;
+  }
+
+  return allData.map(j => ({
     id: j.journal_id, date: j.date, description: j.description,
     ref: j.ref, debit: j.debit, credit: j.credit, account: j.account,
   }));
