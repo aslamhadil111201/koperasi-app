@@ -34,27 +34,27 @@ export const getLogoBase64 = async () => {
  */
 export const buildPrintHeader = (logoBase64, judulLaporan, periodeLabel, cetakLabel, showAddress = true) => {
   const logoHTML = logoBase64
-    ? `<img src="${logoBase64}" alt="Logo KPKCG" style="height:64px;width:64px;object-fit:contain;flex-shrink:0;" />`
-    : `<div style="width:64px;height:64px;background:#FF4D00;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;flex-shrink:0;">K</div>`;
+    ? `<img src="${logoBase64}" alt="Logo KPKCG" style="height:48px;width:48px;object-fit:contain;flex-shrink:0;" />`
+    : `<div style="width:48px;height:48px;background:#FF4D00;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0;">K</div>`;
 
   return `
-  <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #FF4D00;">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #FF4D00;page-break-after:avoid;page-break-inside:avoid;">
     ${logoHTML}
     <div style="flex:1;text-align:center;">
-      <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">
+      <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">
         KOPERASI PEMASARAN KARYA CIPTA GEMILANG
       </div>
-      <div style="font-size:11px;color:#6b7280;margin-top:2px;">
-        ${showAddress ? 'Jl. Australia I Kav.C1/2, Warnasari, Kec. Citangkil, Kota Cilegon, Banten 42443 &nbsp;|&nbsp; Telp: +62 852-1940-4228' : ''}
-      </div>
-      <div style="font-size:15px;font-weight:800;margin-top:6px;color:#FF4D00;letter-spacing:1px;text-transform:uppercase;">
+      ${showAddress ? `<div style="font-size:9px;color:#6b7280;margin-top:1px;">
+        Jl. Australia I Kav.C1/2, Warnasari, Kec. Citangkil, Kota Cilegon, Banten 42443 &nbsp;|&nbsp; Telp: +62 852-1940-4228
+      </div>` : ''}
+      <div style="font-size:13px;font-weight:800;margin-top:4px;color:#FF4D00;letter-spacing:1px;text-transform:uppercase;">
         ${judulLaporan}
       </div>
-      <div style="font-size:11px;color:#444;margin-top:2px;">
+      <div style="font-size:9px;color:#444;margin-top:1px;">
         ${periodeLabel}
       </div>
     </div>
-    <div style="text-align:right;font-size:9px;color:#9ca3af;min-width:100px;">
+    <div style="text-align:right;font-size:8px;color:#9ca3af;min-width:80px;flex-shrink:0;">
       Dicetak:<br/>${cetakLabel}
     </div>
   </div>`;

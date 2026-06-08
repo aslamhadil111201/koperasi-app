@@ -241,19 +241,18 @@ const BukuBesar = () => {
 <meta charset="UTF-8">
 <title>Buku Besar KPKCG</title>
 <style>
-  @page { size: A4; margin: 15mm; }
+  @page { size: A4; margin: 12mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
-  .footer { margin-top: 16px; text-align: center; font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+  .footer { margin-top: 12px; text-align: center; font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 6px; }
+  .akun-block { margin-bottom: 14px; page-break-inside: avoid; }
 </style>
 </head>
 <body>
   ${headerHTML}
-
   ${accountsHTML}
-
   <div class="footer">KPKCG — Koperasi Pemasaran Karya Cipta Gemilang &nbsp;|&nbsp; ${today}</div>
-  <script>setTimeout(function(){window.print();setTimeout(function(){window.close();},1000);}, 800);</script>
+  <script>setTimeout(function(){window.print();setTimeout(function(){window.close();},1000);}, 500);</script>
 </body>
 </html>`;
 
