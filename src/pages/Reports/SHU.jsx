@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
+import { getLogoBase64, buildPrintHeader } from '../../utils/printHeader';
 import './SHU.css';
 import {
   DollarSign, Percent, Users, TrendingUp,
@@ -144,8 +145,10 @@ const SHU = () => {
     { label: 'Dana Sosial',                    pool: poolSosial,      pct: pctSosial,      set: setPctSosial,      color: '#8B5CF6',                 desc: 'Untuk kegiatan sosial koperasi' },
   ];
 
-  const handleCetak = () => {
+  const handleCetak = async () => {
     const todayLabel = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+    const logoBase64 = await getLogoBase64();
+    const headerHTML = buildPrintHeader(logoBase64, 'LAPORAN PERHITUNGAN SHU', 'Sisa Hasil Usaha', todayLabel);
 
     const komponenRows = komponen.map(k => `
       <tr>
@@ -183,10 +186,6 @@ const SHU = () => {
   @page { size: A4 landscape; margin: 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
-  .header { text-align: center; margin-bottom: 16px; border-bottom: 2px solid #FF4D00; padding-bottom: 10px; }
-  .header h1 { font-size: 15px; font-weight: 800; }
-  .header h2 { font-size: 13px; font-weight: 700; margin-top: 3px; color: #FF4D00; }
-  .header p  { font-size: 10px; color: #6b7280; margin-top: 2px; }
   h3 { font-size: 12px; font-weight: 700; margin: 14px 0 6px; color: #FF4D00; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
   .summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 14px; }
   .card { border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; text-align: center; }
@@ -200,11 +199,7 @@ const SHU = () => {
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1>KOPERASI PEMASARAN KARYA CIPTA GEMILANG</h1>
-    <h2>LAPORAN PERHITUNGAN SHU</h2>
-    <p>Sisa Hasil Usaha — Dicetak: ${todayLabel}</p>
-  </div>
+  ${headerHTML}
 
   <div class="summary">
     <div class="card">

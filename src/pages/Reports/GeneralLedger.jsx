@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Filter, Download, Calendar, Search, X, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { getLogoBase64, buildPrintHeader } from '../../utils/printHeader';
 import './Reports.css';
 
 const GeneralLedger = () => {
@@ -182,10 +183,12 @@ const GeneralLedger = () => {
     return new Date(y, m - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
   };
 
-  const handleCetakPDF = () => {
+  const handleCetakPDF = async () => {
     const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const periodeLabel = filterMonth ? fmtMonth(filterMonth) : 'Semua Periode';
     const akunLabel    = filterAkun  ? filterAkun             : 'Semua Akun';
+    const logoBase64   = await getLogoBase64();
+    const headerHTML   = buildPrintHeader(logoBase64, 'JURNAL UMUM', `Periode: ${periodeLabel} &nbsp;|&nbsp; Akun: ${akunLabel} &nbsp;|&nbsp; ${filtered.length} entri`, today);
 
     // Urutkan dari yang terlama (Ascending) untuk Print
     const printData = [...filtered].sort((a, b) => {
@@ -224,10 +227,6 @@ const GeneralLedger = () => {
   @page { size: A4 landscape; margin: 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #FF4D00; padding-bottom: 10px; }
-  .header h1 { font-size: 18px; font-weight: 800; color: #FF4D00; }
-  .header p  { font-size: 10px; color: #6b7280; margin-top: 2px; }
-  .meta { font-size: 10px; color: #6b7280; text-align: right; }
   table { width: 100%; border-collapse: collapse; margin-top: 8px; }
   th { background: #FF4D00; color: #fff; padding: 7px 10px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
   td { padding: 6px 10px; border-bottom: 1px solid #f3f4f6; font-size: 11px; }
@@ -236,16 +235,7 @@ const GeneralLedger = () => {
 </style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1>KPKCG — Jurnal Umum</h1>
-      <p>Koperasi Pemasaran Karya Cipta Gemilang</p>
-      <p>Periode: ${periodeLabel} &nbsp;|&nbsp; Akun: ${akunLabel} &nbsp;|&nbsp; ${filtered.length} entri</p>
-    </div>
-    <div class="meta">
-      <div>Dicetak: ${today}</div>
-    </div>
-  </div>
+  ${headerHTML}
 
   <table>
     <thead>

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BookMarked, Calendar, Printer, ChevronDown, ChevronUp } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { getLogoBase64, buildPrintHeader } from '../../utils/printHeader';
 import './Reports.css';
 
 const fmt = (n) => `Rp ${Number(n || 0).toLocaleString('id-ID')}`;
@@ -145,12 +146,14 @@ const BukuBesar = () => {
     ? [selectedAccount]
     : Object.keys(groupedByAccount).sort(sortByAccountOrder);
 
-  const handleCetak = () => {
+  const handleCetak = async () => {
     const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const periodeLabel = selectedMonth
       ? new Date(selectedMonth + '-01').toLocaleDateString('id-ID', { month:'long', year:'numeric' })
       : 'Semua Periode';
-    const akunLabel = selectedAccount || 'Semua Akun';
+    const akunLabel  = selectedAccount || 'Semua Akun';
+    const logoBase64 = await getLogoBase64();
+    const headerHTML = buildPrintHeader(logoBase64, 'BUKU BESAR', `Periode: ${periodeLabel} &nbsp;|&nbsp; Akun: ${akunLabel} &nbsp;|&nbsp; ${filtered.length} entri · ${accountsToShow.length} akun`, today);
 
     const accountsHTML = accountsToShow.map(akun => {
       const entries = getEntriesWithBalance(groupedByAccount[akun] || { saldoAwal: 0, entries: [] });
@@ -215,21 +218,11 @@ const BukuBesar = () => {
   @page { size: A4; margin: 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #FF4D00; padding-bottom: 10px; }
-  .header h1 { font-size: 18px; font-weight: 800; color: #FF4D00; }
-  .header p  { font-size: 10px; color: #6b7280; margin-top: 2px; }
   .footer { margin-top: 16px; text-align: center; font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px; }
 </style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1>KPKCG — Buku Besar</h1>
-      <p>Koperasi Pemasaran Karya Cipta Gemilang</p>
-      <p>Periode: ${periodeLabel} &nbsp;|&nbsp; Akun: ${akunLabel} &nbsp;|&nbsp; ${filtered.length} entri · ${accountsToShow.length} akun</p>
-    </div>
-    <div style="font-size:10px;color:#6b7280;text-align:right">Dicetak: ${today}</div>
-  </div>
+  ${headerHTML}
 
   ${accountsHTML}
 
