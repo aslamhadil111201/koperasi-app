@@ -44,7 +44,7 @@ export const buildPrintHeader = (logoBase64, judulLaporan, periodeLabel, cetakLa
         KOPERASI PEMASARAN KARYA CIPTA GEMILANG
       </div>
       <div style="font-size:11px;color:#6b7280;margin-top:2px;">
-        Jl. Contoh No. 1, Jakarta &nbsp;|&nbsp; Telp: (021) 000-0000
+        Jl. Australia I Kav.C1/2, Warnasari, Kec. Citangkil, Kota Cilegon, Banten 42443 &nbsp;|&nbsp; Telp: +62 852-1940-4228
       </div>
       <div style="font-size:15px;font-weight:800;margin-top:6px;color:#FF4D00;letter-spacing:1px;text-transform:uppercase;">
         ${judulLaporan}
