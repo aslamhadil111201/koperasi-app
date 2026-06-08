@@ -12,6 +12,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { getLogoBase64, buildPrintHeader } from '../../utils/printHeader';
 // Trigger HMR to resolve recharts
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
@@ -186,8 +187,11 @@ const Dashboard = () => {
     return { name: label, pemasukan, pengeluaran };
   });
 
-  const handleUnduhLaporan = () => {
-    const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  const handleUnduhLaporan = async () => {
+    const todayLabel = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const logoBase64 = await getLogoBase64();
+    const headerHTML = buildPrintHeader(logoBase64, 'LAPORAN DASHBOARD', `Ringkasan Keuangan — ${todayLabel}`, todayLabel);
+
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -197,10 +201,7 @@ const Dashboard = () => {
   @page { size: A4; margin: 20mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; font-size: 12px; color: #111; }
-  h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
   h2 { font-size: 14px; font-weight: 700; margin: 16px 0 8px; border-bottom: 2px solid #FF4D00; padding-bottom: 4px; color: #FF4D00; }
-  .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 12px; }
-  .header p { font-size: 11px; color: #666; margin-top: 2px; }
   .grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
   .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; text-align: center; }
   .card .label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
@@ -216,11 +217,7 @@ const Dashboard = () => {
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1>KPKCG</h1>
-    <p>Koperasi Pemasaran Karya Cipta Gemilang</p>
-    <p>Laporan Dashboard — Dicetak: ${today}</p>
-  </div>
+  ${headerHTML}
 
   <h2>Ringkasan Keuangan</h2>
   <div class="grid4">
@@ -293,7 +290,7 @@ const Dashboard = () => {
   </table>` : ''}
 
   <div class="footer">
-    KPKCG — Koperasi Pemasaran Karya Cipta Gemilang &nbsp;|&nbsp; Dicetak ${today}
+    KPKCG — Koperasi Pemasaran Karya Cipta Gemilang &nbsp;|&nbsp; Dicetak ${todayLabel}
   </div>
 
   <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}</script>
