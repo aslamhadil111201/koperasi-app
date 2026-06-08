@@ -31,6 +31,23 @@ const BukuBesar = () => {
     });
   }, [journal, accounts]);
 
+  // Urutan akun berdasarkan nomor akun di master data (sesuai aturan akuntansi 1-7)
+  // Akun yang ada di jurnal tapi tidak di master data diletakkan di akhir (alphabetical)
+  const accountSortOrder = useMemo(() => {
+    const order = {};
+    accounts.forEach((a, i) => { order[a.name] = i; });
+    return order;
+  }, [accounts]);
+
+  const sortByAccountOrder = (a, b) => {
+    const ia = accountSortOrder[a];
+    const ib = accountSortOrder[b];
+    if (ia !== undefined && ib !== undefined) return ia - ib;
+    if (ia !== undefined) return -1; // akun master data duluan
+    if (ib !== undefined) return 1;
+    return a.localeCompare(b); // fallback alphabetical
+  };
+
   // Semua akun unik dari jurnal dan master data
   const allAccounts = useMemo(() => {
     if (!normalizedJournal || !accounts) return [];
@@ -38,8 +55,8 @@ const BukuBesar = () => {
       ...accounts.map(a => a.name),
       ...normalizedJournal.map(j => j.account)
     ]);
-    return [...list].sort();
-  }, [normalizedJournal, accounts]);
+    return [...list].sort(sortByAccountOrder);
+  }, [normalizedJournal, accounts, accountSortOrder]);
 
   const [selectedAccount, setSelectedAccount] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -126,7 +143,7 @@ const BukuBesar = () => {
 
   const accountsToShow = selectedAccount
     ? [selectedAccount]
-    : Object.keys(groupedByAccount).sort();
+    : Object.keys(groupedByAccount).sort(sortByAccountOrder);
 
   const handleCetak = () => {
     const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
